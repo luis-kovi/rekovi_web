@@ -68,13 +68,13 @@ export default function ControlPanel({
           {/* Toggle Ocultar Fases Vazias - Modernizado */}
           <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
             <span className="text-xs text-gray-700 font-medium">Ocultar fases vazias</span>
-            <button 
-              id="toggleEmptyPhasesBtn"
-              onClick={() => setHideEmptyPhases(!hideEmptyPhases)}
-              className={`relative w-10 h-6 bg-gray-200 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 ${
-                hideEmptyPhases ? 'bg-primary' : ''
-              }`}
-            >
+                         <button 
+               id="toggleEmptyPhasesBtn"
+               onClick={() => setHideEmptyPhases(!hideEmptyPhases)}
+               className={`relative w-10 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 ${
+                 hideEmptyPhases ? 'bg-[#FF355A] ring-2 ring-[#FF355A] ring-opacity-30' : 'bg-gray-200'
+               }`}
+             >
               <span 
                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${
                   hideEmptyPhases ? 'bg-white translate-x-4' : 'bg-white translate-x-0'
@@ -89,7 +89,7 @@ export default function ControlPanel({
               id="slaFilter"
               value={slaFilter}
               onChange={(e) => setSlaFilter(e.target.value)}
-              className="text-sm border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+              className="text-sm border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 bg-white shadow-sm hover:shadow-md appearance-none"
             >
               <option value="all">Filtrar por SLA</option>
               <option value="No Prazo">No Prazo</option>
@@ -115,7 +115,7 @@ export default function ControlPanel({
               placeholder="Procurar cards..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+              className="w-64 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 bg-white shadow-sm hover:shadow-md"
             />
           </div>
 
@@ -124,7 +124,7 @@ export default function ControlPanel({
             <button 
               id="openCalculatorBtn"
               onClick={onOpenCalculator}
-              className="relative bg-primary hover:bg-primary-darker text-white p-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 group"
+              className="relative bg-[#FF355A] hover:bg-[#E02E4D] text-white p-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 group"
               title="Calculadora Km"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">

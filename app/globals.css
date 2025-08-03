@@ -94,6 +94,22 @@ body {
 .border-primary { border-color: var(--primary-color); }
 .focus-primary:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important; }
 
+/* Remover contorno preto padrão dos elementos de formulário */
+select:focus,
+input:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.3) !important;
+}
+
+/* Remover seta padrão do select */
+select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: none !important;
+}
+
 .scroll-container { 
   overflow: auto; 
   scrollbar-width: thin; 
@@ -472,4 +488,253 @@ body {
   .animate-tilt {
     animation-duration: 15s;
   }
+}
+
+/* Animações específicas para interface móvel */
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToBottom {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* Classes utilitárias para animações móveis */
+.animate-in {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+.animate-out {
+  animation: slideOutToBottom 0.3s ease-in;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-in;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.bounce-in {
+  animation: bounceIn 0.6s ease-out;
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+.shake-animation {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Efeitos tátis para cards móveis */
+.mobile-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  touch-action: pan-y;
+}
+
+.mobile-card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-out;
+}
+
+.mobile-card.swiping {
+  transition: transform 0.1s ease-out;
+}
+
+/* Pull to refresh indicator */
+.pull-to-refresh {
+  transition: transform 0.2s ease-out;
+}
+
+/* Swipe gestures */
+.swipe-left {
+  transform: translateX(-100px);
+  opacity: 0.7;
+}
+
+.swipe-right {
+  transform: translateX(100px);
+  opacity: 0.7;
+}
+
+/* Haptic feedback simulation */
+.haptic-feedback {
+  transition: all 0.1s ease-out;
+}
+
+.haptic-feedback:active {
+  transform: scale(0.95);
+  filter: brightness(0.9);
+}
+
+/* Mobile modal animations */
+.mobile-modal-backdrop {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.mobile-modal-content {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+.mobile-modal-content.closing {
+  animation: slideOutToBottom 0.3s ease-in;
+}
+
+/* Touch-friendly button sizes */
+.mobile-button {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling for mobile */
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Mobile-specific shadows */
+.mobile-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-shadow-lg {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Mobile card hover states */
+@media (hover: hover) {
+  .mobile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  .mobile-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* Garantir que não há overlays indesejados */
+body:not(.modal-open) .mobile-modal-backdrop,
+body:not(.modal-open) .fade-in {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Remover qualquer backdrop global indesejado */
+body > div[style*="backdrop-filter"],
+body > div[style*="blur"] {
+  display: none !important;
+}
+
+/* Garantir que a página móvel não tenha blur indesejado */
+.app-mobile {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Estilos para botões de paginação */
+.pagination-btn {
+  @apply px-3 py-1 text-sm border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300;
+}
+
+/* Garantir que dropdown do header fique sempre na frente */
+.user-menu {
+  position: relative;
+  z-index: 999999 !important;
+}
+
+.user-menu > div {
+  z-index: 999999 !important;
 }
