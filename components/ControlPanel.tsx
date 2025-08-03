@@ -65,23 +65,25 @@ export default function ControlPanel({
           </button>
         </div>
         <div className="flex items-center gap-3">
-          {/* Toggle Ocultar Fases Vazias - Modernizado */}
-          <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-            <span className="text-xs text-gray-700 font-medium">Ocultar fases vazias</span>
-                         <button 
-               id="toggleEmptyPhasesBtn"
-               onClick={() => setHideEmptyPhases(!hideEmptyPhases)}
-               className={`relative w-10 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 ${
-                 hideEmptyPhases ? 'bg-[#FF355A] ring-2 ring-[#FF355A] ring-opacity-30' : 'bg-gray-200'
-               }`}
-             >
-              <span 
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${
-                  hideEmptyPhases ? 'bg-white translate-x-4' : 'bg-white translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
+          {/* Toggle Ocultar Fases Vazias - Modernizado - Só visível na aba Kanban */}
+          {activeView === 'kanban' && (
+            <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+              <span className="text-xs text-gray-700 font-medium">Ocultar fases vazias</span>
+                           <button 
+                 id="toggleEmptyPhasesBtn"
+                 onClick={() => setHideEmptyPhases(!hideEmptyPhases)}
+                 className={`relative w-10 h-6 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 ${
+                   hideEmptyPhases ? 'bg-[#FF355A] ring-2 ring-[#FF355A] ring-opacity-30' : 'bg-gray-200'
+                 }`}
+               >
+                <span 
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${
+                    hideEmptyPhases ? 'bg-white translate-x-4' : 'bg-white translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
 
           {/* Filtro SLA - Modernizado */}
           <div className="relative">

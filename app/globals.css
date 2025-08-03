@@ -248,40 +248,7 @@ select {
   gap: 8px; 
 }
 
-#list-view { 
-  position: relative !important; 
-  left: 0 !important; 
-  right: 0 !important; 
-  width: 100% !important; 
-  margin-left: 0 !important; 
-  margin-right: 0 !important; 
-  transform: none !important; 
-  padding: 0 !important; 
-  box-sizing: border-box !important; 
-}
-#list-view > div { 
-  width: 100% !important; 
-  margin-left: 0 !important; 
-  margin-right: 0 !important; 
-  position: relative !important; 
-  left: 0 !important; 
-  right: 0 !important; 
-  padding: 1rem !important; 
-  box-sizing: border-box !important; 
-}
-#list-view table { 
-  width: 100% !important; 
-  table-layout: fixed !important; 
-  margin: 0 !important; 
-  padding: 0 !important; 
-}
-#list-view th, #list-view td { box-sizing: border-box !important; }
-#list-view th:nth-child(1), #list-view td:nth-child(1) { width: 15% !important; }
-#list-view th:nth-child(2), #list-view td:nth-child(2) { width: 20% !important; }
-#list-view th:nth-child(3), #list-view td:nth-child(3) { width: 20% !important; }
-#list-view th:nth-child(4), #list-view td:nth-child(4) { width: 20% !important; }
-#list-view th:nth-child(5), #list-view td:nth-child(5) { width: 15% !important; }
-#list-view th:nth-child(6), #list-view td:nth-child(6) { width: 10% !important; text-align: center !important; }
+
 
 #settings-btn {
   position: relative !important;
@@ -813,4 +780,260 @@ body > div[style*="blur"] {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
   max-height: 90vh !important;
   overflow: hidden !important;
+}
+
+/* Estilos modernos para a aba lista */
+#list-view { 
+  position: relative !important; 
+  left: 0 !important; 
+  right: 0 !important; 
+  width: 100% !important; 
+  margin-left: 0 !important; 
+  margin-right: 0 !important; 
+  transform: none !important; 
+  padding: 0 !important; 
+  box-sizing: border-box !important; 
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+#list-view > div { 
+  width: 100% !important; 
+  margin-left: 0 !important; 
+  margin-right: 0 !important; 
+  position: relative !important; 
+  left: 0 !important; 
+  right: 0 !important; 
+  padding: 1.5rem !important; 
+  box-sizing: border-box !important; 
+}
+
+#list-view table { 
+  width: 100% !important; 
+  table-layout: auto !important; 
+  margin: 0 !important; 
+  padding: 0 !important; 
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+#list-view th, #list-view td { 
+  box-sizing: border-box !important; 
+  border: none !important;
+}
+
+/* Larguras responsivas para as colunas */
+#list-view th:nth-child(1), #list-view td:nth-child(1) { 
+  width: 12% !important; 
+  min-width: 120px !important;
+}
+
+#list-view th:nth-child(2), #list-view td:nth-child(2) { 
+  width: 18% !important; 
+  min-width: 150px !important;
+}
+
+#list-view th:nth-child(3), #list-view td:nth-child(3) { 
+  width: 18% !important; 
+  min-width: 150px !important;
+}
+
+#list-view th:nth-child(4), #list-view td:nth-child(4) { 
+  width: 22% !important; 
+  min-width: 180px !important;
+}
+
+#list-view th:nth-child(5), #list-view td:nth-child(5) { 
+  width: 15% !important; 
+  min-width: 120px !important;
+}
+
+#list-view th:nth-child(6), #list-view td:nth-child(6) { 
+  width: 15% !important; 
+  text-align: center !important; 
+  min-width: 80px !important;
+}
+
+/* Efeitos hover modernos para as linhas da tabela */
+#list-view tbody tr {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  transform: none !important;
+}
+
+#list-view tbody tr:hover {
+  box-shadow: 0 4px 12px rgba(255, 53, 90, 0.1) !important;
+  background: linear-gradient(90deg, rgba(255, 53, 90, 0.05) 0%, transparent 100%) !important;
+  transform: none !important;
+}
+
+#list-view tbody tr:hover::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 3px !important;
+  background: linear-gradient(to bottom, #FF355A, #E02E4D) !important;
+  border-radius: 0 2px 2px 0 !important;
+  z-index: 1 !important;
+}
+
+/* Garantir que o conteúdo da célula não seja afetado pelo pseudo-elemento */
+#list-view tbody tr:hover td {
+  position: relative !important;
+  z-index: 2 !important;
+  transform: none !important;
+  left: 0 !important;
+  right: auto !important;
+}
+
+/* Garantir que o conteúdo dentro das células não seja afetado */
+#list-view tbody tr:hover td * {
+  transform: none !important;
+  position: static !important;
+}
+
+/* Regra específica para prevenir qualquer transformação nas linhas da tabela */
+#list-view tbody tr,
+#list-view tbody tr:hover,
+#list-view tbody tr:focus,
+#list-view tbody tr:active {
+  transform: none !important;
+  translate: none !important;
+  left: 0 !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Garantir que as células mantenham seu alinhamento */
+#list-view tbody td,
+#list-view tbody td:hover,
+#list-view tbody td:focus,
+#list-view tbody td:active {
+  transform: none !important;
+  translate: none !important;
+  left: 0 !important;
+  right: auto !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevenir que group-hover cause transformações indesejadas */
+#list-view tbody tr.group:hover td,
+#list-view tbody tr.group:hover td *,
+#list-view tbody tr:hover td,
+#list-view tbody tr:hover td * {
+  transform: none !important;
+  translate: none !important;
+  left: 0 !important;
+  right: auto !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Garantir que elementos com group-hover não causem desalinhamento */
+#list-view .group-hover\:text-\[#FF355A\],
+#list-view .group-hover\:text-gray-900,
+#list-view .group-hover\:bg-\[#FF355A\]\/10,
+#list-view .group-hover\:text-\[#FF355A\] {
+  transform: none !important;
+  translate: none !important;
+  left: 0 !important;
+  right: auto !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Animações suaves para os badges de SLA */
+#list-view .inline-flex.items-center.justify-center {
+  animation: scaleIn 0.2s ease-out !important;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Efeitos de glassmorphism para o header da tabela */
+#list-view thead {
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* Scrollbar personalizada para a lista */
+#list-view .scroll-container::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+#list-view .scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 3px !important;
+}
+
+#list-view .scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 53, 90, 0.3) !important;
+  border-radius: 3px !important;
+  transition: background 0.3s ease !important;
+}
+
+#list-view .scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 53, 90, 0.5) !important;
+}
+
+/* Altura reduzida para as linhas da tabela */
+#list-view tbody tr {
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+}
+
+#list-view tbody td {
+  padding: 0.375rem 1rem !important;
+  vertical-align: middle !important;
+  position: relative !important;
+  transform: none !important;
+  left: 0 !important;
+  right: auto !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+#list-view thead th {
+  padding: 0.5rem 1rem !important;
+  vertical-align: middle !important;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  #list-view > div {
+    padding: 1rem !important;
+  }
+  
+  #list-view th, #list-view td {
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  #list-view tbody tr {
+    height: 2rem !important;
+    min-height: 2rem !important;
+  }
+  
+  #list-view th:nth-child(1), #list-view td:nth-child(1),
+  #list-view th:nth-child(2), #list-view td:nth-child(2),
+  #list-view th:nth-child(3), #list-view td:nth-child(3),
+  #list-view th:nth-child(4), #list-view td:nth-child(4),
+  #list-view th:nth-child(5), #list-view td:nth-child(5),
+  #list-view th:nth-child(6), #list-view td:nth-child(6) {
+    width: auto !important;
+    min-width: auto !important;
+  }
 }

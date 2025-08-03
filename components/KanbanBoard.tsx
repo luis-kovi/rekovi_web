@@ -73,7 +73,7 @@ export default function KanbanBoard({ initialCards, permissionType }: KanbanBoar
     });
 
     // Filtrar por busca e SLA
-    return cardsWithSLA.filter(card => {
+    const filtered = cardsWithSLA.filter(card => {
       const search = searchTerm.toLowerCase();
       const placa = (card.placa || '').toLowerCase();
       const driver = (card.nomeDriver || '').toLowerCase();
@@ -88,7 +88,14 @@ export default function KanbanBoard({ initialCards, permissionType }: KanbanBoar
       
       return matchesSearch && matchesSla;
     });
-  }, [cards, searchTerm, slaFilter, permissionType]);
+
+    // Ordenar por SLA (do maior para o menor) quando estiver na visualização de lista
+    if (activeView === 'list') {
+      return filtered.sort((a, b) => b.sla - a.sla);
+    }
+
+    return filtered;
+  }, [cards, searchTerm, slaFilter, permissionType, activeView]);
 
   const phases = useMemo(() => {
     const phaseMap: { [key: string]: CardWithSLA[] } = {};
@@ -260,64 +267,150 @@ export default function KanbanBoard({ initialCards, permissionType }: KanbanBoar
               </div>
             </div>
           ) : (
-            <div id="list-view" className="h-full w-full bg-gray-50 p-4">
-              <div className="bg-white rounded-lg shadow-md h-full overflow-y-auto relative table-border-primary scroll-container">
-                <table className="w-full text-sm text-left text-gray-500">
-                  <thead className="text-xs uppercase bg-gray-50 sticky top-0 z-10 table-header-primary">
-                    <tr>
-                      <th scope="col" className="px-6 py-3">Placa</th>
-                      <th scope="col" className="px-6 py-3">Driver</th>
-                      <th scope="col" className="px-6 py-3">Chofer</th>
-                      <th scope="col" className="px-6 py-3">Fase Atual</th>
-                      <th scope="col" className="px-6 py-3">Data Criação</th>
-                      <th scope="col" className="px-6 py-3 text-center">SLA (dias)</th>
-                    </tr>
-                  </thead>
-                  <tbody id="list-container" className="bg-white compact-table">
-                    {filteredCards.map(card => {
-                      const isDisabled = disabledPhases.includes(card.faseAtual);
-                      const slaBg = card.sla >= 3 ? 'bg-red-100 blink' : card.sla === 2 ? 'bg-yellow-100' : 'bg-green-100';
-                      const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
-                      const formattedDate = formatDate(card.dataCriacao);
-                      
-                      if (isDisabled) {
+            <div id="list-view" className="h-full w-full bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 h-full overflow-hidden relative">
+                {/* Header moderno da tabela */}
+                <div className="bg-gradient-to-r from-[#FF355A] to-[#E02E4D] text-white px-6 py-4 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold tracking-wide">Lista de Recolhas</h2>
+                        <p className="text-white/80 text-sm">Visualização em tabela</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5">
+                        <span className="text-sm font-semibold">{filteredCards.length} itens</span>
+                      </div>
+                      <div className="w-2 h-2 bg-white/40 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Container da tabela com scroll moderno */}
+                <div className="overflow-y-auto h-full scroll-container">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+                      <tr className="text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left">Placa</th>
+                        <th className="px-4 py-2 text-left">Driver</th>
+                        <th className="px-4 py-2 text-left">Chofer</th>
+                        <th className="px-4 py-2 text-left">Fase Atual</th>
+                        <th className="px-4 py-2 text-left">Data Criação</th>
+                        <th className="px-4 py-2 text-center">SLA</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white/50">
+                      {filteredCards.map((card, index) => {
+                        const isDisabled = disabledPhases.includes(card.faseAtual);
+                        const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
+                        const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
+                        const formattedDate = formatDate(card.dataCriacao);
+                        
+                        if (isDisabled) {
+                          return (
+                            <tr key={card.id} className="border-b border-gray-100/50 bg-gray-50/30 opacity-60 cursor-not-allowed">
+                              <td className="px-4 py-1.5 font-medium text-gray-400">{card.placa}</td>
+                              <td className="px-4 py-1.5 text-gray-400">{formatPersonName(card.nomeDriver)}</td>
+                              <td className="px-4 py-1.5 text-gray-400">
+                                {!card.chofer || card.chofer === 'N/A' ? (
+                                  <span className="italic text-xs text-gray-400">Não alocado</span>
+                                ) : (
+                                  formatPersonName(card.chofer)
+                                )}
+                              </td>
+                              <td className="px-4 py-1.5 text-gray-400">{displayPhase}</td>
+                              <td className="px-4 py-1.5 text-gray-400">{formattedDate}</td>
+                              <td className="px-4 py-1.5 text-center">
+                                <div className="flex items-center justify-center">
+                                  <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
+                                  <span className="text-xs text-gray-400 ml-2">Processando</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        }
+                        
                         return (
-                          <tr key={card.id} className="table-list-item border-b bg-gray-100 opacity-70 cursor-not-allowed">
-                            <td className="px-6 py-2 font-bold text-gray-500 card-placa">{card.placa}</td>
-                            <td className="px-6 py-2 text-gray-500 card-driver">{formatPersonName(card.nomeDriver)}</td>
-                            <td className="px-6 py-2 text-gray-500 card-chofer">{formatPersonName(card.chofer)}</td>
-                            <td className="px-6 py-2 text-gray-500">{displayPhase}</td>
-                            <td className="px-6 py-2 text-gray-500">{formattedDate}</td>
-                            <td className="px-6 py-2 text-center">
+                          <tr 
+                            key={card.id} 
+                            className={`border-b border-gray-100/30 hover:bg-gradient-to-r hover:from-[#FF355A]/5 hover:to-transparent cursor-pointer transition-all duration-200 group ${
+                              index % 2 === 0 ? 'bg-white/30' : 'bg-gray-50/30'
+                            }`}
+                            onClick={() => setSelectedCard(card)}
+                          >
+                            <td className="px-4 py-1.5">
+                              <div className="flex items-center">
+                                <div className="w-2 h-2 bg-[#FF355A] rounded-full mr-3 opacity-60"></div>
+                                <span className="font-semibold text-gray-900 group-hover:text-[#FF355A] transition-colors">
+                                  {card.placa}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-1.5">
+                              <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
+                                {formatPersonName(card.nomeDriver)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-1.5">
+                              {!card.chofer || card.chofer === 'N/A' ? (
+                                <span className="italic text-xs text-gray-500 group-hover:text-gray-600 transition-colors">Não alocado</span>
+                              ) : (
+                                <span className="text-gray-700 group-hover:text-gray-900 transition-colors">
+                                  {formatPersonName(card.chofer)}
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-1.5">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 group-hover:bg-[#FF355A]/10 group-hover:text-[#FF355A] transition-all">
+                                {displayPhase}
+                              </span>
+                            </td>
+                            <td className="px-4 py-1.5">
+                              <span className="text-gray-600 text-xs">
+                                {formattedDate}
+                              </span>
+                            </td>
+                            <td className="px-4 py-1.5 text-center">
                               <div className="flex items-center justify-center">
-                                <svg className="animate-spin h-4 w-4 text-gray-500 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span className="text-xs text-gray-500">Processando</span>
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold text-white transition-all duration-200 ${
+                                  slaStatus === 'atrasado' 
+                                    ? 'bg-red-500 shadow-lg shadow-red-500/30' 
+                                    : slaStatus === 'alerta' 
+                                    ? 'bg-yellow-500 shadow-lg shadow-yellow-500/30' 
+                                    : 'bg-green-500 shadow-lg shadow-green-500/30'
+                                }`}>
+                                  {card.sla}
+                                </span>
+                                {slaStatus === 'atrasado' && (
+                                  <div className="ml-2 w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
+                                )}
                               </div>
                             </td>
                           </tr>
                         );
-                      }
-                      
-                      return (
-                        <tr 
-                          key={card.id} 
-                          className={`table-list-item data-item border-b hover:bg-gray-50 cursor-pointer ${slaBg}`}
-                          onClick={() => setSelectedCard(card)}
-                        >
-                          <td className="px-6 py-2 font-bold text-gray-900 card-placa">{card.placa}</td>
-                          <td className="px-6 py-2 card-driver">{formatPersonName(card.nomeDriver)}</td>
-                          <td className="px-6 py-2 card-chofer">{formatPersonName(card.chofer)}</td>
-                          <td className="px-6 py-2">{displayPhase}</td>
-                          <td className="px-6 py-2">{formattedDate}</td>
-                          <td className="px-6 py-2 text-center font-bold text-lg">{card.sla}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      })}
+                    </tbody>
+                  </table>
+                  
+                  {/* Estado vazio moderno */}
+                  {filteredCards.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">Nenhuma recolha encontrada</h3>
+                      <p className="text-sm text-gray-500">Tente ajustar os filtros ou a busca</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )

@@ -96,19 +96,6 @@ export default function Header({ user, permissionType }: HeaderProps) {
 
         {/* Área do Usuário */}
         <div className="flex items-center gap-4">
-          {/* Link para versão móvel */}
-          <Link 
-            href="/mobile" 
-            className="flex items-center gap-1 px-3 py-2 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all duration-300 hover:scale-105 backdrop-blur-sm text-xs font-medium" 
-            title="Versão Móvel" 
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M4 2.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5v-11zm1 0v11h6v-11h-6z"/>
-              <path d="M6.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm2 0a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h1z"/>
-            </svg>
-            Móvel
-          </Link>
-
                      {/* Menu do Usuário */}
                        <div className="relative user-menu" style={{zIndex: 99999999}}>
                                                    <button
