@@ -1,7 +1,7 @@
 // components/MobileTaskManager.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import type { Card } from '@/types'
 import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
@@ -14,13 +14,11 @@ interface MobileTaskManagerProps {
 
 export default function MobileTaskManager({ initialCards, permissionType }: MobileTaskManagerProps) {
   const [cards, setCards] = useState<Card[]>(initialCards)
-  const [filteredCards, setFilteredCards] = useState<Card[]>(initialCards)
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPhase, setSelectedPhase] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'date' | 'priority' | 'phase'>('date')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [pullToRefreshY, setPullToRefreshY] = useState(0)
   const [isPulling, setIsPulling] = useState(false)
@@ -52,32 +50,14 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
       'Tentativa 3 de Recolha': 'bg-red-100 text-red-800',
       'Desbloquear Veículo': 'bg-purple-100 text-purple-800',
       'Solicitar Guincho': 'bg-indigo-100 text-indigo-800',
-  
       'Nova tentativa de recolha': 'bg-green-100 text-green-800',
       'Confirmação de Entrega no Pátio': 'bg-green-100 text-green-800'
     }
     return colors[phase] || 'bg-gray-100 text-gray-800'
   }
 
-  // Função para obter prioridade baseada na fase
-  const getPriority = (phase: string) => {
-    const priorities: { [key: string]: number } = {
-      'Fila de Recolha': 1,
-      'Aprovar Custo de Recolha': 2,
-      'Tentativa 1 de Recolha': 3,
-      'Tentativa 2 de Recolha': 4,
-      'Tentativa 3 de Recolha': 5,
-      'Desbloquear Veículo': 6,
-      'Solicitar Guincho': 7,
-  
-      'Nova tentativa de recolha': 9,
-      'Confirmação de Entrega no Pátio': 10
-    }
-    return priorities[phase] || 0
-  }
-
-  // Filtrar e ordenar cards
-  useEffect(() => {
+  // Filtrar e ordenar cards usando useMemo
+  const filteredCards = useMemo(() => {
     let filtered = cards
 
     // Filtro por busca
@@ -95,22 +75,21 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
       filtered = filtered.filter(card => card.faseAtual === selectedPhase)
     }
 
-    // Ordenação
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'date':
-          return new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime()
-        case 'priority':
-          return getPriority(a.faseAtual) - getPriority(b.faseAtual)
-        case 'phase':
-          return a.faseAtual.localeCompare(b.faseAtual)
-        default:
-          return 0
-      }
+    // Ordenação: sempre ordem crescente de ID (menor ID primeiro)
+    const sorted = [...filtered].sort((a, b) => {
+      // Converter IDs para números para comparação numérica
+      const idA = parseInt(a.id, 10)
+      const idB = parseInt(b.id, 10)
+      return idA - idB // Crescente: menor ID primeiro
     })
 
-    setFilteredCards(filtered)
-  }, [cards, searchTerm, selectedPhase, sortBy])
+    return sorted
+  }, [cards, searchTerm, selectedPhase])
+
+  // Garantir que os cards sejam inicializados corretamente
+  useEffect(() => {
+    setCards(initialCards)
+  }, [initialCards])
 
   // Pull to refresh
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -209,16 +188,6 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
             Filtros
           </button>
           
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'date' | 'priority' | 'phase')}
-            className="px-3 py-2 bg-gray-100 rounded-lg text-sm font-medium text-gray-700"
-          >
-            <option value="date">Mais Recentes</option>
-            <option value="priority">Prioridade</option>
-            <option value="phase">Fase</option>
-          </select>
-
           <div className="flex items-center gap-1 text-xs text-gray-500">
             <span>{filteredCards.length}</span>
             <span>tarefas</span>

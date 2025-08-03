@@ -13,16 +13,11 @@ interface MobileTaskModalProps {
 }
 
 export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details' }: MobileTaskModalProps) {
-  const [isVisible, setIsVisible] = useState(false)
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
 
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true)
-    } else {
-      setTimeout(() => setIsVisible(false), 300)
-    }
-  }, [isOpen])
+
+
+
 
   // Função para formatar data
   const formatDate = (dateString: string) => {
@@ -91,10 +86,12 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     }
   }
 
-  if (!isVisible || !isOpen) return null
+  if (!isOpen) {
+    return null
+  }
 
   return (
-    <div className="fixed inset-0 z-50 fade-in">
+    <div className="fixed inset-0 z-[9999] fade-in">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm mobile-modal-backdrop"
@@ -102,7 +99,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       />
       
       {/* Modal */}
-      <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform transition-transform duration-300 mobile-modal-content mobile-shadow-lg ${
+      <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform transition-transform duration-300 mobile-modal-content mobile-shadow-lg z-[10000] ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
       }`}>
         {/* Handle */}
@@ -160,180 +157,179 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
         </div>
 
         {/* Content */}
-        <div className="max-h-[60vh] overflow-y-auto">
-          {activeTab === 'details' && (
-            <div className="p-6 space-y-6">
-              {/* Informações do veículo */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">Informações do veículo</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Placa</span>
-                    <span className="text-sm font-medium text-gray-900">{card.placa}</span>
-                  </div>
-                  {card.modeloVeiculo && (
+        <div className="max-h-[70vh] overflow-y-auto">
+          <div className="min-h-[500px]"> {/* Altura mínima fixa aumentada */}
+            {activeTab === 'details' && (
+              <div className="p-6 space-y-6">
+                {/* Informações do veículo */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Informações do veículo</h3>
+                  <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Modelo</span>
-                      <span className="text-sm font-medium text-gray-900">{card.modeloVeiculo}</span>
+                      <span className="text-sm text-gray-500">Placa</span>
+                      <span className="text-sm font-medium text-gray-900">{card.placa}</span>
                     </div>
-                  )}
-                  {card.enderecoRecolha && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-500">Localização</span>
-                        {card.linkMapa && (
-                          <button
-                            onClick={() => openMap(card.linkMapa!)}
-                            className="text-xs text-[#FF355A] hover:underline flex items-center gap-1"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            Google Maps
-                          </button>
-                        )}
+                    {card.modeloVeiculo && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Modelo</span>
+                        <span className="text-sm font-medium text-gray-900">{card.modeloVeiculo}</span>
                       </div>
-                      <p className="text-sm text-gray-900">{card.enderecoRecolha}</p>
-                    </div>
-                  )}
-                  {card.origemLocacao && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Local para entrega</span>
-                      <span className="text-sm font-medium text-gray-900">{card.origemLocacao}</span>
-                    </div>
-                  )}
+                    )}
+                    {card.enderecoRecolha && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-gray-500">Localização</span>
+                          {card.linkMapa && (
+                            <button
+                              onClick={() => openMap(card.linkMapa!)}
+                              className="text-xs text-[#FF355A] hover:underline flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              Google Maps
+                            </button>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-900">{card.enderecoRecolha}</p>
+                      </div>
+                    )}
+                    {card.origemLocacao && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Local para entrega</span>
+                        <span className="text-sm font-medium text-gray-900">{card.origemLocacao}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Informações do cliente */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">Informações do cliente</h3>
-                <div className="space-y-3">
-                  {card.nomeDriver && (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Nome</span>
-                      <span className="text-sm font-medium text-gray-900">{card.nomeDriver}</span>
-                    </div>
-                  )}
-                  {card.telefoneContato && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Telefone</span>
-                      <button
-                        onClick={() => makeCall(card.telefoneContato!)}
-                        className="text-sm font-medium text-[#FF355A] hover:underline"
-                      >
-                        {card.telefoneContato}
-                      </button>
-                    </div>
-                  )}
-                  {card.telefoneOpcional && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500">Telefone opcional</span>
-                      <button
-                        onClick={() => makeCall(card.telefoneOpcional!)}
-                        className="text-sm font-medium text-[#FF355A] hover:underline"
-                      >
-                        {card.telefoneOpcional}
-                      </button>
-                    </div>
-                  )}
-                  {card.enderecoCadastro && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-500">Endereço de cadastro</span>
+                {/* Informações do cliente */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Informações do cliente</h3>
+                  <div className="space-y-3">
+                    {card.nomeDriver && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Nome</span>
+                        <span className="text-sm font-medium text-gray-900">{card.nomeDriver}</span>
+                      </div>
+                    )}
+                    {card.telefoneContato && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">Telefone</span>
                         <button
-                          onClick={() => copyToClipboard(card.enderecoCadastro!)}
-                          className="text-xs text-[#FF355A] hover:underline"
+                          onClick={() => makeCall(card.telefoneContato!)}
+                          className="text-sm font-medium text-[#FF355A] hover:underline"
                         >
-                          Copiar
+                          {card.telefoneContato}
                         </button>
                       </div>
-                      <p className="text-sm text-gray-900">{card.enderecoCadastro}</p>
-                    </div>
-                  )}
+                    )}
+                    {card.telefoneOpcional && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">Telefone opcional</span>
+                        <button
+                          onClick={() => makeCall(card.telefoneOpcional!)}
+                          className="text-sm font-medium text-[#FF355A] hover:underline"
+                        >
+                          {card.telefoneOpcional}
+                        </button>
+                      </div>
+                    )}
+                    {card.enderecoCadastro && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm text-gray-500">Endereço de cadastro</span>
+                          <button
+                            onClick={() => copyToClipboard(card.enderecoCadastro!)}
+                            className="text-xs text-[#FF355A] hover:underline"
+                          >
+                            Copiar
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-900">{card.enderecoCadastro}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Prestador */}
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900">Prestador</h3>
-                <div className="space-y-3">
-                  {card.empresaResponsavel && (
+                {/* Prestador */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900">Prestador</h3>
+                  <div className="space-y-3">
+                    {card.empresaResponsavel && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-500">Empresa</span>
+                        <span className="text-sm font-medium text-gray-900">{card.empresaResponsavel}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Empresa</span>
-                      <span className="text-sm font-medium text-gray-900">{card.empresaResponsavel}</span>
+                      <span className="text-sm text-gray-500">Chofer</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {card.chofer ? card.chofer : <em>Não há chofer alocado</em>}
+                      </span>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Chofer</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {card.chofer ? card.chofer : <em>Não há chofer alocado</em>}
-                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'actions' && (
-            <div className="h-full">
-              {card.urlPublica ? (
-                <iframe
-                  src={card.urlPublica}
-                  className="w-full h-full border-0"
-                  title="Pipefy Card"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                />
-              ) : (
-                <div className="p-6 space-y-3">
-                  <div className="bg-yellow-50 rounded-xl p-4 text-center">
-                    <svg className="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <p className="text-sm text-yellow-700">URL pública não disponível</p>
-                    <p className="text-xs text-yellow-600 mt-1">Este card não possui uma URL pública configurada</p>
+            {activeTab === 'actions' && (
+              <div className="h-full min-h-[500px]">
+                {card.urlPublica ? (
+                  <div className="h-full min-h-[500px]">
+                    <iframe
+                      src={card.urlPublica}
+                      className="w-full h-full min-h-[500px] border-0"
+                      title="Pipefy Card"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                      style={{ height: '500px' }}
+                    />
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                ) : (
+                  <div className="p-6 space-y-3 h-full flex items-center justify-center min-h-[500px]">
+                    <div className="bg-yellow-50 rounded-xl p-4 text-center">
+                      <svg className="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <p className="text-sm text-yellow-700">URL pública não disponível</p>
+                      <p className="text-xs text-yellow-600 mt-1">Este card não possui uma URL pública configurada</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {activeTab === 'history' && (
-            <div className="p-6 space-y-4">
-              <h3 className="font-semibold text-gray-900">Histórico de Atividades</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-[#FF355A] rounded-full mt-2" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">Tarefa criada</p>
-                    <p className="text-xs text-gray-500">{formatDate(card.dataCriacao)}</p>
-                  </div>
-                </div>
+            {activeTab === 'history' && (
+              <div className="p-6 space-y-4 h-full min-h-[500px] flex flex-col justify-start">
+                <h3 className="font-semibold text-gray-900">Histórico de Atividades</h3>
                 
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 bg-gray-300 rounded-full mt-2" />
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600">Aguardando processamento...</p>
-                    <p className="text-xs text-gray-400">Histórico em desenvolvimento</p>
+                <div className="space-y-4 flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-[#FF355A] rounded-full mt-2" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Tarefa criada</p>
+                      <p className="text-xs text-gray-500">{formatDate(card.dataCriacao)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-gray-300 rounded-full mt-2" />
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-600">Aguardando processamento...</p>
+                      <p className="text-xs text-gray-400">Histórico em desenvolvimento</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200">
-          <div className="flex items-center justify-between">
+        <div className="p-3 border-t border-gray-200">
+          <div className="flex items-center justify-center">
             <span className="text-xs text-gray-500">ID: {card.id}</span>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-            >
-              Fechar
-            </button>
           </div>
         </div>
       </div>

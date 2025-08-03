@@ -29,7 +29,7 @@ export default async function MobilePage() {
     modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
     endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
     valor_recolha, custo_km_adicional, public_url
-  `).limit(100000);
+  `).order('card_id', { ascending: true }).limit(100000);
 
   // Filtrar apenas cards com fases válidas diretamente na query
   const validPhases = [
@@ -82,6 +82,8 @@ export default async function MobilePage() {
     custoKmAdicional: card.custo_km_adicional || '',
     urlPublica: card.public_url || '',
   })).filter(card => card.id && card.placa); // Filtrar apenas cards válidos
+
+
 
         return (
         <div className="app-mobile flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">

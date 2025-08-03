@@ -706,17 +706,19 @@ select {
 }
 
 /* Garantir que não há overlays indesejados */
-body:not(.modal-open) .mobile-modal-backdrop,
+/* Removendo esta regra que estava impedindo o modal de aparecer */
+/* body:not(.modal-open) .mobile-modal-backdrop,
 body:not(.modal-open) .fade-in {
   display: none !important;
   pointer-events: none !important;
-}
+} */
 
 /* Remover qualquer backdrop global indesejado */
-body > div[style*="backdrop-filter"],
+/* Removendo esta regra que estava impedindo o modal de aparecer */
+/* body > div[style*="backdrop-filter"],
 body > div[style*="blur"] {
   display: none !important;
-}
+} */
 
 /* Garantir que a página móvel não tenha blur indesejado */
 .app-mobile {
@@ -732,16 +734,16 @@ body > div[style*="blur"] {
 /* Garantir que dropdown do header fique sempre na frente */
 .user-menu {
   position: relative;
-  z-index: 999999 !important;
+  z-index: 1000 !important;
 }
 
 .user-menu > div {
-  z-index: 999999 !important;
+  z-index: 1000 !important;
 }
 
 .dropdown-menu {
-  z-index: 99999999 !important;
-  position: relative !important;
+  z-index: 1001 !important;
+  position: absolute !important;
 }
 
 /* Garantir que modais móveis funcionem corretamente */
@@ -753,6 +755,7 @@ body > div[style*="blur"] {
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .mobile-modal-content {
@@ -763,6 +766,10 @@ body > div[style*="blur"] {
   left: 0 !important;
   right: 0 !important;
   max-height: 90vh !important;
+  background-color: white !important;
+  border-top-left-radius: 24px !important;
+  border-top-right-radius: 24px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
 }
 
 /* Garantir que modais não sejam afetados por outros elementos */
@@ -780,6 +787,7 @@ body > div[style*="blur"] {
 .fade-in {
   opacity: 1 !important;
   visibility: visible !important;
+  display: block !important;
 }
 
 /* Estilos específicos para modal de teste */

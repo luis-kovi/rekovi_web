@@ -54,7 +54,6 @@ export const fixedPhaseOrder = [
   'Nova tentativa de recolha',
   'Desbloquear Veículo',
   'Solicitar Guincho',
-  'Dificuldade na Recolha',
   'Confirmação de Entrega no Pátio'
 ];
 
@@ -67,7 +66,6 @@ export const phaseDisplayNames: { [key: string]: string } = {
   'Nova tentativa de recolha': 'Nova Tentativa',
   'Desbloquear Veículo': 'Desbloquear Veículo',
   'Solicitar Guincho': 'Solicitar Guincho',
-  'Dificuldade na Recolha': 'Dificuldade na Recolha',
   'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'
 };
 

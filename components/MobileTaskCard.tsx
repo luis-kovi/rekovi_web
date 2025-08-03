@@ -94,11 +94,22 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
       } else {
         onSwipe(card.id, 'left')
       }
+    } else {
+      // Se não foi um swipe válido, tratar como toque simples para abrir modal
+      onCardPress()
     }
     
     // Reset
     setIsDragging(false)
     setTranslateX(0)
+  }
+
+  // Adicionar suporte para clique do mouse
+  const handleClick = (e: React.MouseEvent) => {
+    // Se não está arrastando, tratar como clique para abrir modal
+    if (!isDragging) {
+      onCardPress()
+    }
   }
 
   // Efeitos visuais de swipe
@@ -149,7 +160,7 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={onCardPress}
+        onClick={handleClick}
       >
         {/* Header do card */}
         <div className="px-4 py-3 border-b border-gray-100">
