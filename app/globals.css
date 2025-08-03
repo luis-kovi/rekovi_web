@@ -3,6 +3,10 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary-color: #FF355A;
+  --primary-color-darker: #E02E4D;
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
 }
 
 @theme inline {
@@ -22,5 +26,450 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  background-color: #f7f9fa;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Modernizações gerais */
+* {
+  box-sizing: border-box;
+}
+
+/* Melhorias nos cards */
+.kanban-card {
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Melhorias nos botões */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(255, 53, 90, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-color-darker);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 53, 90, 0.3);
+}
+
+/* Melhorias nos modais - Removendo contornos pretos */
+.modal-panel {
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border: none !important;
+}
+
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Melhorias na tabela */
+.table-list-item {
+  transition: all 0.2s ease-in-out;
+}
+
+.table-list-item:hover {
+  background-color: #f8fafc !important;
+  transform: scale(1.01);
+}
+
+/* Estilos baseados no HTML fornecido */
+.bg-primary { background-color: var(--primary-color); }
+.control-btn.active { background-color: var(--primary-color); color: white; }
+.btn-primary { background-color: var(--primary-color); color: white; transition: background-color 0.2s; }
+.btn-primary:hover { background-color: var(--primary-color-darker); }
+.text-primary { color: var(--primary-color); }
+.border-primary { border-color: var(--primary-color); }
+.focus-primary:focus { border-color: var(--primary-color) !important; box-shadow: 0 0 0 2px rgba(255, 53, 90, 0.4) !important; }
+
+.scroll-container { 
+  overflow: auto; 
+  scrollbar-width: thin; 
+  scrollbar-color: transparent transparent; 
+  transition: scrollbar-color 0.3s ease; 
+}
+.scroll-container:hover { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+.scroll-container::-webkit-scrollbar { width: 8px; height: 8px; background-color: transparent; }
+.scroll-container::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
+.scroll-container::-webkit-scrollbar-thumb { 
+  background-color: transparent; 
+  border-radius: 4px; 
+  border: 2px solid transparent; 
+  background-clip: padding-box; 
+}
+.scroll-container:hover::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+.scroll-container:hover::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); }
+.scroll-container::-webkit-scrollbar-thumb:hover { background-color: #a0a0a0; }
+
+.kanban-board { scrollbar-gutter: stable; }
+.modal-overlay { transition: opacity 0.2s ease-in-out; }
+.modal-panel { transition: transform 0.2s ease-in-out; }
+.phase-title { 
+  font-size: 0.875rem; 
+  font-weight: 600; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+.border-t-3 { border-top-width: 3px; }
+.table-header-primary th { color: var(--primary-color); font-weight: 700; }
+.table-border-primary { border-top: 4px solid var(--primary-color); }
+.compact-table td { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+
+.split-modal { display: flex; height: 60vh; }
+.split-modal-left { flex: 1; overflow-y: auto; padding: 1rem; border-right: 1px solid #e5e7eb; }
+.split-modal-right { flex: 1; overflow-y: auto; padding: 0; }
+.split-modal-right iframe { width: 100%; height: 100%; border: none; }
+
+.calculator-modal { 
+  width: 404px; 
+  height: 604px; 
+  border-radius: 12px; 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+  overflow: hidden; 
+  background: var(--primary-color); 
+  border: none !important;
+}
+.calculator-header { 
+  background-color: var(--primary-color); 
+  padding: 8px 12px; 
+  display: flex; 
+  justify-content: flex-end; 
+  align-items: center; 
+  cursor: move; 
+  height: 40px; 
+  border: none !important;
+}
+.calculator-iframe { width: 100%; height: calc(100% - 40px); border: none; background-color: white; }
+.close-calculator { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 4px; }
+
+#openCalculatorBtn { 
+  background-color: var(--primary-color); 
+  color: white; 
+  transition: background-color 0.2s; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+#openCalculatorBtn:hover { background-color: var(--primary-color-darker); }
+#calculatorModal { pointer-events: none !important; }
+#calculatorContainer { pointer-events: auto !important; }
+
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.blink { animation: blink 1s linear infinite; }
+
+.kanban-card:not(.cursor-not-allowed):hover { 
+  border-color: var(--primary-color) !important; 
+  box-shadow: 0 4px 12px rgba(255, 53, 90, 0.15) !important; 
+  transform: translateY(-1px); 
+  transition: all 0.2s ease-in-out; 
+}
+.table-list-item:not(.cursor-not-allowed):hover { 
+  background-color: rgba(255, 53, 90, 0.05) !important; 
+  border-left: 3px solid var(--primary-color) !important; 
+  transition: all 0.2s ease-in-out; 
+}
+
+.toggle-switch { 
+  display: inline-block; 
+  position: relative; 
+  width: 40px; 
+  height: 24px; 
+  background: #fff; 
+  border: 1.5px solid #e5e7eb; 
+  border-radius: 9999px; 
+  transition: background 0.2s; 
+}
+.toggle-switch.active { background: var(--primary-color); border-color: var(--primary-color); }
+.toggle-slider { 
+  position: absolute; 
+  top: -1px; 
+  left: -1px; 
+  width: 24px; 
+  height: 24px; 
+  background: #e5e7eb; 
+  border-radius: 50%; 
+  transition: transform 0.2s, background 0.2s; 
+  box-shadow: 0 1px 4px 0 rgba(0,0,0,0.08); 
+}
+.toggle-switch.active .toggle-slider { background: #fff; transform: translateX(16px); }
+
+.kanban-card .p-2.flex.items-center.justify-between.border-t, 
+.kanban-card .p-2.flex.items-center.justify-center.border-t { 
+  min-height: 38px !important; 
+  max-height: 38px !important; 
+  padding-top: 8px !important; 
+  padding-bottom: 8px !important; 
+  height: 38px !important; 
+  box-sizing: border-box !important; 
+  overflow: hidden !important; 
+  border: none !important;
+}
+.kanban-card .p-2.flex.items-center.justify-between.border-t *, 
+.kanban-card .p-2.flex.items-center.justify-center.border-t * { 
+  font-size: 12px !important; 
+  line-height: 1.2 !important; 
+}
+
+.toggle-container { 
+  background-color: #f3f4f6; 
+  padding: 8px 12px; 
+  border-radius: 8px; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+#list-view { 
+  position: relative !important; 
+  left: 0 !important; 
+  right: 0 !important; 
+  width: 100% !important; 
+  margin-left: 0 !important; 
+  margin-right: 0 !important; 
+  transform: none !important; 
+  padding: 0 !important; 
+  box-sizing: border-box !important; 
+}
+#list-view > div { 
+  width: 100% !important; 
+  margin-left: 0 !important; 
+  margin-right: 0 !important; 
+  position: relative !important; 
+  left: 0 !important; 
+  right: 0 !important; 
+  padding: 1rem !important; 
+  box-sizing: border-box !important; 
+}
+#list-view table { 
+  width: 100% !important; 
+  table-layout: fixed !important; 
+  margin: 0 !important; 
+  padding: 0 !important; 
+}
+#list-view th, #list-view td { box-sizing: border-box !important; }
+#list-view th:nth-child(1), #list-view td:nth-child(1) { width: 15% !important; }
+#list-view th:nth-child(2), #list-view td:nth-child(2) { width: 20% !important; }
+#list-view th:nth-child(3), #list-view td:nth-child(3) { width: 20% !important; }
+#list-view th:nth-child(4), #list-view td:nth-child(4) { width: 20% !important; }
+#list-view th:nth-child(5), #list-view td:nth-child(5) { width: 15% !important; }
+#list-view th:nth-child(6), #list-view td:nth-child(6) { width: 10% !important; text-align: center !important; }
+
+#settings-btn {
+  position: relative !important;
+  z-index: 100 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  margin-right: 12px !important;
+}
+
+#settings-btn svg {
+  position: relative !important;
+  z-index: 101 !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Removendo contornos pretos dos modais */
+.modal-panel,
+.modal-panel *,
+.calculator-modal,
+.calculator-header {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Melhorando o background dos modais */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Estilos modernos para tooltips */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Modern Kanban Board Styles */
+.kanban-board {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: calc(100vh - 120px);
+}
+
+.kanban-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+  backdrop-filter: blur(10px);
+}
+
+.kanban-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: #cbd5e1;
+}
+
+/* Modern Scrollbar */
+.scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Phase Column Animations - Mais discreto */
+.kanban-board .flex-shrink-0 {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Card Hover Effects - Moderno e elegante */
+.kanban-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kanban-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: #d1d5db;
+}
+
+.kanban-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.kanban-card:hover::before {
+  left: 100%;
+}
+
+/* Modern Phase Headers */
+.phase-title {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.5px;
+}
+
+/* Card Count Badge */
+.card-count {
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Animações para a tela de login */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes tilt {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1deg); }
+  75% { transform: rotate(-1deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-tilt {
+  animation: tilt 10s ease-in-out infinite;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .animate-float,
+  .animate-float-delayed,
+  .animate-float-gentle {
+    animation-duration: 8s;
+  }
+  
+  .animate-tilt {
+    animation-duration: 15s;
+  }
 }
