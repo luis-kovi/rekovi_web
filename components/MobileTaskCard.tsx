@@ -50,7 +50,7 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
       'Tentativa 3 de Recolha': 'M13 10V3L4 14h7v7l9-11h-7z',
       'Desbloquear Veículo': 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
       'Solicitar Guincho': 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-      'Dificuldade na Recolha': 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z',
+
       'Nova tentativa de recolha': 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15',
       'Confirmação de Entrega no Pátio': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
     }
@@ -149,10 +149,7 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={() => {
-          console.log('MobileTaskCard: Card clicked, card ID:', card.id)
-          onCardPress()
-        }}
+        onClick={onCardPress}
       >
         {/* Header do card */}
         <div className="px-4 py-3 border-b border-gray-100">

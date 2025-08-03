@@ -748,15 +748,61 @@ body > div[style*="blur"] {
 .mobile-modal-backdrop {
   z-index: 9998 !important;
   pointer-events: auto !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
 }
 
 .mobile-modal-content {
   z-index: 9999 !important;
   pointer-events: auto !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  max-height: 90vh !important;
 }
 
 /* Garantir que modais não sejam afetados por outros elementos */
 .fixed.inset-0.z-\[9999\] {
   z-index: 9999 !important;
   pointer-events: auto !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
+/* Garantir que o modal seja visível */
+.fade-in {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Estilos específicos para modal de teste */
+.modal-test {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+}
+
+.modal-test-content {
+  background-color: white !important;
+  width: 100% !important;
+  max-width: 500px !important;
+  border-top-left-radius: 24px !important;
+  border-top-right-radius: 24px !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
 }

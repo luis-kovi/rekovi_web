@@ -17,7 +17,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
 
   useEffect(() => {
-    console.log('MobileTaskModal: useEffect triggered, isOpen:', isOpen)
     if (isOpen) {
       setIsVisible(true)
     } else {
@@ -27,19 +26,14 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
   // Função para formatar data
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A'
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    } catch (error) {
-      return 'Data inválida'
-    }
+    const date = new Date(dateString)
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   // Função para adaptar nomes das fases para melhor legibilidade
@@ -72,65 +66,45 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
   // Função para copiar para clipboard
   const copyToClipboard = (text: string) => {
-    if (!text) return
-    try {
-      navigator.clipboard.writeText(text)
-      // Aqui você poderia adicionar um toast de confirmação
-    } catch (error) {
-      console.error('Erro ao copiar para clipboard:', error)
-    }
+    navigator.clipboard.writeText(text)
+    // Aqui você poderia adicionar um toast de confirmação
   }
 
   // Função para abrir mapa
   const openMap = (link: string) => {
     if (link) {
-      try {
-        window.open(link, '_blank')
-      } catch (error) {
-        console.error('Erro ao abrir mapa:', error)
-      }
+      window.open(link, '_blank')
     }
   }
 
   // Função para fazer ligação
   const makeCall = (phone: string) => {
     if (phone) {
-      try {
-        window.location.href = `tel:${phone.replace(/\D/g, '')}`
-      } catch (error) {
-        console.error('Erro ao fazer ligação:', error)
-      }
+      window.location.href = `tel:${phone.replace(/\D/g, '')}`
     }
   }
 
   // Função para enviar email
   const sendEmail = (email: string) => {
     if (email) {
-      try {
-        window.location.href = `mailto:${email}`
-      } catch (error) {
-        console.error('Erro ao enviar email:', error)
-      }
+      window.location.href = `mailto:${email}`
     }
   }
 
-  console.log('MobileTaskModal: Rendering modal, isVisible:', isVisible, 'isOpen:', isOpen, 'card:', card?.id)
-  
-  if (!isVisible || !isOpen || !card) return null
+  if (!isVisible || !isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] fade-in">
+    <div className="fixed inset-0 z-50 fade-in">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm mobile-modal-backdrop"
         onClick={onClose}
-        style={{ zIndex: 9998 }}
       />
       
       {/* Modal */}
       <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform transition-transform duration-300 mobile-modal-content mobile-shadow-lg ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
-      }`} style={{ zIndex: 9999 }}>
+      }`}>
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-12 h-1 bg-gray-300 rounded-full" />
@@ -146,8 +120,8 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                 </svg>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">{card?.placa || 'N/A'}</h2>
-                <p className="text-sm text-gray-500">{card?.nomeDriver || 'N/A'}</p>
+                <h2 className="text-lg font-bold text-gray-900">{card.placa}</h2>
+                <p className="text-sm text-gray-500">{card.nomeDriver}</p>
               </div>
             </div>
             <button
@@ -189,38 +163,27 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
         <div className="max-h-[60vh] overflow-y-auto">
           {activeTab === 'details' && (
             <div className="p-6 space-y-6">
-              {/* Status */}
-              <div className="bg-gray-50 rounded-xl p-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Status Atual</h3>
-                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getPhaseColor(card?.faseAtual || '')}`}>
-                  {adaptPhaseName(card?.faseAtual || '')}
-                </span>
-                <p className="text-xs text-gray-500 mt-1">
-                  Criado em {formatDate(card?.dataCriacao || '')}
-                </p>
-              </div>
-
               {/* Informações do veículo */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-900">Informações do veículo</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Placa</span>
-                    <span className="text-sm font-medium text-gray-900">{card?.placa || 'N/A'}</span>
+                    <span className="text-sm font-medium text-gray-900">{card.placa}</span>
                   </div>
-                  {card?.modeloVeiculo && (
+                  {card.modeloVeiculo && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Modelo</span>
                       <span className="text-sm font-medium text-gray-900">{card.modeloVeiculo}</span>
                     </div>
                   )}
-                  {card?.enderecoRecolha && (
+                  {card.enderecoRecolha && (
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm text-gray-500">Localização</span>
-                        {card?.linkMapa && (
+                        {card.linkMapa && (
                           <button
-                            onClick={() => openMap(card.linkMapa)}
+                            onClick={() => openMap(card.linkMapa!)}
                             className="text-xs text-[#FF355A] hover:underline flex items-center gap-1"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,7 +197,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       <p className="text-sm text-gray-900">{card.enderecoRecolha}</p>
                     </div>
                   )}
-                  {card?.origemLocacao && (
+                  {card.origemLocacao && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Local para entrega</span>
                       <span className="text-sm font-medium text-gray-900">{card.origemLocacao}</span>
@@ -247,40 +210,40 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-900">Informações do cliente</h3>
                 <div className="space-y-3">
-                  {card?.nomeDriver && (
+                  {card.nomeDriver && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Nome</span>
                       <span className="text-sm font-medium text-gray-900">{card.nomeDriver}</span>
                     </div>
                   )}
-                  {card?.telefoneContato && (
+                  {card.telefoneContato && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Telefone</span>
                       <button
-                        onClick={() => makeCall(card.telefoneContato)}
+                        onClick={() => makeCall(card.telefoneContato!)}
                         className="text-sm font-medium text-[#FF355A] hover:underline"
                       >
                         {card.telefoneContato}
                       </button>
                     </div>
                   )}
-                  {card?.telefoneOpcional && (
+                  {card.telefoneOpcional && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Telefone opcional</span>
                       <button
-                        onClick={() => makeCall(card.telefoneOpcional)}
+                        onClick={() => makeCall(card.telefoneOpcional!)}
                         className="text-sm font-medium text-[#FF355A] hover:underline"
                       >
                         {card.telefoneOpcional}
                       </button>
                     </div>
                   )}
-                  {card?.enderecoCadastro && (
+                  {card.enderecoCadastro && (
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm text-gray-500">Endereço de cadastro</span>
                         <button
-                          onClick={() => copyToClipboard(card.enderecoCadastro)}
+                          onClick={() => copyToClipboard(card.enderecoCadastro!)}
                           className="text-xs text-[#FF355A] hover:underline"
                         >
                           Copiar
@@ -296,7 +259,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-900">Prestador</h3>
                 <div className="space-y-3">
-                  {card?.empresaResponsavel && (
+                  {card.empresaResponsavel && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Empresa</span>
                       <span className="text-sm font-medium text-gray-900">{card.empresaResponsavel}</span>
@@ -305,7 +268,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Chofer</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {card?.chofer ? card.chofer : <em>Não há chofer alocado</em>}
+                      {card.chofer ? card.chofer : <em>Não há chofer alocado</em>}
                     </span>
                   </div>
                 </div>
@@ -314,18 +277,16 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
           )}
 
           {activeTab === 'actions' && (
-            <div className="p-6">
-              {card?.urlPublica ? (
-                <div className="space-y-4">
-                  <iframe
-                    src={card.urlPublica}
-                    className="w-full h-[600px] border-0 rounded-lg"
-                    title="Pipefy Card"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                  />
-                </div>
+            <div className="h-full">
+              {card.urlPublica ? (
+                <iframe
+                  src={card.urlPublica}
+                  className="w-full h-full border-0"
+                  title="Pipefy Card"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                />
               ) : (
-                <div className="space-y-3">
+                <div className="p-6 space-y-3">
                   <div className="bg-yellow-50 rounded-xl p-4 text-center">
                     <svg className="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -347,7 +308,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                   <div className="w-2 h-2 bg-[#FF355A] rounded-full mt-2" />
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">Tarefa criada</p>
-                    <p className="text-xs text-gray-500">{formatDate(card?.dataCriacao || '')}</p>
+                    <p className="text-xs text-gray-500">{formatDate(card.dataCriacao)}</p>
                   </div>
                 </div>
                 
@@ -366,7 +327,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
         {/* Footer */}
         <div className="p-6 border-t border-gray-200">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">ID: {card?.id || 'N/A'}</span>
+            <span className="text-xs text-gray-500">ID: {card.id}</span>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
