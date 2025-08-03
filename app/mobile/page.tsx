@@ -18,6 +18,11 @@ export default async function MobilePage() {
 
   const permissionType = user.app_metadata?.permissionType?.toLowerCase() || 'default';
   
+  // Verificar se o usuário está cadastrado
+  if (!permissionType || permissionType === 'default') {
+    return redirect('/?error=unauthorized')
+  }
+  
   let query = supabase.from('v_pipefy_cards_detalhada').select(`
     card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
     phase_name, created_at, email_chofer, empresa_recolha,
@@ -57,26 +62,26 @@ export default async function MobilePage() {
   }
   
   const initialCards: Card[] = (cardsData || []).map(card => ({
-    id: card.card_id,
-    placa: card.placa_veiculo,
-    nomeDriver: card.nome_driver,
-    chofer: card.nome_chofer_recolha,
-    faseAtual: card.phase_name,
-    dataCriacao: card.created_at,
-    emailChofer: card.email_chofer,
-    empresaResponsavel: card.empresa_recolha,
-    modeloVeiculo: card.modelo_veiculo,
-    telefoneContato: card.telefone_contato,
-    telefoneOpcional: card.telefone_opcional,
-    emailCliente: card.email_cliente,
-    enderecoCadastro: card.endereco_cadastro,
-    enderecoRecolha: card.endereco_recolha,
-    linkMapa: card.link_mapa,
-    origemLocacao: card.origem_locacao,
-    valorRecolha: card.valor_recolha,
-    custoKmAdicional: card.custo_km_adicional,
-    urlPublica: card.public_url,
-  }));
+    id: card.card_id || '',
+    placa: card.placa_veiculo || '',
+    nomeDriver: card.nome_driver || '',
+    chofer: card.nome_chofer_recolha || '',
+    faseAtual: card.phase_name || '',
+    dataCriacao: card.created_at || '',
+    emailChofer: card.email_chofer || '',
+    empresaResponsavel: card.empresa_recolha || '',
+    modeloVeiculo: card.modelo_veiculo || '',
+    telefoneContato: card.telefone_contato || '',
+    telefoneOpcional: card.telefone_opcional || '',
+    emailCliente: card.email_cliente || '',
+    enderecoCadastro: card.endereco_cadastro || '',
+    enderecoRecolha: card.endereco_recolha || '',
+    linkMapa: card.link_mapa || '',
+    origemLocacao: card.origem_locacao || '',
+    valorRecolha: card.valor_recolha || '',
+    custoKmAdicional: card.custo_km_adicional || '',
+    urlPublica: card.public_url || '',
+  })).filter(card => card.id && card.placa); // Filtrar apenas cards válidos
 
         return (
         <div className="app-mobile flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">

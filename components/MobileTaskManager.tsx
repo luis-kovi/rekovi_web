@@ -12,9 +12,9 @@ interface MobileTaskManagerProps {
   permissionType: string
 }
 
-export default function MobileTaskManager({ initialCards, permissionType }: MobileTaskManagerProps) {
-  const [cards, setCards] = useState<Card[]>(initialCards)
-  const [filteredCards, setFilteredCards] = useState<Card[]>(initialCards)
+export default function MobileTaskManager({ initialCards = [], permissionType }: MobileTaskManagerProps) {
+  const [cards, setCards] = useState<Card[]>(initialCards || [])
+  const [filteredCards, setFilteredCards] = useState<Card[]>(initialCards || [])
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -78,32 +78,38 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
 
   // Filtrar e ordenar cards
   useEffect(() => {
-    let filtered = cards
+    // Garantir que cards seja um array válido
+    if (!cards || !Array.isArray(cards)) {
+      setFilteredCards([])
+      return
+    }
+
+    let filtered = [...cards]
 
     // Filtro por busca
     if (searchTerm) {
       filtered = filtered.filter(card => 
-        card.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.nomeDriver.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.chofer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.faseAtual.toLowerCase().includes(searchTerm.toLowerCase())
+        card?.placa?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card?.nomeDriver?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card?.chofer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card?.faseAtual?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     // Filtro por fase
     if (selectedPhase !== 'all') {
-      filtered = filtered.filter(card => card.faseAtual === selectedPhase)
+      filtered = filtered.filter(card => card?.faseAtual === selectedPhase)
     }
 
     // Ordenação
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date':
-          return new Date(b.dataCriacao).getTime() - new Date(a.dataCriacao).getTime()
+          return new Date(b?.dataCriacao || 0).getTime() - new Date(a?.dataCriacao || 0).getTime()
         case 'priority':
-          return getPriority(a.faseAtual) - getPriority(b.faseAtual)
+          return getPriority(a?.faseAtual || '') - getPriority(b?.faseAtual || '')
         case 'phase':
-          return a.faseAtual.localeCompare(b.faseAtual)
+          return (a?.faseAtual || '').localeCompare(b?.faseAtual || '')
         default:
           return 0
       }
@@ -220,7 +226,7 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
           </select>
 
           <div className="flex items-center gap-1 text-xs text-gray-500">
-            <span>{filteredCards.length}</span>
+            <span>{filteredCards?.length || 0}</span>
             <span>tarefas</span>
           </div>
         </div>
@@ -248,7 +254,7 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
         onTouchEnd={handleTouchEnd}
       >
         <div className="px-4 py-2 space-y-3">
-          {filteredCards.length === 0 ? (
+          {(!filteredCards || filteredCards.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-12 text-gray-500">
               <svg className="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -257,35 +263,41 @@ export default function MobileTaskManager({ initialCards, permissionType }: Mobi
               <p className="text-sm">Tente ajustar os filtros de pesquisa</p>
             </div>
           ) : (
-            filteredCards.map((card) => (
+            filteredCards?.map((card) => card ? (
               <MobileTaskCard
                 key={card.id}
                 card={card}
                 phaseColor={getPhaseColor(card.faseAtual)}
                 adaptedPhaseName={adaptPhaseName(card.faseAtual)}
                 onCardPress={() => {
+                  console.log('MobileTaskManager: Card pressed, opening modal for card:', card.id)
                   setSelectedCard(card)
                   setIsModalOpen(true)
                 }}
                 onSwipe={handleCardSwipe}
               />
-            ))
+            ) : null)
           )}
         </div>
       </div>
 
       {/* Modal de Detalhes */}
+      {console.log('MobileTaskManager: Modal condition check - selectedCard:', selectedCard?.id, 'isModalOpen:', isModalOpen)}
       {selectedCard && isModalOpen && (
-        <MobileTaskModal
-          card={selectedCard}
-          isOpen={isModalOpen}
-          onClose={() => {
-            setIsModalOpen(false)
-            setSelectedCard(null)
-          }}
-          permissionType={permissionType}
-          initialTab={initialModalTab}
-        />
+        <>
+          {console.log('MobileTaskManager: Rendering modal with card:', selectedCard.id, 'isModalOpen:', isModalOpen)}
+          <MobileTaskModal
+            card={selectedCard}
+            isOpen={isModalOpen}
+            onClose={() => {
+              console.log('MobileTaskManager: Closing modal')
+              setIsModalOpen(false)
+              setSelectedCard(null)
+            }}
+            permissionType={permissionType}
+            initialTab={initialModalTab}
+          />
+        </>
       )}
 
       {/* Painel de Filtros */}

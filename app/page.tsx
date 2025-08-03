@@ -8,6 +8,16 @@ export default function LoginPage() {
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [errorMessage, setErrorMessage] = useState('')
+  
+  // Verificar se há erro na URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const error = urlParams.get('error')
+    if (error === 'unauthorized') {
+      setErrorMessage('Usuário não cadastrado. Entre em contato com o administrador do sistema.')
+    }
+  }, [])
 
   // Rastrear posição do mouse para efeito parallax
   useEffect(() => {
@@ -136,6 +146,20 @@ export default function LoginPage() {
                   Acesse sua conta para continuar
                 </p>
               </div>
+
+              {/* Mensagem de Erro */}
+              {errorMessage && (
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-red-200 text-sm font-medium">
+                      {errorMessage}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Botão de login */}
               <button 

@@ -18,6 +18,11 @@ export default async function KanbanPage() {
 
   const permissionType = user.app_metadata?.permissionType?.toLowerCase() || 'default';
   
+  // Verificar se o usuário está cadastrado
+  if (!permissionType || permissionType === 'default') {
+    return redirect('/?error=unauthorized')
+  }
+  
           let query = supabase.from('v_pipefy_cards_detalhada').select(`
           card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
           phase_name, created_at, email_chofer, empresa_recolha,

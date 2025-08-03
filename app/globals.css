@@ -738,3 +738,25 @@ body > div[style*="blur"] {
 .user-menu > div {
   z-index: 999999 !important;
 }
+
+.dropdown-menu {
+  z-index: 99999999 !important;
+  position: relative !important;
+}
+
+/* Garantir que modais móveis funcionem corretamente */
+.mobile-modal-backdrop {
+  z-index: 9998 !important;
+  pointer-events: auto !important;
+}
+
+.mobile-modal-content {
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}
+
+/* Garantir que modais não sejam afetados por outros elementos */
+.fixed.inset-0.z-\[9999\] {
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+}

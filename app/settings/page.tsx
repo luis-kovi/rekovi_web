@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [pagination, setPagination] = useState<PaginationInfo>({
-    currentPage: 1,
+    currentPage: 0, // Inicializar com 0 para evitar carregamento prematuro
     totalPages: 1,
     totalUsers: 0,
     usersPerPage: 10
@@ -49,12 +49,15 @@ export default function SettingsPage() {
     checkAuthAndLoadUsers()
   }, [])
 
+  // Debug: Log quando o componente renderiza
+  console.log('Settings: Component rendering, loading state:', loading)
+
   useEffect(() => {
-    console.log('Settings: loadUsers effect triggered - currentPage:', pagination.currentPage, 'searchTerm:', searchTerm)
-    if (pagination.currentPage > 0) { // Só carregar se já tiver sido inicializado
+    console.log('Settings: loadUsers effect triggered - currentPage:', pagination.currentPage, 'searchTerm:', searchTerm, 'loading:', loading)
+    if (pagination.currentPage > 0 && !loading) { // Só carregar se já tiver sido inicializado e não estiver carregando
       loadUsers()
     }
-  }, [pagination.currentPage, searchTerm])
+  }, [pagination.currentPage, searchTerm]) // Remover loading das dependências para evitar loop
 
   const checkAuthAndLoadUsers = async () => {
     try {
@@ -68,23 +71,12 @@ export default function SettingsPage() {
 
       console.log('Settings: User session found:', session.user.email)
 
-      // Verificar se é admin
-      const { data: profile } = await supabase
-        .from('user_permissions')
-        .select('permission_type')
-        .eq('user_id', session.user.id)
-        .single()
+      // Verificar se é admin usando a mesma lógica da página Kanban
+      const permissionType = session.user.app_metadata?.permissionType?.toLowerCase() || 'default'
+      console.log('Settings: Permission type from app_metadata:', permissionType)
 
-      console.log('Settings: Profile data:', profile)
-
-      if (!profile?.permission_type) {
-        console.log('Settings: No permission_type found, redirecting to /kanban')
-        router.push('/kanban')
-        return
-      }
-
-      const isAdmin = profile.permission_type.toLowerCase() === 'admin' || profile.permission_type === 'Admin'
-      console.log('Settings: Permission type:', profile.permission_type, 'Is admin:', isAdmin)
+      const isAdmin = permissionType === 'admin'
+      console.log('Settings: Is admin:', isAdmin)
 
       if (!isAdmin) {
         console.log('Settings: Not admin, redirecting to /kanban')
@@ -92,7 +84,8 @@ export default function SettingsPage() {
         return
       }
 
-      console.log('Settings: Admin verified, loading users')
+      console.log('Settings: Admin verified, setting initial page and loading users')
+      setPagination(prev => ({ ...prev, currentPage: 1 }))
       await loadUsers()
     } catch (error) {
       console.error('Erro na autenticação:', error)
@@ -102,6 +95,13 @@ export default function SettingsPage() {
 
   const loadUsers = async () => {
     try {
+      // Verificar se a página atual é válida
+      if (pagination.currentPage <= 0) {
+        console.log('Settings: Skipping loadUsers - invalid page:', pagination.currentPage)
+        return
+      }
+
+      console.log('Settings: Loading users for page:', pagination.currentPage)
       setLoading(true)
       
       const { data, error } = await supabase.functions.invoke('get-users', {

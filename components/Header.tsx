@@ -73,7 +73,7 @@ export default function Header({ user, permissionType }: HeaderProps) {
   }
 
      return (
-     <header className="relative bg-gradient-to-r from-[#FF355A] via-[#E02E4D] to-[#D6254A] text-white flex-shrink-0 shadow-lg border-b border-white/10 backdrop-blur-sm" style={{overflow: 'visible'}}>
+     <header className="relative bg-gradient-to-r from-[#FF355A] via-[#E02E4D] to-[#D6254A] text-white flex-shrink-0 shadow-lg border-b border-white/10 backdrop-blur-sm" style={{overflow: 'visible', zIndex: 1000}}>
       {/* Efeito de brilho sutil */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-30"></div>
       
@@ -110,7 +110,7 @@ export default function Header({ user, permissionType }: HeaderProps) {
           </Link>
 
                      {/* Menu do Usuário */}
-                       <div className="relative user-menu" style={{zIndex: 999999}}>
+                       <div className="relative user-menu" style={{zIndex: 99999999}}>
                                                    <button
                 onClick={() => {
                   console.log('Menu clicked, current state:', isMenuOpen)
@@ -140,8 +140,8 @@ export default function Header({ user, permissionType }: HeaderProps) {
                                                                              {/* Menu Dropdown */}
               {isMenuOpen && (
                                  <div 
-                   className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2"
-                   style={{ zIndex: 999999 }}
+                   className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 dropdown-menu"
+                   style={{ zIndex: 99999999 }}
                  >
                                     {/* Configurações - só visível para admins */}
                    {isAdmin && (

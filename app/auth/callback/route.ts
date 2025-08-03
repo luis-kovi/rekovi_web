@@ -6,7 +6,6 @@ import { cookies } from 'next/headers' // Importamos diretamente de 'next/header
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/kanban'
 
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
   const protocol = request.headers.get('x-forwarded-proto') || 'http'
@@ -29,7 +28,28 @@ export async function GET(request: NextRequest) {
     )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // Verificar se o usuário está cadastrado
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (user) {
+        // Verificar se o usuário tem permissão cadastrada
+        const permissionType = user.app_metadata?.permissionType?.toLowerCase()
+        
+        if (!permissionType || permissionType === 'default') {
+          // Usuário não cadastrado - redirecionar para login com mensagem
+          return NextResponse.redirect(`${origin}/?error=unauthorized`)
+        }
+        
+        // Usuário válido - verificar dispositivo e redirecionar adequadamente
+        const userAgent = request.headers.get('user-agent') || ''
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
+        
+        if (isMobile) {
+          return NextResponse.redirect(`${origin}/mobile`)
+        } else {
+          return NextResponse.redirect(`${origin}/kanban`)
+        }
+      }
     }
   }
 

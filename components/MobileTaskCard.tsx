@@ -149,7 +149,10 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={onCardPress}
+        onClick={() => {
+          console.log('MobileTaskCard: Card clicked, card ID:', card.id)
+          onCardPress()
+        }}
       >
         {/* Header do card */}
         <div className="px-4 py-3 border-b border-gray-100">
