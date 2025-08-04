@@ -43,4 +43,6 @@ export const config = {
     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
+  // Forçar execução no Node.js runtime em vez do Edge Runtime
+  runtime: 'nodejs'
 }
