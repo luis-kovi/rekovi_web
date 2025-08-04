@@ -1037,3 +1037,51 @@ body > div[style*="blur"] {
     min-width: auto !important;
   }
 }
+
+/* REGRAS ESPECÍFICAS PARA O DROPDOWN DO HEADER */
+/* Garantir que o dropdown do header tenha prioridade máxima */
+header .relative {
+  position: relative !important;
+  z-index: 99999 !important;
+}
+
+header .relative > div[class*="fixed"] {
+  z-index: 99999 !important;
+  position: fixed !important;
+}
+
+/* Garantir que o overlay do dropdown não interfira com outros elementos */
+header .fixed.inset-0 {
+  z-index: 99998 !important;
+}
+
+/* Garantir que o dropdown apareça acima de todos os outros elementos */
+header .relative button + div[class*="fixed"] {
+  z-index: 99999 !important;
+  position: fixed !important;
+  top: 80px !important;
+  right: 24px !important;
+  width: 192px !important;
+}
+
+/* Garantir que outros elementos não sobreponham o dropdown */
+body > *:not(header) {
+  z-index: auto !important;
+}
+
+/* Garantir que a barra de busca e outros elementos não sobreponham o dropdown */
+input[placeholder*="Procurar"],
+button[class*="bg-red"],
+div[class*="bg-red"] {
+  z-index: auto !important;
+  position: relative !important;
+}
+
+/* Garantir que o dropdown seja sempre visível */
+header .relative > div[style*="z-index"] {
+  z-index: 99999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
