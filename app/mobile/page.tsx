@@ -8,7 +8,7 @@ import type { Card } from '@/types'
 export const dynamic = 'force-dynamic'
 
 export default async function MobilePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
@@ -83,12 +83,10 @@ export default async function MobilePage() {
     urlPublica: card.public_url || '',
   })).filter(card => card.id && card.placa); // Filtrar apenas cards válidos
 
-
-
-        return (
-        <div className="app-mobile flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-          <MobileHeader user={user} permissionType={permissionType} />
-          <MobileTaskManager initialCards={initialCards} permissionType={permissionType} />
-        </div>
-      )
+  return (
+    <div className="app-mobile flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+      <MobileHeader user={user} permissionType={permissionType} />
+      <MobileTaskManager initialCards={initialCards} permissionType={permissionType} />
+    </div>
+  )
 } 
