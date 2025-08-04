@@ -1,25 +1,43 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuração para desabilitar pré-renderizado
+  // Configuração para melhor performance
   experimental: {
-    // Desabilitar pré-renderizado estático
-    staticPageGenerationTimeout: 0
+    // Manter configurações experimentais seguras
+    optimizePackageImports: ['@supabase/ssr']
   },
-  // Forçar renderização dinâmica
+  // Configuração de saída
   output: 'standalone',
-  // Desabilitar geração estática
+  // Configuração de trailing slash
   trailingSlash: false,
-  // Configurar para sempre renderizar dinamicamente
-  generateStaticParams: async () => {
-    return []
-  },
-  // Desabilitar verificação de tipos durante o build
+  // Habilitar verificação de tipos durante o build (recomendado)
   typescript: {
-    ignoreBuildErrors: true
+    ignoreBuildErrors: false
   },
-  // Desabilitar ESLint durante o build
+  // Habilitar ESLint durante o build (recomendado)
   eslint: {
-    ignoreDuringBuilds: true
+    ignoreDuringBuilds: false
+  },
+  // Configurações de segurança
+  headers: async () => {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          }
+        ]
+      }
+    ]
   }
 }
 

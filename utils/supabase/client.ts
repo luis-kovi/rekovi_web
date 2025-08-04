@@ -10,26 +10,18 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Debug para verificar as variáveis
-  console.log('Debug - Supabase URL:', supabaseUrl)
-  console.log('Debug - Supabase Key:', supabaseKey ? 'Presente' : 'Ausente')
-
-  // Se as variáveis não estiverem disponíveis, tentar usar valores padrão
+  // Se as variáveis não estiverem disponíveis, lançar erro
   if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase environment variables')
-    console.error('URL:', supabaseUrl)
-    console.error('Key:', supabaseKey ? 'Presente' : 'Ausente')
-    
-    // Retornar null para evitar erros
-    return null as any
+    throw new Error(
+      'Supabase environment variables are missing. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+    )
   }
 
   try {
     const client = createBrowserClient(supabaseUrl, supabaseKey)
-    console.log('Supabase client created successfully')
     return client
   } catch (error) {
     console.error('Error creating Supabase client:', error)
-    return null as any
+    throw new Error('Failed to create Supabase client. Please check your configuration.')
   }
 }

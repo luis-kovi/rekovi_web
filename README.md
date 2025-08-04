@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Prod Recolha v2
 
-## Getting Started
+Aplicação de gerenciamento de tarefas com autenticação segura.
 
-First, run the development server:
+## 🔒 Correções de Segurança Implementadas
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1. Middleware de Autenticação
+- ✅ Implementado middleware que verifica sessões do usuário
+- ✅ Proteção de rotas sensíveis (`/kanban`, `/settings`)
+- ✅ Redirecionamento automático para login quando não autenticado
+- ✅ Prevenção de acesso a páginas de auth quando já logado
+
+### 2. Tratamento de Erros Melhorado
+- ✅ Cliente Supabase agora lança erros em vez de retornar `null`
+- ✅ Mensagens de erro mais descritivas
+- ✅ Remoção de logs de debug desnecessários
+
+### 3. Configuração de Build Segura
+- ✅ Habilitada verificação de TypeScript durante build
+- ✅ Habilitado ESLint durante build
+- ✅ Adicionados headers de segurança
+- ✅ Removidas configurações que ocultavam problemas
+
+## 🚀 Como Executar
+
+### Pré-requisitos
+- Node.js 18+
+- Conta no Supabase
+
+### Variáveis de Ambiente
+Crie um arquivo `.env.local` na raiz do projeto:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=sua_url_do_supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Instalação
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Desenvolvimento
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Build para Produção
+```bash
+npm run build
+```
 
-## Learn More
+## 🔐 Autenticação
 
-To learn more about Next.js, take a look at the following resources:
+A aplicação agora possui um sistema de autenticação completo:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Login**: `/auth/signin`
+- **Registro**: `/auth/signup`
+- **Logout**: Botão disponível nas páginas protegidas
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Rotas Protegidas
+- `/kanban` - Quadro Kanban
+- `/settings` - Configurações
 
-## Deploy on Vercel
+### Rotas Públicas
+- `/` - Página inicial
+- `/auth/*` - Páginas de autenticação
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🛡️ Melhorias de Segurança
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Middleware de Autenticação**: Verifica sessões em todas as rotas protegidas
+2. **Headers de Segurança**: Implementados no `next.config.ts`
+3. **Tratamento de Erros**: Melhorado para evitar falhas silenciosas
+4. **Validação de Variáveis**: Verificação adequada de variáveis de ambiente
+
+## 📝 Notas Importantes
+
+- Certifique-se de configurar as variáveis de ambiente do Supabase
+- O middleware agora protege adequadamente as rotas sensíveis
+- Os erros são tratados de forma mais robusta
+- A configuração de build foi otimizada para segurança
+
+## 🚨 Antes do Deploy
+
+1. Configure as variáveis de ambiente no Vercel
+2. Verifique se o Supabase está configurado corretamente
+3. Teste o fluxo de autenticação localmente
+4. Execute `npm run build` para verificar se não há erros
