@@ -9,6 +9,7 @@ export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
@@ -37,6 +38,36 @@ export default function SignIn() {
       setError('Erro ao fazer login. Tente novamente.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSignInWithGoogle = async () => {
+    setGoogleLoading(true)
+    setError('')
+
+    try {
+      const supabase = createClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/kanban`,
+          queryParams: {
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        setError(error.message)
+        setGoogleLoading(false)
+      }
+    } catch (err) {
+      setError('Erro ao fazer login com Google. Tente novamente.')
+      setGoogleLoading(false)
     }
   }
 
@@ -78,6 +109,41 @@ export default function SignIn() {
             <h2 className="text-2xl font-bold text-gray-900">
               Entrar na sua conta
             </h2>
+          </div>
+
+          {/* Botão Google */}
+          <div className="mb-6">
+            <button
+              onClick={handleSignInWithGoogle}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-sm"
+            >
+              {googleLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+                  Conectando...
+                </div>
+              ) : (
+                <>
+                  <img 
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+                    alt="Google" 
+                    className="h-5 w-5" 
+                  />
+                  <span>Entrar com Google</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Divisor */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">ou</span>
+            </div>
           </div>
 
           {/* Formulário */}

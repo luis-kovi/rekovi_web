@@ -58,6 +58,18 @@ export async function middleware(request: NextRequest) {
   // Verificar se o usuário está autenticado
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Redirecionar rota raiz (/) para /auth/signin se não autenticado
+  if (request.nextUrl.pathname === '/' && !user) {
+    const redirectUrl = new URL('/auth/signin', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Se o usuário estiver autenticado e acessar a rota raiz, redirecionar para /kanban
+  if (request.nextUrl.pathname === '/' && user) {
+    const redirectUrl = new URL('/kanban', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
+
   // Rotas que requerem autenticação
   const protectedRoutes = ['/kanban', '/settings']
   const isProtectedRoute = protectedRoutes.some(route => 
