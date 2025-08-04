@@ -26,4 +26,9 @@ node_modules/
 # Arquivos de build local
 .next/
 out/
-dist/ 
+dist/
+
+# Arquivos que podem causar problemas de build
+*.log
+*.tmp
+*.temp 
