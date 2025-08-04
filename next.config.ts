@@ -1,12 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuração simplificada para produção
+  // Configuração para desabilitar pré-renderizado
   experimental: {
     // Desabilitar pré-renderizado estático
     staticPageGenerationTimeout: 0
   },
   // Forçar renderização dinâmica
-  output: 'standalone'
+  output: 'standalone',
+  // Desabilitar geração estática
+  trailingSlash: false,
+  // Configurar para sempre renderizar dinamicamente
+  generateStaticParams: async () => {
+    return []
+  }
 }
 
 export default nextConfig
