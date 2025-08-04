@@ -9,6 +9,12 @@ export const dynamic = 'force-dynamic'
 
 export default async function KanbanPage() {
   const supabase = await createClient()
+  
+  if (!supabase) {
+    console.error('Supabase client not available')
+    return redirect('/')
+  }
+
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
