@@ -141,7 +141,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'details' | 'actions' | 'history')}
               className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id 
                   ? 'text-[#FF355A] border-b-2 border-[#FF355A]' 
