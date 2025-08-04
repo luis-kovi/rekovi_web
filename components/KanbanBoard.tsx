@@ -339,7 +339,7 @@ export default function KanbanBoard({ initialCards, permissionType }: KanbanBoar
                         return (
                           <tr 
                             key={card.id} 
-                            className={`border-b border-gray-100/30 hover:bg-gradient-to-r hover:from-[#FF355A]/5 hover:to-transparent cursor-pointer transition-all duration-200 group ${
+                            className={`border-b border-gray-100/30 hover:bg-[#FF355A]/5 cursor-pointer transition-all duration-200 group ${
                               index % 2 === 0 ? 'bg-white/30' : 'bg-gray-50/30'
                             }`}
                             onClick={() => setSelectedCard(card)}
