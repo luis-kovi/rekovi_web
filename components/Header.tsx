@@ -93,12 +93,6 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
           width: '192px'
         }}
       >
-        <div className="px-4 py-3 border-b border-gray-100">
-          <p className="text-sm font-medium text-gray-900">{userName}</p>
-          <p className="text-xs text-gray-500">{userEmail}</p>
-          <p className="text-xs text-[#FF355A] font-medium mt-1">{permissionType?.toUpperCase()}</p>
-        </div>
-        
         <div className="py-1">
           {permissionType?.toLowerCase() === 'admin' && (
             <button
@@ -131,15 +125,15 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
   }
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-2 shadow-sm relative">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-1.5 shadow-sm relative">
       <div className="flex items-center justify-between">
         {/* Logo - Lado esquerdo */}
         <div className="flex items-center">
           <div className="transform hover:scale-105 transition-transform duration-300">
             <img 
-              src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
+              src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
               alt="Logo Kovi" 
-              className="h-16 w-auto" 
+              className="h-20 w-auto" 
             />
           </div>
         </div>

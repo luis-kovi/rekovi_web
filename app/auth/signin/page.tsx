@@ -97,7 +97,7 @@ export default function SignIn() {
           <div className="flex flex-col items-center mb-6">
             <div className="mb-4 transform hover:scale-105 transition-transform duration-300">
               <img 
-                src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
+                src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
                 alt="Logo Kovi" 
                 className="h-48 w-auto" 
               />
