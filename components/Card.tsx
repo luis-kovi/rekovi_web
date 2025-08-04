@@ -84,4 +84,4 @@ export default function Card({ card }: CardProps) {
       </div>
     </div>
   );
-}
+}     
