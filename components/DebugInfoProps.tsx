@@ -1,7 +1,9 @@
 'use client'
 
+import { Card } from '@/types'
+
 interface DebugInfoProps {
-  cards: any[];
+  cards: Card[];
   permissionType?: string;
   userEmail?: string;
 }
