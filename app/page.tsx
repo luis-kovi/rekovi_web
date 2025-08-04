@@ -18,6 +18,8 @@ export default function LoginPage() {
     console.log('Debug - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
     console.log('Debug - Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Presente' : 'Ausente')
     console.log('Debug - Supabase Client:', supabase ? 'Disponível' : 'Indisponível')
+    console.log('Debug - Window location:', window.location.href)
+    console.log('Debug - Origin:', window.location.origin)
   }, [supabase])
   
   // Verificar se há erro na URL
