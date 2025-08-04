@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Lida com pedidos POST
 export async function POST(request: NextRequest) {
-  const supabase = createClient()
+  const supabase = await createClient()
   await supabase.auth.signOut()
 
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host')

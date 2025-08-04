@@ -1,14 +1,19 @@
 // app/kanban/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import Header from '@/components/Header'
-import KanbanBoard from '@/components/KanbanBoard'
+import KanbanWrapper from '@/components/KanbanWrapper'
 import type { Card } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function KanbanPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
+  
+  if (!supabase) {
+    console.error('Supabase client not available')
+    return redirect('/')
+  }
+
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
@@ -23,13 +28,13 @@ export default async function KanbanPage() {
     return redirect('/?error=unauthorized')
   }
   
-          let query = supabase.from('v_pipefy_cards_detalhada').select(`
-          card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
-          phase_name, created_at, email_chofer, empresa_recolha,
-          modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
-          endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
-          valor_recolha, custo_km_adicional, public_url
-        `).limit(100000); // Limite alto para pegar todos os 20k cards
+  let query = supabase.from('v_pipefy_cards_detalhada').select(`
+    card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
+    phase_name, created_at, email_chofer, empresa_recolha,
+    modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
+    endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
+    valor_recolha, custo_km_adicional, public_url
+  `).limit(100000); // Limite alto para pegar todos os 20k cards
 
   // Filtrar apenas cards com fases válidas diretamente na query
   const validPhases = [
@@ -64,9 +69,9 @@ export default async function KanbanPage() {
   
   // Debug para verificar as fases dos cards
   if (cardsData && cardsData.length > 0) {
-    console.log('Debug - Sample phase_names:', cardsData.slice(0, 5).map(card => card.phase_name));
-    console.log('Debug - Unique phase_names:', [...new Set(cardsData.map(card => card.phase_name))]);
-    console.log('Debug - Sample cards with phase_name:', cardsData.slice(0, 3).map(card => ({
+    console.log('Debug - Sample phase_names:', cardsData.slice(0, 5).map((card: any) => card.phase_name));
+    console.log('Debug - Unique phase_names:', [...new Set(cardsData.map((card: any) => card.phase_name))]);
+    console.log('Debug - Sample cards with phase_name:', cardsData.slice(0, 3).map((card: any) => ({
       card_id: card.card_id,
       phase_name: card.phase_name,
       placa: card.placa_veiculo
@@ -82,35 +87,33 @@ export default async function KanbanPage() {
   // Debug do filtro
   console.log('Debug - Valid phases to filter:', validPhases);
   
-  const initialCards: Card[] = (cardsData || []).map(card => ({
-          id: card.card_id,
-          placa: card.placa_veiculo,
-          nomeDriver: card.nome_driver,
-          chofer: card.nome_chofer_recolha,
-          faseAtual: card.phase_name,
-          dataCriacao: card.created_at,
-          emailChofer: card.email_chofer,
-          empresaResponsavel: card.empresa_recolha,
-          modeloVeiculo: card.modelo_veiculo,
-          telefoneContato: card.telefone_contato,
-          telefoneOpcional: card.telefone_opcional,
-          emailCliente: card.email_cliente,
-          enderecoCadastro: card.endereco_cadastro,
-          enderecoRecolha: card.endereco_recolha,
-          linkMapa: card.link_mapa,
-          origemLocacao: card.origem_locacao,
-          valorRecolha: card.valor_recolha,
-          custoKmAdicional: card.custo_km_adicional,
-          urlPublica: card.public_url,
-        }));
-
-  console.log('Debug - Total cards before filter:', cardsData?.length || 0);
-  console.log('Debug - Valid cards after filter:', initialCards.length);
+  const initialCards: Card[] = (cardsData || []).map((card: any) => ({
+    id: card.card_id,
+    placa: card.placa_veiculo,
+    nomeDriver: card.nome_driver,
+    chofer: card.nome_chofer_recolha,
+    faseAtual: card.phase_name,
+    dataCriacao: card.created_at,
+    emailChofer: card.email_chofer,
+    empresaResponsavel: card.empresa_recolha,
+    modeloVeiculo: card.modelo_veiculo,
+    telefoneContato: card.telefone_contato,
+    telefoneOpcional: card.telefone_opcional,
+    emailCliente: card.email_cliente,
+    enderecoCadastro: card.endereco_cadastro,
+    enderecoRecolha: card.endereco_recolha,
+    linkMapa: card.link_mapa,
+    origemLocacao: card.origem_locacao,
+    valorRecolha: card.valor_recolha,
+    custoKmAdicional: card.custo_km_adicional,
+    urlPublica: card.public_url,
+  })).filter((card: Card) => card.id && card.placa); // Filtrar apenas cards válidos
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
-      <Header user={user} permissionType={permissionType} />
-      <KanbanBoard initialCards={initialCards} permissionType={permissionType} />
-    </div>
+    <KanbanWrapper 
+      initialCards={initialCards} 
+      permissionType={permissionType} 
+      user={user} 
+    />
   )
 }

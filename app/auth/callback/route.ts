@@ -1,7 +1,7 @@
 // app/auth/callback/route.ts
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { cookies } from 'next/headers' // Importamos diretamente de 'next/headers'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -12,20 +12,33 @@ export async function GET(request: NextRequest) {
   const origin = `${protocol}://${host}`
 
   if (code) {
-    // A forma correta de criar o cookie store para a rota
-    const cookieStore = cookies() 
+    const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          // Passamos a referência da função diretamente
-          get: async (name) => (await cookieStore).get(name)?.value,
-          set: async (name, value, options) => (await cookieStore).set({ name, value, ...options }),
-          remove: async (name, options) => (await cookieStore).delete({ name, ...options }),
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options) {
+            try {
+              cookieStore.set({ name, value, ...options })
+            } catch (error) {
+              // O `set` pode falhar em Server Actions
+            }
+          },
+          remove(name: string, options) {
+            try {
+              cookieStore.set({ name, value: '', ...options })
+            } catch (error) {
+              // O `delete` pode falhar em Server Actions
+            }
+          },
         },
       }
     )
+    
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       // Verificar se o usuário está cadastrado

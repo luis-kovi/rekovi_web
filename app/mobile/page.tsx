@@ -1,14 +1,19 @@
 // app/mobile/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import MobileHeader from '@/components/MobileHeader'
-import MobileTaskManager from '@/components/MobileTaskManager'
+import MobileWrapper from '@/components/MobileWrapper'
 import type { Card } from '@/types'
 
 export const dynamic = 'force-dynamic'
 
 export default async function MobilePage() {
-  const supabase = createClient()
+  const supabase = await createClient()
+  
+  if (!supabase) {
+    console.error('Supabase client not available')
+    return redirect('/')
+  }
+
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
@@ -61,7 +66,7 @@ export default async function MobilePage() {
     console.error('Erro ao buscar os cards:', error);
   }
   
-  const initialCards: Card[] = (cardsData || []).map(card => ({
+  const initialCards: Card[] = (cardsData || []).map((card: any) => ({
     id: card.card_id || '',
     placa: card.placa_veiculo || '',
     nomeDriver: card.nome_driver || '',
@@ -81,14 +86,13 @@ export default async function MobilePage() {
     valorRecolha: card.valor_recolha || '',
     custoKmAdicional: card.custo_km_adicional || '',
     urlPublica: card.public_url || '',
-  })).filter(card => card.id && card.placa); // Filtrar apenas cards válidos
+  })).filter((card: Card) => card.id && card.placa); // Filtrar apenas cards válidos
 
-
-
-        return (
-        <div className="app-mobile flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-          <MobileHeader user={user} permissionType={permissionType} />
-          <MobileTaskManager initialCards={initialCards} permissionType={permissionType} />
-        </div>
-      )
+  return (
+    <MobileWrapper 
+      initialCards={initialCards} 
+      permissionType={permissionType} 
+      user={user} 
+    />
+  )
 } 

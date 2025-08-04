@@ -1,169 +1,97 @@
 // components/Header.tsx
 'use client'
 
-import Link from 'next/link'
-import { User } from '@supabase/supabase-js'
-import type { User as AppUser } from '@/types'
 import { useState, useEffect } from 'react'
+import { createClient } from '@/utils/supabase/client'
 
 interface HeaderProps {
-  user?: User
-  permissionType?: string
+  user: any
+  permissionType: string
+  isUpdating?: boolean
 }
 
-export default function Header({ user, permissionType }: HeaderProps) {
-  const isAdmin = permissionType === 'admin';
-  console.log('Header - permissionType:', permissionType, 'isAdmin:', isAdmin);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function Header({ user, permissionType, isUpdating = false }: HeaderProps) {
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const [isConnected, setIsConnected] = useState(true)
 
-  // Fechar menu quando clicar fora
-  const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target as Element;
-    if (!target.closest('.user-menu')) {
-      setIsMenuOpen(false);
-    }
-  };
-
-  // Adicionar listener para clicar fora
+  // Monitorar conectividade com Supabase
   useEffect(() => {
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+    const supabase = createClient()
+    if (!supabase) return
+
+    const channel = supabase
+      .channel('connection-status')
+      .on('system', { event: 'disconnect' }, () => {
+        setIsConnected(false)
+        console.log('Conexão perdida com Supabase')
+      })
+      .on('system', { event: 'reconnect' }, () => {
+        setIsConnected(true)
+        setLastUpdate(new Date())
+        console.log('Reconectado ao Supabase')
+      })
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
     }
-  }, [isMenuOpen]);
-  
-  // Verificação de segurança para user undefined
-  if (!user) {
-    return (
-      <header className="relative bg-gradient-to-r from-[#FF355A] via-[#E02E4D] to-[#D6254A] text-white flex-shrink-0 shadow-lg border-b border-white/10 backdrop-blur-sm" style={{overflow: 'visible'}}>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-30"></div>
-        <div className="relative flex justify-between items-center px-6 py-3">
-          <div className="flex items-center gap-4">
-            <img 
-              src="https://i.ibb.co/2pSmCRw/kovi-logo-fundo-rosa-removebg-preview.png" 
-              alt="Logo Kovi" 
-              className="h-10 w-auto" 
-            />
-            <span className="text-white opacity-50">/</span>
-            <h1 
-              className="text-lg font-bold tracking-wide" 
-              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700 }}
-            >
-              Gestão de Recolhas
-            </h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 shadow-sm">
-              <div className="h-8 w-8 rounded-lg border-2 border-white/30 shadow-sm bg-white/20 flex items-center justify-center">
-                <span className="text-white text-sm font-bold">?</span>
-              </div>
-              <div className="flex flex-col">
-                <p className="font-bold text-sm leading-tight text-white">
-                  Carregando...
-                </p>
-                <p className="text-xs opacity-80 leading-tight text-white">
-                  Aguarde...
-                </p>
-              </div>
+  }, [])
+
+  const formatLastUpdate = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  }
+
+  return (
+    <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#FF355A] to-[#E02E4D] rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Gestão de Recolhas</h1>
+              <p className="text-sm text-gray-500">Kovi - {permissionType?.toUpperCase()}</p>
             </div>
           </div>
         </div>
-      </header>
-    );
-  }
 
-     return (
-     <header className="relative bg-gradient-to-r from-[#FF355A] via-[#E02E4D] to-[#D6254A] text-white flex-shrink-0 shadow-lg border-b border-white/10 backdrop-blur-sm" style={{overflow: 'visible', zIndex: 1000}}>
-      {/* Efeito de brilho sutil */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-30"></div>
-      
-             <div className="relative flex justify-between items-center px-6 py-3">
-        {/* Logo e Título */}
         <div className="flex items-center gap-4">
-          <img 
-            src="https://i.ibb.co/2pSmCRw/kovi-logo-fundo-rosa-removebg-preview.png" 
-            alt="Logo Kovi" 
-            className="h-10 w-auto" 
-          />
-          <span className="text-white opacity-50">/</span>
-          <h1 
-            className="text-lg font-bold tracking-wide" 
-            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700 }}
-          >
-            Gestão de Recolhas
-          </h1>
-        </div>
+          {/* Status de conectividade */}
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-xs text-gray-500">
+              {isUpdating ? 'Atualizando...' : (isConnected ? 'Conectado' : 'Desconectado')}
+            </span>
+            {lastUpdate && !isUpdating && (
+              <span className="text-xs text-gray-400">
+                Última atualização: {formatLastUpdate(lastUpdate)}
+              </span>
+            )}
+            {isUpdating && (
+              <span className="text-xs text-blue-500 animate-pulse">
+                Sincronizando dados...
+              </span>
+            )}
+          </div>
 
-        {/* Área do Usuário */}
-        <div className="flex items-center gap-4">
-                     {/* Menu do Usuário */}
-                       <div className="relative user-menu" style={{zIndex: 99999999}}>
-                                                   <button
-                onClick={() => {
-                  console.log('Menu clicked, current state:', isMenuOpen)
-                  setIsMenuOpen(!isMenuOpen)
-                }}
-               className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/20 shadow-sm hover:bg-white/20 transition-all duration-200"
-             >
-              <img 
-                id="user-avatar"
-                src={user?.user_metadata?.avatar_url || "https://placehold.co/40x40/FFFFFF/FF355A?text=K"} 
-                alt="Foto do Perfil" 
-                className="h-8 w-8 rounded-lg border-2 border-white/30 shadow-sm" 
-              />
-              <div className="flex flex-col items-start">
-                <p id="user-name" className="font-bold text-sm leading-tight">
-                  {user?.user_metadata?.full_name || user?.email || 'Utilizador Kovi'}
-                </p>
-                <p id="user-email" className="text-xs opacity-80 leading-tight">
-                  {user?.email || 'A carregar...'}
-                </p>
-              </div>
-              <svg className="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-                                                                             {/* Menu Dropdown */}
-              {isMenuOpen && (
-                                 <div 
-                   className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 dropdown-menu"
-                   style={{ zIndex: 99999999 }}
-                 >
-                                    {/* Configurações - só visível para admins */}
-                   {isAdmin && (
-                     <Link 
-                       href="/settings" 
-                       className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors w-full"
-                       onClick={() => {
-                         setIsMenuOpen(false)
-                         console.log('Configurações clicked, navigating to /settings')
-                       }}
-                     >
-                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                       </svg>
-                       Configurações
-                     </Link>
-                   )}
-                   
-                                       {/* Sair */}
-                    <a 
-                      href="/auth/signout" 
-                      className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors w-full"
-                      onClick={() => {
-                        setIsMenuOpen(false)
-                        console.log('Sair clicked, signing out')
-                      }}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Sair
-                    </a>
-                </div>
-              )}
+          {/* Informações do usuário */}
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm font-medium text-gray-900">{user?.email}</p>
+              <p className="text-xs text-gray-500">{permissionType}</p>
+            </div>
+            <div className="w-8 h-8 bg-gradient-to-br from-[#FF355A] to-[#E02E4D] rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-medium">
+                {user?.email?.charAt(0).toUpperCase()}
+              </span>
+            </div>
           </div>
         </div>
       </div>
