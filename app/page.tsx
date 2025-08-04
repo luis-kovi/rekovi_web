@@ -4,6 +4,9 @@
 import { createClient } from '@/utils/supabase/client'
 import { useState, useEffect } from 'react'
 
+// Forçar renderização dinâmica para evitar pré-renderizado
+export const dynamic = 'force-dynamic'
+
 export default function LoginPage() {
   const supabase = createClient()
   const [isLoading, setIsLoading] = useState(false)
