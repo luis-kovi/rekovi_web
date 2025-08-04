@@ -13,6 +13,13 @@ export default function LoginPage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [errorMessage, setErrorMessage] = useState('')
   
+  // Debug: verificar se as variáveis de ambiente estão disponíveis
+  useEffect(() => {
+    console.log('Debug - Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('Debug - Supabase Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Presente' : 'Ausente')
+    console.log('Debug - Supabase Client:', supabase ? 'Disponível' : 'Indisponível')
+  }, [supabase])
+  
   // Verificar se há erro na URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
@@ -39,7 +46,11 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      await supabase.auth.signInWithOAuth({
+      console.log('Iniciando login com Google...')
+      console.log('Origin:', location.origin)
+      console.log('Redirect URL:', `${location.origin}/auth/callback?next=/kanban`)
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${location.origin}/auth/callback?next=/kanban`,
@@ -48,6 +59,13 @@ export default function LoginPage() {
           },
         },
       })
+      
+      if (error) {
+        console.error('Erro no login:', error)
+        setIsLoading(false)
+      } else {
+        console.log('Login iniciado com sucesso:', data)
+      }
     } catch (error) {
       console.error('Erro no login:', error)
       setIsLoading(false)
