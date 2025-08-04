@@ -8,7 +8,7 @@ import type { Card } from '@/types'
 export const dynamic = 'force-dynamic'
 
 export default async function KanbanPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
