@@ -67,7 +67,7 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
   const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-4 shadow-sm">
+    <header className="bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-2 shadow-sm">
       <div className="flex items-center justify-between">
         {/* Logo - Lado esquerdo */}
         <div className="flex items-center">
@@ -75,7 +75,7 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
             <img 
               src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
               alt="Logo Kovi" 
-              className="h-12 w-auto" 
+              className="h-16 w-auto" 
             />
           </div>
         </div>
@@ -154,9 +154,9 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
               </svg>
             </button>
 
-            {/* Dropdown menu */}
+            {/* Dropdown menu - Z-index aumentado */}
             {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[9999]">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-900">{userName}</p>
                   <p className="text-xs text-gray-500">{userEmail}</p>
@@ -193,10 +193,10 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
         </div>
       </div>
 
-      {/* Overlay para fechar dropdown */}
+      {/* Overlay para fechar dropdown - Z-index ajustado */}
       {showDropdown && (
         <div 
-          className="fixed inset-0 z-40" 
+          className="fixed inset-0 z-[9998]" 
           onClick={() => setShowDropdown(false)}
         />
       )}
