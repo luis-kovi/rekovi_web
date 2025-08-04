@@ -5,6 +5,9 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+// Forçar renderização dinâmica para evitar pré-renderizado
+export const dynamic = 'force-dynamic'
+
 interface User {
   id: string
   email: string
