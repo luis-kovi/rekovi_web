@@ -64,6 +64,12 @@ export default function SettingsPage() {
 
   const checkAuthAndLoadUsers = async () => {
     try {
+      if (!supabase) {
+        console.error('Supabase client not available')
+        router.push('/')
+        return
+      }
+
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.user) {
