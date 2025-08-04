@@ -14,12 +14,9 @@ const eslintConfig = [
   {
     rules: {
       // Desabilitar warnings que não impedem o build
-      "@typescript-eslint/no-unused-vars": "warn",
       "@next/next/no-img-element": "warn",
       "@next/next/no-page-custom-font": "warn",
-      "react-hooks/exhaustive-deps": "warn",
-      // Manter erros críticos
-      "@typescript-eslint/no-explicit-any": "error"
+      "react-hooks/exhaustive-deps": "warn"
     }
   }
 ];
