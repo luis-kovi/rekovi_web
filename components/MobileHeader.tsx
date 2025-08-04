@@ -19,11 +19,11 @@ export default function MobileHeader({ user, permissionType }: MobileHeaderProps
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[#FF355A] via-[#E02E4D] to-[#D6254A] text-white shadow-lg border-b border-white/10 backdrop-blur-sm">
         <div className="flex justify-between items-center px-4 py-3">
           <div className="flex items-center gap-3">
-            <img 
-              src="https://i.ibb.co/2pSmCRw/kovi-logo-fundo-rosa-removebg-preview.png" 
-              alt="Logo Kovi" 
-              className="h-8 w-auto" 
-            />
+                      <img 
+            src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
+            alt="Logo Kovi" 
+            className="h-8 w-auto" 
+          />
             <div className="flex flex-col">
               <h1 className="text-sm font-bold tracking-wide" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Recolhas
@@ -47,7 +47,7 @@ export default function MobileHeader({ user, permissionType }: MobileHeaderProps
         {/* Logo e Título */}
         <div className="flex items-center gap-3">
           <img 
-            src="https://i.ibb.co/2pSmCRw/kovi-logo-fundo-rosa-removebg-preview.png" 
+            src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
             alt="Logo Kovi" 
             className="h-8 w-auto" 
           />

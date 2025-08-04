@@ -223,7 +223,7 @@ export default function SettingsPage() {
         <div className="flex justify-between items-center px-6 py-4">
           <div className="flex items-center gap-4">
             <img 
-              src="https://i.ibb.co/2pSmCRw/kovi-logo-fundo-rosa-removebg-preview.png" 
+              src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
               alt="Logo Kovi" 
               className="h-10 w-auto" 
             />

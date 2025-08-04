@@ -5,14 +5,14 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
-export default function SignIn() {
+export default function SignUp() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
     setError('')
@@ -23,7 +23,7 @@ export default function SignIn() {
         throw new Error('Supabase client not available')
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
       })
@@ -31,10 +31,11 @@ export default function SignIn() {
       if (error) {
         setError(error.message)
       } else {
-        router.push('/kanban')
+        // Redirecionar para verificação de email ou login
+        router.push('/auth/signin?message=Check your email to confirm your account')
       }
     } catch (err) {
-      setError('Erro ao fazer login. Tente novamente.')
+      setError('Erro ao criar conta. Tente novamente.')
     } finally {
       setLoading(false)
     }
@@ -43,12 +44,17 @@ export default function SignIn() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Entrar na sua conta
+        <div className="flex flex-col items-center">
+          <img 
+            src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
+            alt="Logo Kovi" 
+            className="h-16 w-auto mb-6" 
+          />
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+            Criar nova conta
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSignIn}>
+        <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -92,13 +98,13 @@ export default function SignIn() {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Criando conta...' : 'Criar conta'}
             </button>
           </div>
 
           <div className="text-center">
-            <Link href="/auth/signup" className="text-indigo-600 hover:text-indigo-500">
-              Não tem uma conta? Registre-se
+            <Link href="/auth/signin" className="text-indigo-600 hover:text-indigo-500">
+              Já tem uma conta? Faça login
             </Link>
           </div>
         </form>

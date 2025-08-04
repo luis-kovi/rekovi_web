@@ -158,7 +158,7 @@ export default function LoginPage() {
                 <div className="relative">
                                      <div className="absolute inset-0 bg-gradient-to-r from-[#FF355A] to-red-600 rounded-full blur-lg opacity-50 animate-pulse"></div>
                                      <img 
-                     src="https://i.ibb.co/2pSmCRw/kovi-logo-fundo-rosa-removebg-preview.png" 
+                     src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
                      alt="Logo Kovi" 
                      className="relative h-16 w-auto animate-float-gentle" 
                    />

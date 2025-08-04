@@ -50,11 +50,11 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#FF355A] to-[#E02E4D] rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
+            <img 
+              src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
+              alt="Logo Kovi" 
+              className="h-10 w-auto" 
+            />
             <div>
               <h1 className="text-xl font-bold text-gray-900">Gestão de Recolhas</h1>
               <p className="text-sm text-gray-500">Kovi - {permissionType?.toUpperCase()}</p>
