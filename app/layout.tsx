@@ -2,6 +2,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+// Forçar renderização dinâmica em todo o app
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: "Gestão de Recolhas - Kovi",
   description: "Aplicação para gestão de recolhas Kovi",
