@@ -70,9 +70,9 @@ export default async function KanbanPage() {
   
   // Debug para verificar as fases dos cards
   if (cardsData && cardsData.length > 0) {
-    console.log('Debug - Sample phase_names:', cardsData.slice(0, 5).map(card => card.phase_name));
-    console.log('Debug - Unique phase_names:', [...new Set(cardsData.map(card => card.phase_name))]);
-    console.log('Debug - Sample cards with phase_name:', cardsData.slice(0, 3).map(card => ({
+    console.log('Debug - Sample phase_names:', cardsData.slice(0, 5).map((card: any) => card.phase_name));
+    console.log('Debug - Unique phase_names:', [...new Set(cardsData.map((card: any) => card.phase_name))]);
+    console.log('Debug - Sample cards with phase_name:', cardsData.slice(0, 3).map((card: any) => ({
       card_id: card.card_id,
       phase_name: card.phase_name,
       placa: card.placa_veiculo
@@ -88,7 +88,7 @@ export default async function KanbanPage() {
   // Debug do filtro
   console.log('Debug - Valid phases to filter:', validPhases);
   
-  const initialCards: Card[] = (cardsData || []).map(card => ({
+  const initialCards: Card[] = (cardsData || []).map((card: any) => ({
     id: card.card_id,
     placa: card.placa_veiculo,
     nomeDriver: card.nome_driver,
@@ -108,7 +108,7 @@ export default async function KanbanPage() {
     valorRecolha: card.valor_recolha,
     custoKmAdicional: card.custo_km_adicional,
     urlPublica: card.public_url,
-  })).filter(card => card.id && card.placa); // Filtrar apenas cards válidos
+  })).filter((card: Card) => card.id && card.placa); // Filtrar apenas cards válidos
 
   return (
     <div className="app-kanban flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
