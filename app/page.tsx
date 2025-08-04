@@ -32,6 +32,11 @@ export default function LoginPage() {
   }, [])
 
   const handleSignInWithGoogle = async () => {
+    if (!supabase) {
+      console.error('Supabase client not available')
+      return
+    }
+
     setIsLoading(true)
     try {
       await supabase.auth.signInWithOAuth({
