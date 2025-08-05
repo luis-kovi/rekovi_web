@@ -280,7 +280,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   };
 
   // Função para drag and drop da calculadora
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e: any) => {
     if (!calculatorRef.current) return;
     
     setIsDragging(true);
@@ -380,42 +380,59 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                          text: 'text-gray-500',
                          icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
                        }
-                     : columnColors[index % columnColors.length];
+                     : {
+                         bg: columnColors[index % columnColors.length].bg,
+                         border: columnColors[index % columnColors.length].border,
+                         header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]', // Cor padrão para todos
+                         text: columnColors[index % columnColors.length].text,
+                         icon: columnColors[index % columnColors.length].icon
+                       };
                     
                    return (
                      <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-xl flex flex-col flex-shrink-0 shadow-lg border ${colorScheme.border} hover:shadow-xl transition-all duration-300 backdrop-blur-sm relative overflow-hidden group animate-in`}>
                        {/* Borda animada no hover */}
                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                       <div className={`${colorScheme.header} text-white p-4 rounded-t-xl relative overflow-hidden`}>
+                       <div className={`${colorScheme.header} text-white p-2.5 rounded-t-xl relative overflow-hidden`}>
                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                          {/* Partículas decorativas */}
-                         <div className="absolute top-2 right-2 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
-                         <div className="absolute top-3 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
-                         <div className="flex items-center justify-between relative z-10">
-                           <div className="flex items-center gap-2">
-                             <div className="w-5 h-5 flex items-center justify-center">
-                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                 <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
-                               </svg>
-                             </div>
-                             <h2 className="phase-title text-sm font-bold tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
-                               {displayPhaseName}
-                             </h2>
-                           </div>
-                           <div className="flex items-center gap-2">
-                             {!isDisabledPhase && lateOrAlertCount > 0 && (
-                               <div className="flex items-center gap-1 text-amber-200 font-bold text-xs bg-amber-900/40 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg">
-                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                         <div className="absolute top-1.5 right-2 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
+                         <div className="absolute top-2 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
+                         <div className="relative z-10">
+                           {/* Header principal compacto */}
+                           <div className="flex items-center justify-between mb-1">
+                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                               <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                   <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                  </svg>
-                                 <span>{lateOrAlertCount}</span>
                                </div>
-                             )}
-                             <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-1 shadow-sm">
-                               <div className="w-2 h-2 bg-white rounded-full opacity-80"></div>
+                               <h2 className="phase-title text-xs font-bold tracking-wide truncate" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
+                                 {displayPhaseName}
+                               </h2>
+                             </div>
+                             
+                             {/* Contador total sempre visível */}
+                             <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm flex-shrink-0">
+                               <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80"></div>
                                <span className="text-xs font-bold text-white">{cardsInPhase.length}</span>
                              </div>
                            </div>
+                           
+                           {/* Indicador de alertas posicionado de forma flutuante */}
+                           {!isDisabledPhase && lateOrAlertCount > 0 && (
+                             <div className="absolute -top-1 -right-1 z-20">
+                               <div className="relative">
+                                 <div className="flex items-center gap-1 text-amber-200 font-bold text-xs bg-amber-900/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-lg border border-amber-700/50">
+                                   <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                   </svg>
+                                   <span>{lateOrAlertCount}</span>
+                                 </div>
+                                 {/* Pulse animation */}
+                                 <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
+                               </div>
+                             </div>
+                           )}
                          </div>
                        </div>
                        <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
