@@ -347,8 +347,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           <LoadingIndicator message="A carregar dados..." />
         ) : (
           activeView === 'kanban' ? (
-            <div id="kanban-view" className="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-6 scroll-container bg-gradient-to-br from-gray-50 to-gray-100">
-              <div id="kanban-container" className="flex gap-6">
+            <div id="kanban-view" className="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-6 scroll-container bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 relative">
+              {/* Background decorativo */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
+              <div id="kanban-container" className="flex gap-4 relative z-10">
                 {fixedPhaseOrder.map((phaseName, index) => {
                   const cardsInPhase = phases[phaseName] || [];
                   if (hideEmptyPhases && cardsInPhase.length === 0) return null;
@@ -357,63 +359,93 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                   const isDisabledPhase = disabledPhases.includes(phaseName);
                   const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
                   
-                                                  // Cores baseadas no tom primário da ferramenta #FF355A
-             const columnColors = [
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' },
-               { bg: 'bg-gradient-to-b from-red-50 to-red-100', border: 'border-red-200', header: 'bg-gradient-to-r from-[#FF355A] to-[#E02E4D]', text: 'text-red-700' }
-             ];
+                                                  // Esquema de cores moderno e elegante baseado na cor primária #FF355A
+                  const columnColors = [
+                    { bg: 'bg-gradient-to-b from-red-50/80 to-red-100/60', border: 'border-red-200/50', header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]', text: 'text-red-600', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
+                    { bg: 'bg-gradient-to-b from-orange-50/80 to-orange-100/60', border: 'border-orange-200/50', header: 'bg-gradient-to-br from-orange-500 via-orange-600 to-red-500', text: 'text-orange-600', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
+                    { bg: 'bg-gradient-to-b from-yellow-50/80 to-yellow-100/60', border: 'border-yellow-200/50', header: 'bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-500', text: 'text-yellow-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+                    { bg: 'bg-gradient-to-b from-amber-50/80 to-amber-100/60', border: 'border-amber-200/50', header: 'bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-500', text: 'text-amber-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+                    { bg: 'bg-gradient-to-b from-lime-50/80 to-lime-100/60', border: 'border-lime-200/50', header: 'bg-gradient-to-br from-lime-500 via-lime-600 to-green-500', text: 'text-lime-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+                    { bg: 'bg-gradient-to-b from-emerald-50/80 to-emerald-100/60', border: 'border-emerald-200/50', header: 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-500', text: 'text-emerald-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+                    { bg: 'bg-gradient-to-b from-blue-50/80 to-blue-100/60', border: 'border-blue-200/50', header: 'bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-500', text: 'text-blue-600', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
+                    { bg: 'bg-gradient-to-b from-indigo-50/80 to-indigo-100/60', border: 'border-indigo-200/50', header: 'bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-500', text: 'text-indigo-600', icon: 'M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0' },
+                    { bg: 'bg-gradient-to-b from-green-50/80 to-green-100/60', border: 'border-green-200/50', header: 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-500', text: 'text-green-600', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
+                  ];
                    
                    const colorScheme = isDisabledPhase 
-                     ? { bg: 'bg-gradient-to-b from-gray-50 to-gray-100', border: 'border-gray-300', header: 'bg-gradient-to-r from-gray-400 to-gray-500', text: 'text-gray-500' }
+                     ? { 
+                         bg: 'bg-gradient-to-b from-gray-100/60 to-gray-200/40', 
+                         border: 'border-gray-300/50', 
+                         header: 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600', 
+                         text: 'text-gray-500',
+                         icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                       }
                      : columnColors[index % columnColors.length];
                     
                    return (
-                     <div key={phaseName} className={`w-64 ${colorScheme.bg} rounded-lg flex flex-col flex-shrink-0 shadow-md border ${colorScheme.border} hover:shadow-lg transition-all duration-200`}>
-                       <div className={`${colorScheme.header} text-white p-3 rounded-t-lg border-b ${colorScheme.border} shadow-sm`}>
-                         <div className="flex items-center justify-between">
-                           <h2 className="phase-title text-sm font-bold tracking-wide uppercase" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                             {displayPhaseName}
-                           </h2>
-                                                       <div className="flex items-center gap-1">
-                              {!isDisabledPhase && lateOrAlertCount > 0 && (
-                                <span className="flex items-center text-amber-300 font-bold text-xs bg-amber-900 bg-opacity-30 rounded-full px-1.5 py-0.5">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-0.5">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M12 6v6l4 2"/>
-                                  </svg>
-                                  {lateOrAlertCount}
-                                </span>
-                              )}
-                              <span className="text-xs font-bold bg-white bg-opacity-20 rounded-full px-1.5 py-0.5 text-gray-700">
-                                {cardsInPhase.length}
-                              </span>
-                            </div>
+                     <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-xl flex flex-col flex-shrink-0 shadow-lg border ${colorScheme.border} hover:shadow-xl transition-all duration-300 backdrop-blur-sm relative overflow-hidden group animate-in`}>
+                       {/* Borda animada no hover */}
+                       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                       <div className={`${colorScheme.header} text-white p-4 rounded-t-xl relative overflow-hidden`}>
+                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                         {/* Partículas decorativas */}
+                         <div className="absolute top-2 right-2 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
+                         <div className="absolute top-3 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
+                         <div className="flex items-center justify-between relative z-10">
+                           <div className="flex items-center gap-2">
+                             <div className="w-5 h-5 flex items-center justify-center">
+                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                 <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
+                               </svg>
+                             </div>
+                             <h2 className="phase-title text-sm font-bold tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
+                               {displayPhaseName}
+                             </h2>
+                           </div>
+                           <div className="flex items-center gap-2">
+                             {!isDisabledPhase && lateOrAlertCount > 0 && (
+                               <div className="flex items-center gap-1 text-amber-200 font-bold text-xs bg-amber-900/40 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg">
+                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                 </svg>
+                                 <span>{lateOrAlertCount}</span>
+                               </div>
+                             )}
+                             <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-1 shadow-sm">
+                               <div className="w-2 h-2 bg-white rounded-full opacity-80"></div>
+                               <span className="text-xs font-bold text-white">{cardsInPhase.length}</span>
+                             </div>
+                           </div>
                          </div>
                        </div>
-                       <div className="flex-1 p-2 space-y-2 overflow-y-auto scroll-container phase-container" data-phase={phaseName}>
+                       <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
                          {cardsInPhase.length > 0 ? (
                            cardsInPhase.map(card => (
-                             <div key={card.id} onClick={() => setSelectedCard(card)} className="transition-transform duration-200 hover:translate-y-[-2px]">
+                             <div 
+                               key={card.id} 
+                               onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
+                               className={`transition-all duration-300 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:translate-y-[-4px] hover:scale-[1.02]'}`}
+                             >
                                <CardComponent card={card} />
                              </div>
                            ))
                          ) : (
-                                                       <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 p-4">
-                              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mb-2">
-                                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                              </div>
-                              <p className="text-sm font-medium text-gray-600">Nenhuma recolha nesta fase</p>
-                            </div>
+                           <div className="flex flex-col items-center justify-center h-32 text-center p-4">
+                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
+                               <svg className={`w-6 h-6 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                               </svg>
+                             </div>
+                             <p className={`text-sm font-medium ${isDisabledPhase ? 'text-gray-400' : 'text-gray-600'}`}>
+                               {isDisabledPhase ? 'Fase em processamento' : 'Nenhuma recolha nesta fase'}
+                             </p>
+                             {isDisabledPhase && (
+                               <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                                 <span>Aguardando...</span>
+                               </div>
+                             )}
+                           </div>
                          )}
                        </div>
                      </div>
