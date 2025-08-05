@@ -103,3 +103,21 @@ export const choferNames = {
     'Sebastião Irineu Pinto', 'Thiago do Carmo Almeida', 'Vinicius Bessa Vilela', 'Willian Grespin'
   ]
 };
+
+// Função para detectar se o dispositivo é móvel baseado no User-Agent
+export function isMobileDevice(userAgent: string): boolean {
+  const mobileKeywords = [
+    'Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 'Windows Phone', 
+    'BlackBerry', 'webOS', 'Opera Mini', 'Opera Mobi', 'IEMobile',
+    'Mobile Safari', 'CriOS', 'FxiOS', 'EdgiOS'
+  ];
+  
+  return mobileKeywords.some(keyword => 
+    userAgent.includes(keyword)
+  );
+}
+
+// Função para determinar a rota de redirecionamento baseada no dispositivo
+export function getRedirectRoute(userAgent: string): string {
+  return isMobileDevice(userAgent) ? '/mobile' : '/kanban';
+}

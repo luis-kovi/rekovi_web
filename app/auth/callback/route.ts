@@ -2,11 +2,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
+import { getRedirectRoute } from '@/utils/helpers'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') || '/kanban'
+  const userAgent = request.headers.get('user-agent') || ''
+  const defaultRoute = getRedirectRoute(userAgent)
+  const next = searchParams.get('next') || defaultRoute
 
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host')
   const protocol = request.headers.get('x-forwarded-proto') || 'http'

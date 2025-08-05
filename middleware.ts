@@ -1,6 +1,7 @@
 // middleware.ts
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getRedirectRoute } from '@/utils/helpers'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -64,14 +65,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Se o usuário estiver autenticado e acessar a rota raiz, redirecionar para /kanban
+  // Se o usuário estiver autenticado e acessar a rota raiz, redirecionar baseado no dispositivo
   if (request.nextUrl.pathname === '/' && user) {
-    const redirectUrl = new URL('/kanban', request.url)
+    const userAgent = request.headers.get('user-agent') || ''
+    const redirectRoute = getRedirectRoute(userAgent)
+    const redirectUrl = new URL(redirectRoute, request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
   // Rotas que requerem autenticação
-  const protectedRoutes = ['/kanban', '/settings']
+  const protectedRoutes = ['/kanban', '/mobile', '/settings']
   const isProtectedRoute = protectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
   )
@@ -89,7 +92,9 @@ export async function middleware(request: NextRequest) {
   )
 
   if (isAuthRoute && user) {
-    const redirectUrl = new URL('/kanban', request.url)
+    const userAgent = request.headers.get('user-agent') || ''
+    const redirectRoute = getRedirectRoute(userAgent)
+    const redirectUrl = new URL(redirectRoute, request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
