@@ -76,7 +76,8 @@ export default function MobileHeader({ user, permissionType, isUpdating = false,
             <img 
               src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
               alt="Logo Kovi" 
-              className="h-12 w-auto" 
+              className="h-10 w-auto object-contain" 
+              style={{ aspectRatio: '406/130' }}
             />
           </div>
         </div>

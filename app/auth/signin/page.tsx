@@ -99,7 +99,8 @@ export default function SignIn() {
               <img 
                 src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
                 alt="Logo Kovi" 
-                className="h-48 w-auto" 
+                className="h-40 w-auto object-contain" 
+                style={{ aspectRatio: '406/130' }}
               />
             </div>
             <h1 className="text-sm font-medium text-gray-600 mb-1">

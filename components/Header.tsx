@@ -133,7 +133,8 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
             <img 
               src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
               alt="Logo Kovi" 
-              className="h-20 w-auto" 
+              className="h-14 w-auto object-contain" 
+              style={{ aspectRatio: '406/130' }}
             />
           </div>
         </div>
