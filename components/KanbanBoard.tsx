@@ -372,20 +372,34 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                     { bg: 'bg-gradient-to-b from-green-50/80 to-green-100/60', border: 'border-green-200/50', header: 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-500', text: 'text-green-600', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
                   ];
                    
+                   // Ícones personalizados para fases específicas
+                   const getPhaseIcon = (phaseName: string) => {
+                     switch (phaseName) {
+                       case 'Aprovar Custo de Recolha':
+                         return 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1';
+                       case 'Desbloquear Veículo':
+                         return 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z';
+                       case 'Solicitar Guincho':
+                         return 'M8 5v14l11-7L8 5z';
+                       default:
+                         return 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2';
+                     }
+                   };
+
                    const colorScheme = isDisabledPhase 
                      ? { 
-                         bg: 'bg-gradient-to-b from-gray-100/60 to-gray-200/40', 
+                         bg: 'bg-gradient-to-b from-gray-100/60 to-gray-200/40', // Manter cinza para fases desabilitadas
                          border: 'border-gray-300/50', 
                          header: 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600', 
                          text: 'text-gray-500',
-                         icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+                         icon: getPhaseIcon(phaseName)
                        }
                      : {
-                         bg: columnColors[index % columnColors.length].bg,
-                         border: columnColors[index % columnColors.length].border,
-                         header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]', // Cor padrão para todos
-                         text: columnColors[index % columnColors.length].text,
-                         icon: columnColors[index % columnColors.length].icon
+                         bg: 'bg-gradient-to-b from-red-50/80 to-red-100/60', // Cor padrão da Fila de Recolha para fases ativas
+                         border: 'border-red-200/50',
+                         header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]',
+                         text: 'text-red-600',
+                         icon: getPhaseIcon(phaseName)
                        };
                     
                    return (
@@ -400,7 +414,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                          <div className="relative z-10">
                            {/* Header principal compacto */}
                            <div className="flex items-center justify-between mb-1">
-                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-2">
                                <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                    <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
@@ -411,28 +425,29 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                </h2>
                              </div>
                              
-                             {/* Contador total sempre visível */}
-                             <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm flex-shrink-0">
-                               <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80"></div>
-                               <span className="text-xs font-bold text-white">{cardsInPhase.length}</span>
-                             </div>
-                           </div>
-                           
-                           {/* Indicador de alertas posicionado de forma flutuante */}
-                           {!isDisabledPhase && lateOrAlertCount > 0 && (
-                             <div className="absolute -top-1 -right-1 z-20">
-                               <div className="relative">
-                                 <div className="flex items-center gap-1 text-amber-200 font-bold text-xs bg-amber-900/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-lg border border-amber-700/50">
-                                   <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                   </svg>
-                                   <span>{lateOrAlertCount}</span>
+                             {/* Container para indicadores com espaçamento adequado */}
+                             <div className="flex items-center gap-1 flex-shrink-0">
+                               {/* Indicador de alertas */}
+                               {!isDisabledPhase && lateOrAlertCount > 0 && (
+                                 <div className="relative">
+                                   <div className="flex items-center gap-1 text-amber-200 font-bold text-xs bg-amber-900/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-lg border border-amber-700/50">
+                                     <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                     </svg>
+                                     <span>{lateOrAlertCount}</span>
+                                   </div>
+                                   {/* Pulse animation */}
+                                   <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
                                  </div>
-                                 {/* Pulse animation */}
-                                 <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
+                               )}
+                               
+                               {/* Contador total */}
+                               <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
+                                 <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80"></div>
+                                 <span className="text-xs font-bold text-white">{cardsInPhase.length}</span>
                                </div>
                              </div>
-                           )}
+                           </div>
                          </div>
                        </div>
                        <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
@@ -450,18 +465,53 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                            <div className="flex flex-col items-center justify-center h-32 text-center p-4">
                              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
                                <svg className={`w-6 h-6 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                 <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                </svg>
                              </div>
-                             <p className={`text-sm font-medium ${isDisabledPhase ? 'text-gray-400' : 'text-gray-600'}`}>
-                               {isDisabledPhase ? 'Fase em processamento' : 'Nenhuma recolha nesta fase'}
-                             </p>
-                             {isDisabledPhase && (
-                               <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
-                                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                                 <span>Aguardando...</span>
-                               </div>
-                             )}
+                             
+                             {/* Mensagens personalizadas por fase */}
+                             {(() => {
+                               if (isDisabledPhase) {
+                                 switch (phaseName) {
+                                   case 'Aprovar Custo de Recolha':
+                                     return (
+                                       <p className="text-sm font-medium text-gray-400">
+                                         Não há custos de recolhas pendentes de aprovação
+                                       </p>
+                                     );
+                                   case 'Desbloquear Veículo':
+                                     return (
+                                       <p className="text-sm font-medium text-gray-400">
+                                         Não há pendências de desbloqueio
+                                       </p>
+                                     );
+                                   case 'Solicitar Guincho':
+                                     return (
+                                       <p className="text-sm font-medium text-gray-400">
+                                         Não há solicitações de guincho pendentes
+                                       </p>
+                                     );
+                                   default:
+                                     return (
+                                       <>
+                                         <p className="text-sm font-medium text-gray-400">
+                                           Fase em processamento
+                                         </p>
+                                         <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                                           <span>Aguardando...</span>
+                                         </div>
+                                       </>
+                                     );
+                                 }
+                               } else {
+                                 return (
+                                   <p className="text-sm font-medium text-gray-600">
+                                     Nenhuma recolha nesta fase
+                                   </p>
+                                 );
+                               }
+                             })()}
                            </div>
                          )}
                        </div>
