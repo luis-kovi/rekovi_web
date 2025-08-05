@@ -413,38 +413,38 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                          <div className="absolute top-2 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
                          <div className="relative z-10">
                            {/* Header principal compacto */}
-                           <div className="flex items-center justify-between mb-1">
-                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-2">
-                               <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
-                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                           <div className="flex items-center justify-between">
+                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
+                               <div className="w-3 h-3 flex items-center justify-center flex-shrink-0">
+                                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                    <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                  </svg>
                                </div>
-                               <h2 className="phase-title text-xs font-bold tracking-wide truncate" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
+                               <h2 className="phase-title text-[10px] font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
                                  {displayPhaseName}
                                </h2>
                              </div>
                              
-                             {/* Container para indicadores com espaçamento adequado */}
-                             <div className="flex items-center gap-1 flex-shrink-0">
-                               {/* Indicador de alertas */}
+                             {/* Indicadores empilhados verticalmente - menores */}
+                             <div className="flex flex-col gap-0.5 flex-shrink-0 items-end">
+                               {/* Indicador de alertas - menor */}
                                {!isDisabledPhase && lateOrAlertCount > 0 && (
                                  <div className="relative">
-                                   <div className="flex items-center gap-1 text-amber-200 font-bold text-xs bg-amber-900/90 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-lg border border-amber-700/50">
-                                     <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                   <div className="flex items-center gap-0.5 text-amber-200 font-bold text-[9px] bg-amber-900/90 backdrop-blur-sm rounded-full px-1 py-0.5 shadow-lg border border-amber-700/50">
+                                     <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                      </svg>
                                      <span>{lateOrAlertCount}</span>
                                    </div>
-                                   {/* Pulse animation */}
+                                   {/* Pulse animation - menor */}
                                    <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
                                  </div>
                                )}
                                
-                               {/* Contador total */}
-                               <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                                 <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80"></div>
-                                 <span className="text-xs font-bold text-white">{cardsInPhase.length}</span>
+                               {/* Contador total - menor */}
+                               <div className="flex items-center gap-0.5 bg-white/25 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-sm">
+                                 <div className="w-1 h-1 bg-white rounded-full opacity-80"></div>
+                                 <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>
                                </div>
                              </div>
                            </div>
