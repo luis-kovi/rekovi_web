@@ -414,20 +414,30 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                          <div className="relative z-10">
                            {/* Header principal compacto */}
                            <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
+                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1 group">
                                <div className="w-3 h-3 flex items-center justify-center flex-shrink-0">
                                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                    <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                  </svg>
                                </div>
-                               <h2 className="phase-title text-[10px] font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
-                                 {displayPhaseName}
-                               </h2>
+                               
+                               {/* Container com overflow para animação de scroll */}
+                               <div className="phase-text-container relative flex-1 min-w-0 overflow-hidden">
+                                 <h2 
+                                   className="phase-title text-[10px] font-bold tracking-wide whitespace-nowrap leading-tight group-hover:animate-scroll-text" 
+                                   style={{ 
+                                     fontFamily: 'Inter, sans-serif', 
+                                     fontWeight: '700'
+                                   }}
+                                 >
+                                   {displayPhaseName}
+                                 </h2>
+                               </div>
                              </div>
                              
-                             {/* Indicadores empilhados verticalmente - menores */}
-                             <div className="flex flex-col gap-0.5 flex-shrink-0 items-end">
-                               {/* Indicador de alertas - menor */}
+                             {/* Indicadores lado a lado - menores */}
+                             <div className="flex items-center gap-1 flex-shrink-0">
+                               {/* Indicador de alertas */}
                                {!isDisabledPhase && lateOrAlertCount > 0 && (
                                  <div className="relative">
                                    <div className="flex items-center gap-0.5 text-amber-200 font-bold text-[9px] bg-amber-900/90 backdrop-blur-sm rounded-full px-1 py-0.5 shadow-lg border border-amber-700/50">
@@ -436,12 +446,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                      </svg>
                                      <span>{lateOrAlertCount}</span>
                                    </div>
-                                   {/* Pulse animation - menor */}
+                                   {/* Pulse animation */}
                                    <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
                                  </div>
                                )}
                                
-                               {/* Contador total - menor */}
+                               {/* Contador total */}
                                <div className="flex items-center gap-0.5 bg-white/25 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-sm">
                                  <div className="w-1 h-1 bg-white rounded-full opacity-80"></div>
                                  <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>

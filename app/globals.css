@@ -1085,3 +1085,46 @@ header .relative > div[style*="z-index"] {
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* Animação de scroll de texto para nomes de fases truncados */
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(calc(-100% + 100px));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-scroll-text {
+  animation: scroll-text 3s ease-in-out infinite;
+}
+
+/* Parar animação quando não estiver em hover */
+.phase-title:not(.group-hover .phase-title) {
+  animation-play-state: paused !important;
+}
+
+/* Container para o texto com overflow controlado */
+.phase-text-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Gradiente de fade nas bordas para suavizar a transição */
+.phase-text-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 100%;
+  background: linear-gradient(to left, currentColor, transparent);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+}
