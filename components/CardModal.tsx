@@ -69,228 +69,384 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   const choferOptions = card.empresaResponsavel ? populateChoferOptions(card.empresaResponsavel.toLowerCase()) : [];
 
   return (
-    <div id="cardModal" className="modal-overlay fixed inset-0 bg-black bg-opacity-10 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="modal-panel bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                 <div className="flex justify-between items-center p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-xl border-b border-gray-200">
+    <div id="cardModal" className="modal-overlay fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="modal-panel bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-red-200/50 w-full max-w-7xl max-h-[95vh] overflow-hidden relative" onClick={(e) => e.stopPropagation()}>
+        {/* Background decorativo similar ao Kanban */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.02)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.02)_0%,transparent_50%)] pointer-events-none rounded-2xl"></div>
+        
+        {/* Header moderno */}
+        <div className="relative z-10 bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846] text-white p-4 rounded-t-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+          {/* Partículas decorativas */}
+          <div className="absolute top-3 right-8 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
+          <div className="absolute top-4 right-12 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
+          
+          <div className="flex justify-between items-center relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+              </div>
+              <div>
            <div className="flex items-center gap-3">
-             <h3 className="text-xl font-bold text-gray-800" id="modalPlaca" style={{ fontFamily: 'Poppins, sans-serif' }}>{card.placa}</h3>
+                  <h3 className="text-xl font-bold tracking-wide" id="modalPlaca" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>{card.placa}</h3>
              <button 
                onClick={handleCopyPlate}
-               className={`relative text-gray-600 hover:text-gray-800 transition-all duration-200 p-2 rounded-lg hover:bg-gray-200 ${
-                 copiedPlate ? 'bg-gray-500' : ''
+                    className={`relative text-white/80 hover:text-white transition-all duration-200 p-2 rounded-lg hover:bg-white/20 backdrop-blur-sm ${
+                      copiedPlate ? 'bg-white/30' : ''
                }`}
                title="Copiar placa"
              >
-               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                </svg>
                {copiedPlate && (
-                 <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-gray-600 text-white text-xs px-2 py-1 rounded-md whitespace-nowrap">
+                      <span className="absolute left-full ml-2 top-1/2 transform -translate-y-1/2 bg-white/90 text-gray-800 text-xs px-2 py-1 rounded-lg whitespace-nowrap shadow-lg">
                    Copiado!
                  </span>
                )}
              </button>
            </div>
+                <p className="text-white/80 text-sm">Detalhes da recolha</p>
+              </div>
+            </div>
+            
            <div className="flex items-center gap-4">
              <div className="text-right">
-               <p className="text-xs text-gray-600" style={{ fontFamily: 'Poppins, sans-serif' }}>Data de Criação</p>
-               <p className="text-sm text-gray-800 font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-4 h-4 bg-white/20 rounded-sm flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-white/80 font-medium" style={{ fontFamily: 'Inter, sans-serif' }}>Data de Criação</p>
+                </div>
+                <p className="text-sm text-white font-bold" style={{ fontFamily: 'Inter, sans-serif' }}>
                  {formatDate(card.dataCriacao)}
                </p>
              </div>
-             <button id="closeCardModal" onClick={onClose} className="text-gray-600 hover:text-gray-800 text-2xl transition-colors p-1 rounded-lg hover:bg-gray-200">&times;</button>
+              
+              <button 
+                id="closeCardModal" 
+                onClick={onClose} 
+                className="text-white/80 hover:text-white transition-all duration-200 p-2 rounded-xl hover:bg-white/20 backdrop-blur-sm group"
+              >
+                <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
            </div>
          </div>
-        <div className="split-modal">
-          <div className="split-modal-left scroll-container">
-            <div id="modal-content" className="space-y-2 p-4">
-              {/* SLA e Fase - Estilo similar ao card do Kanban */}
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-2 rounded-lg border border-gray-200">
+        {/* Layout principal sem scroll necessário */}
+        <div className="flex h-[calc(95vh-120px)] relative z-10">
+          <div className="flex-1 p-6 overflow-y-auto scroll-container">
+            <div id="modal-content" className="space-y-4">
+              {/* SLA e Fase - Card moderno */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-1">
-                      <span className="text-red-600 mr-1 text-xs">⏰</span>
-                      <p className="text-xs font-semibold text-gray-700" style={{ fontFamily: 'Poppins, sans-serif' }}>SLA</p>
+                <div className="bg-gradient-to-br from-red-50/80 to-red-100/60 backdrop-blur-sm rounded-xl p-4 border border-red-200/50 shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-red-100 to-red-200 rounded-lg flex items-center justify-center shadow-sm">
+                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm font-bold text-red-700" style={{ fontFamily: 'Inter, sans-serif' }}>SLA</p>
                     </div>
-                    <p className="text-sm font-bold text-red-600" style={{ fontFamily: 'Poppins, sans-serif' }}>{card.sla} dias</p>
+                    <p className="text-2xl font-bold text-red-600" style={{ fontFamily: 'Inter, sans-serif' }}>{card.sla}<span className="text-sm ml-1">dias</span></p>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center mb-1">
-                      <span className="text-primary mr-1 text-xs">📋</span>
-                      <p className="text-xs font-semibold text-gray-700" style={{ fontFamily: 'Poppins, sans-serif' }}>Fase Atual</p>
                     </div>
-                    <p className="text-sm font-bold text-primary" style={{ fontFamily: 'Poppins, sans-serif' }}>{displayPhase}</p>
+                
+                <div className="bg-gradient-to-br from-blue-50/80 to-blue-100/60 backdrop-blur-sm rounded-xl p-4 border border-blue-200/50 shadow-lg relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center shadow-sm">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                  </div>
+                      <p className="text-sm font-bold text-blue-700" style={{ fontFamily: 'Inter, sans-serif' }}>Fase Atual</p>
+                    </div>
+                    <p className="text-lg font-bold text-blue-600" style={{ fontFamily: 'Inter, sans-serif' }}>{displayPhase}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Valores - Movidos para cima quando não nulos e não 0,00 */}
+              {/* Valores - Cards modernos */}
               {(!isFila && (card.valorRecolha || card.custoKmAdicional)) && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   {card.valorRecolha && card.valorRecolha !== 'N/A' && card.valorRecolha !== 'null' && card.valorRecolha !== '0,00' && card.valorRecolha !== '0.00' && (
-                    <div className="bg-green-50 p-2 rounded-lg border border-green-200">
-                      <div className="flex items-center mb-1">
-                        <span className="text-green-600 mr-2">💰</span>
-                        <p className="text-xs font-semibold text-green-800" style={{ fontFamily: 'Poppins, sans-serif' }}>Valor da Recolha</p>
+                    <div className="bg-gradient-to-br from-green-50/80 to-green-100/60 backdrop-blur-sm rounded-xl p-4 border border-green-200/50 shadow-lg relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center shadow-sm">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-bold text-green-700" style={{ fontFamily: 'Inter, sans-serif' }}>Valor da Recolha</p>
+                        </div>
+                        <p className="text-xl font-bold text-green-600" style={{ fontFamily: 'Inter, sans-serif' }}>R$ {card.valorRecolha}</p>
                       </div>
-                      <p className="text-lg font-bold text-green-900">R$ {card.valorRecolha}</p>
                     </div>
                   )}
                   {card.custoKmAdicional && card.custoKmAdicional !== 'N/A' && card.custoKmAdicional !== 'null' && card.custoKmAdicional !== '0,00' && card.custoKmAdicional !== '0.00' && (
-                    <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
-                      <div className="flex items-center mb-1">
-                        <span className="text-blue-600 mr-2">🛣️</span>
-                        <p className="text-xs font-semibold text-blue-800" style={{ fontFamily: 'Poppins, sans-serif' }}>Custo KM Adicional</p>
+                    <div className="bg-gradient-to-br from-amber-50/80 to-amber-100/60 backdrop-blur-sm rounded-xl p-4 border border-amber-200/50 shadow-lg relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-8 h-8 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center shadow-sm">
+                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <p className="text-sm font-bold text-amber-700" style={{ fontFamily: 'Inter, sans-serif' }}>Custo KM Adicional</p>
+                        </div>
+                        <p className="text-xl font-bold text-amber-600" style={{ fontFamily: 'Inter, sans-serif' }}>R$ {card.custoKmAdicional}</p>
                       </div>
-                      <p className="text-lg font-bold text-blue-900">R$ {card.custoKmAdicional}</p>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Cliente e Carro - Estilo similar ao card do Kanban */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                  <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    <span className="mr-2">👤</span>Cliente
-                  </h3>
-                  <div className="space-y-2">
+              {/* Cliente e Carro - Cards modernos */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>Cliente</h3>
+                    </div>
+                    <div className="space-y-3">
                     <div className="text-gray-600">
-                      <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>👤 NOME</div>
-                      <div className="truncate text-gray-800 font-medium">{formatPersonName(card.nomeDriver)}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-green-100 rounded-sm">
+                            <svg className="w-2 h-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <span>NOME</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm">{formatPersonName(card.nomeDriver)}</div>
                     </div>
                     <div className="text-gray-600">
-                      <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>📱 TELEFONE</div>
-                      <div className="truncate text-gray-800 font-medium">{card.telefoneContato || 'N/A'}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-blue-100 rounded-sm">
+                            <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          </div>
+                          <span>TELEFONE</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm">{card.telefoneContato || 'N/A'}</div>
                     </div>
                     <div className="text-gray-600">
-                      <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>📞 TELEFONE OPCIONAL</div>
-                      <div className="truncate text-gray-800 font-medium">{card.telefoneOpcional || 'N/A'}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-indigo-100 rounded-sm">
+                            <svg className="w-2 h-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                          </div>
+                          <span>TEL. OPCIONAL</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm">{card.telefoneOpcional || 'N/A'}</div>
                     </div>
                                          <div className="text-gray-600">
-                       <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>🏠 ENDEREÇO</div>
-                       <div className="text-gray-800 font-medium break-words">{card.enderecoCadastro || 'N/A'}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-orange-100 rounded-sm">
+                            <svg className="w-2 h-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <span>ENDEREÇO</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm break-words">{card.enderecoCadastro || 'N/A'}</div>
+                      </div>
                      </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                  <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                    <span className="mr-2">🚗</span>Carro
-                  </h3>
-                  <div className="space-y-2">
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-cyan-200/50 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-xl flex items-center justify-center shadow-sm">
+                        <svg className="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>Veículo</h3>
+                    </div>
+                    <div className="space-y-3">
                     <div className="text-gray-600">
-                      <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>🏷️ MODELO</div>
-                      <div className="truncate text-gray-800 font-medium">{formatPersonName(card.modeloVeiculo)}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-blue-100 rounded-sm">
+                            <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                          </div>
+                          <span>MODELO</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm">{formatPersonName(card.modeloVeiculo)}</div>
                     </div>
                     <div className="text-gray-600">
-                      <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>🏢 ORIGEM</div>
-                      <div className="truncate text-gray-800 font-medium">{keepOriginalFormat(card.origemLocacao)}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-emerald-100 rounded-sm">
+                            <svg className="w-2 h-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <span>ORIGEM</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm">{keepOriginalFormat(card.origemLocacao)}</div>
                     </div>
                                          <div className="text-gray-600">
-                       <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>📍 LOCALIZAÇÃO</div>
-                       <div className="text-gray-800 font-medium mb-1 break-words">{card.enderecoRecolha || 'N/A'}</div>
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-red-100 rounded-sm">
+                            <svg className="w-2 h-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <span>LOCALIZAÇÃO</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm mb-2 break-words">{card.enderecoRecolha || 'N/A'}</div>
                       {card.linkMapa && card.linkMapa !== 'null' && (
                         <a 
                           href={card.linkMapa} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors"
+                            className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
                         >
-                          <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                           </svg>
-                          Google Maps
+                            <span>Google Maps</span>
                         </a>
                       )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Chofer - Estilo similar ao card do Kanban */}
+              {/* Chofer - Card moderno */}
               {!isFila && (
-                <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-gray-800 flex items-center" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                      <span className="mr-2">🚛</span>Chofer
-                    </h3>
-                    {allowChoferChange && (
-                      <button 
-                        onClick={() => setShowChoferChange(!showChoferChange)}
-                        className="relative p-2 text-gray-600 hover:text-primary transition-colors rounded-lg hover:bg-gray-100 group"
-                        title="Trocar chofer"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                          Trocar chofer
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-yellow-200/50 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
                         </div>
-                      </button>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>Chofer</h3>
+                      </div>
+                      {allowChoferChange && (
+                        <button 
+                          onClick={() => setShowChoferChange(!showChoferChange)}
+                          className="relative p-2 text-gray-600 hover:text-[#FF355A] transition-all duration-200 rounded-lg hover:bg-red-50 group"
+                          title="Trocar chofer"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          {/* Tooltip moderno */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900/90 backdrop-blur-sm text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-10 shadow-lg">
+                            Trocar chofer
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/90"></div>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-gray-600">
+                      <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                        <div className="w-3 h-3 flex items-center justify-center bg-orange-100 rounded-sm">
+                          <svg className="w-2 h-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <span>CHOFER RESPONSÁVEL</span>
+                      </div>
+                      <div className="text-gray-800 font-medium text-sm">{formatPersonName(card.chofer)}</div>
+                    </div>
+                  
+                    {/* Trocar Chofer - Expandido com design moderno */}
+                    {showChoferChange && (
+                      <div className="mt-4 p-4 bg-gradient-to-br from-red-50/50 to-red-100/30 backdrop-blur-sm rounded-xl border border-red-200/50">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>Novo Chofer</label>
+                            <select 
+                              value={selectedChofer}
+                              onChange={(e) => {
+                                setSelectedChofer(e.target.value);
+                                const option = choferOptions.find(opt => opt.name === e.target.value);
+                                setChoferEmail(option?.email || '');
+                              }}
+                              className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
+                            >
+                              <option value="">Selecione um nome...</option>
+                              {choferOptions.map(option => (
+                                <option key={option.name} value={option.name}>{option.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>E-mail do Novo Chofer</label>
+                            <input 
+                              type="email" 
+                              value={choferEmail}
+                              onChange={(e) => setChoferEmail(e.target.value)}
+                              className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
+                            />
+                          </div>
+                          {feedback && (
+                            <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                              feedback.includes('Erro') 
+                                ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                                : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                            }`}>
+                              {feedback}
+                            </div>
+                          )}
+                          <button 
+                            onClick={handleChoferChange}
+                            disabled={isUpdating || !selectedChofer || !choferEmail}
+                            className="w-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] hover:from-[#E02E4D] hover:to-[#D12846] text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl backdrop-blur-sm"
+                          >
+                            Confirmar Alteração
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <div className="text-gray-600">
-                    <div className="font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Poppins, sans-serif' }}>🚛 CHOFER</div>
-                    <div className="truncate text-gray-800 font-medium">{formatPersonName(card.chofer)}</div>
-                  </div>
-                  
-                  {/* Trocar Chofer - Expandido */}
-                  {showChoferChange && (
-                    <div className="mt-3 p-3 bg-gray-50 rounded-md border border-gray-300">
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Poppins, sans-serif' }}>Novo Chofer</label>
-                          <select 
-                            value={selectedChofer}
-                            onChange={(e) => {
-                              setSelectedChofer(e.target.value);
-                              const option = choferOptions.find(opt => opt.name === e.target.value);
-                              setChoferEmail(option?.email || '');
-                            }}
-                            className="mt-1 block w-full p-2 border border-gray-400 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary bg-white"
-                          >
-                            <option value="">Selecione um nome...</option>
-                            {choferOptions.map(option => (
-                              <option key={option.name} value={option.name}>{option.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700" style={{ fontFamily: 'Poppins, sans-serif' }}>E-mail do Novo Chofer</label>
-                          <input 
-                            type="email" 
-                            value={choferEmail}
-                            onChange={(e) => setChoferEmail(e.target.value)}
-                            className="mt-1 block w-full p-2 border border-gray-400 rounded-md text-sm focus:ring-2 focus:ring-primary focus:border-primary bg-white"
-                          />
-                        </div>
-                        {feedback && (
-                          <div className={`text-sm text-center ${feedback.includes('Erro') ? 'text-red-600' : 'text-green-600'} font-semibold`}>
-                            {feedback}
-                          </div>
-                        )}
-                        <button 
-                          onClick={handleChoferChange}
-                          disabled={isUpdating || !selectedChofer || !choferEmail}
-                          className="w-full btn-primary px-3 py-2 text-sm font-medium rounded-md mt-2 disabled:opacity-50"
-                        >
-                          Confirmar Alteração
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
           </div>
-          <div className="split-modal-right scroll-container">
+          
+          {/* Área do iframe modernizada */}
+          <div className="w-1/2 bg-white/50 backdrop-blur-sm rounded-r-2xl border-l border-red-200/50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-red-50/20 to-transparent pointer-events-none"></div>
             <iframe 
               id="modalFormIframe" 
               src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
-              className="w-full h-full"
+              className="w-full h-full rounded-r-2xl relative z-10"
             />
           </div>
         </div>
