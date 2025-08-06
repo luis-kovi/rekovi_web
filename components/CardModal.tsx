@@ -67,7 +67,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   };
 
   const choferOptions = card.empresaResponsavel ? populateChoferOptions(card.empresaResponsavel.toLowerCase()) : [];
-  
+
   // Calcular status do SLA
   const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
 
@@ -111,7 +111,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                )}
              </button>
            </div>
-                <p className="text-white/80 text-sm">Detalhes da recolha</p>
+                <p className="text-white/80 text-sm">{displayPhase}</p>
               </div>
             </div>
             
@@ -139,15 +139,16 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
-           </div>
+                  </div>
+                </div>
          </div>
         {/* Layout principal sem scroll necessário */}
         <div className="flex h-[calc(95vh-120px)] relative z-10">
           <div className="flex-1 p-6 overflow-y-auto scroll-container">
             <div id="modal-content" className="space-y-4">
-              {/* SLA e Fase - Tags compactas */}
+              {/* SLA, Valores e Fase - Tags compactas na mesma linha */}
               <div className="flex flex-wrap gap-2">
+                {/* SLA Tag */}
                 <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-red-100 px-3 py-2 rounded-lg border border-red-200/50">
                   <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
                     <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
@@ -164,58 +165,40 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                   }`}>
                     {card.sla} dias
                   </span>
-                </div>
-                
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 px-3 py-2 rounded-lg border border-blue-200/50">
-                  <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-medium text-blue-600">Fase:</span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-semibold">
-                    {displayPhase}
-                  </span>
-                </div>
               </div>
 
-              {/* Valores - Cards modernos */}
-              {(!isFila && (card.valorRecolha || card.custoKmAdicional)) && (
-                <div className="grid grid-cols-2 gap-4">
-                  {card.valorRecolha && card.valorRecolha !== 'N/A' && card.valorRecolha !== 'null' && card.valorRecolha !== '0,00' && card.valorRecolha !== '0.00' && (
-                    <div className="bg-gradient-to-br from-green-50/80 to-green-100/60 backdrop-blur-sm rounded-xl p-4 border border-green-200/50 shadow-lg relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center shadow-sm">
-                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                            </svg>
-                          </div>
-                          <p className="text-sm font-bold text-green-700" style={{ fontFamily: 'Inter, sans-serif' }}>Valor da Recolha</p>
-                        </div>
-                        <p className="text-xl font-bold text-green-600" style={{ fontFamily: 'Inter, sans-serif' }}>R$ {card.valorRecolha}</p>
+                {/* Valor da Recolha Tag */}
+                {(!isFila && card.valorRecolha && card.valorRecolha !== 'N/A' && card.valorRecolha !== 'null' && card.valorRecolha !== '0,00' && card.valorRecolha !== '0.00') && (
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-50 to-green-100 px-3 py-2 rounded-lg border border-green-200/50">
+                    <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
                       </div>
+                    <span className="text-xs font-medium text-green-600">Valor da Recolha:</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-semibold">
+                      R$ {card.valorRecolha}
+                    </span>
                     </div>
                   )}
-                  {card.custoKmAdicional && card.custoKmAdicional !== 'N/A' && card.custoKmAdicional !== 'null' && card.custoKmAdicional !== '0,00' && card.custoKmAdicional !== '0.00' && (
-                    <div className="bg-gradient-to-br from-amber-50/80 to-amber-100/60 backdrop-blur-sm rounded-xl p-4 border border-amber-200/50 shadow-lg relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-amber-100 to-amber-200 rounded-lg flex items-center justify-center shadow-sm">
-                            <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <p className="text-sm font-bold text-amber-700" style={{ fontFamily: 'Inter, sans-serif' }}>Custo KM Adicional</p>
-                        </div>
-                        <p className="text-xl font-bold text-amber-600" style={{ fontFamily: 'Inter, sans-serif' }}>R$ {card.custoKmAdicional}</p>
+
+                {/* Custo KM Adicional Tag */}
+                {(!isFila && card.custoKmAdicional && card.custoKmAdicional !== 'N/A' && card.custoKmAdicional !== 'null' && card.custoKmAdicional !== '0,00' && card.custoKmAdicional !== '0.00') && (
+                  <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-50 to-amber-100 px-3 py-2 rounded-lg border border-amber-200/50">
+                    <div className="w-4 h-4 bg-amber-500 rounded-sm flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                       </div>
+                    <span className="text-xs font-medium text-amber-600">Km Adicional:</span>
+                    <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-semibold">
+                      R$ {card.custoKmAdicional}
+                    </span>
                     </div>
                   )}
                 </div>
-              )}
+
+
 
               {/* Cliente e Carro - Cards modernos */}
               <div className="grid grid-cols-2 gap-4">
@@ -359,24 +342,24 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                         </div>
                         <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>Chofer</h3>
                       </div>
-                      {allowChoferChange && (
-                        <button 
-                          onClick={() => setShowChoferChange(!showChoferChange)}
+                    {allowChoferChange && (
+                      <button 
+                        onClick={() => setShowChoferChange(!showChoferChange)}
                           className="relative p-2 text-gray-600 hover:text-[#FF355A] transition-all duration-200 rounded-lg hover:bg-red-50 group"
-                          title="Trocar chofer"
-                        >
+                        title="Trocar chofer"
+                      >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                          </svg>
+                        </svg>
                           {/* Tooltip moderno */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900/90 backdrop-blur-sm text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-10 shadow-lg">
-                            Trocar chofer
+                          Trocar chofer
                             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/90"></div>
-                          </div>
-                        </button>
-                      )}
-                    </div>
-                    <div className="text-gray-600">
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-gray-600">
                       <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
                         <div className="w-3 h-3 flex items-center justify-center bg-orange-100 rounded-sm">
                           <svg className="w-2 h-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -386,57 +369,57 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                         <span>CHOFER RESPONSÁVEL</span>
                       </div>
                       <div className="text-gray-800 font-medium text-sm">{formatPersonName(card.chofer)}</div>
-                    </div>
+                  </div>
                   
                     {/* Trocar Chofer - Expandido com design moderno */}
-                    {showChoferChange && (
+                  {showChoferChange && (
                       <div className="mt-4 p-4 bg-gradient-to-br from-red-50/50 to-red-100/30 backdrop-blur-sm rounded-xl border border-red-200/50">
                         <div className="space-y-4">
-                          <div>
+                        <div>
                             <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>Novo Chofer</label>
-                            <select 
-                              value={selectedChofer}
-                              onChange={(e) => {
-                                setSelectedChofer(e.target.value);
-                                const option = choferOptions.find(opt => opt.name === e.target.value);
-                                setChoferEmail(option?.email || '');
-                              }}
+                          <select 
+                            value={selectedChofer}
+                            onChange={(e) => {
+                              setSelectedChofer(e.target.value);
+                              const option = choferOptions.find(opt => opt.name === e.target.value);
+                              setChoferEmail(option?.email || '');
+                            }}
                               className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
-                            >
-                              <option value="">Selecione um nome...</option>
-                              {choferOptions.map(option => (
-                                <option key={option.name} value={option.name}>{option.name}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
+                          >
+                            <option value="">Selecione um nome...</option>
+                            {choferOptions.map(option => (
+                              <option key={option.name} value={option.name}>{option.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
                             <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>E-mail do Novo Chofer</label>
-                            <input 
-                              type="email" 
-                              value={choferEmail}
-                              onChange={(e) => setChoferEmail(e.target.value)}
+                          <input 
+                            type="email" 
+                            value={choferEmail}
+                            onChange={(e) => setChoferEmail(e.target.value)}
                               className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
-                            />
-                          </div>
-                          {feedback && (
+                          />
+                        </div>
+                        {feedback && (
                             <div className={`text-sm text-center p-3 rounded-lg font-medium ${
                               feedback.includes('Erro') 
                                 ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
                                 : 'text-green-700 bg-green-100/50 border border-green-200/50'
                             }`}>
-                              {feedback}
-                            </div>
-                          )}
-                          <button 
-                            onClick={handleChoferChange}
-                            disabled={isUpdating || !selectedChofer || !choferEmail}
+                            {feedback}
+                          </div>
+                        )}
+                        <button 
+                          onClick={handleChoferChange}
+                          disabled={isUpdating || !selectedChofer || !choferEmail}
                             className="w-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] hover:from-[#E02E4D] hover:to-[#D12846] text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl backdrop-blur-sm"
-                          >
-                            Confirmar Alteração
-                          </button>
-                        </div>
+                        >
+                          Confirmar Alteração
+                        </button>
                       </div>
-                    )}
+                    </div>
+                  )}
                   </div>
                 </div>
               )}
