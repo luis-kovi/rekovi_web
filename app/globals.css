@@ -859,12 +859,25 @@ body > div[style*="blur"] {
   text-align: center !important; 
 }
 
-/* Estilo simplificado para tabela sem transformações conflitantes */
+/* Estilo da lista com alinhamento perfeito e fundo cinza */
+#list-view .scroll-container {
+  background-color: #f8fafc !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
 #list-view table {
   table-layout: fixed !important;
   border-collapse: separate !important;
   border-spacing: 0 !important;
   width: 100% !important;
+  background-color: white !important;
+  margin: 0 !important;
+}
+
+#list-view thead {
+  background: linear-gradient(to right, rgba(254, 242, 242, 0.9), rgba(254, 226, 226, 0.7)) !important;
+  backdrop-filter: blur(4px) !important;
+  border-bottom: 1px solid rgba(248, 113, 113, 0.5) !important;
 }
 
 #list-view thead th {
@@ -872,10 +885,14 @@ body > div[style*="blur"] {
   top: 0 !important;
   z-index: 10 !important;
   white-space: nowrap !important;
+  padding: 10px 16px !important;
+  margin: 0 !important;
+  border: none !important;
 }
 
 #list-view tbody tr {
   transition: background-color 0.2s ease !important;
+  background-color: white !important;
 }
 
 #list-view tbody tr:hover {
@@ -886,6 +903,10 @@ body > div[style*="blur"] {
   vertical-align: middle !important;
   white-space: nowrap !important;
   overflow: hidden !important;
+  padding: 8px 16px !important;
+  margin: 0 !important;
+  border: none !important;
+  background-color: inherit !important;
 }
 
 /* Animações suaves para os badges de SLA */

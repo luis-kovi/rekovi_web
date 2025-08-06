@@ -521,7 +521,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               </div>
             </div>
           ) : (
-            <div id="list-view" className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 p-4 relative">
+            <div id="list-view" className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 p-6 relative">
               {/* Background decorativo similar ao Kanban */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
               
@@ -554,9 +554,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                   </div>
                 </div>
                 
-                {/* Container da tabela com scroll moderno */}
-                <div className="overflow-y-auto h-full scroll-container">
-                  <table className="w-full text-sm">
+                {/* Container da tabela com scroll moderno e fundo cinza */}
+                <div className="overflow-y-auto h-full scroll-container bg-gray-50/50">
+                  <table className="w-full text-sm bg-white">
                     <thead className="sticky top-0 z-10 bg-gradient-to-r from-red-50/90 to-red-100/70 backdrop-blur-sm border-b border-red-200/50">
                       <tr className="text-[10px] font-bold text-red-700 uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>
                         <th className="px-4 py-2.5 text-left">
