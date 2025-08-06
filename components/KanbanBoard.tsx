@@ -360,7 +360,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                   const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
                   
                                                   // Esquema de cores moderno e elegante baseado na cor primária #FF355A
-                  const columnColors = [
+             const columnColors = [
                     { bg: 'bg-gradient-to-b from-red-50/80 to-red-100/60', border: 'border-red-200/50', header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]', text: 'text-red-600', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
                     { bg: 'bg-gradient-to-b from-orange-50/80 to-orange-100/60', border: 'border-orange-200/50', header: 'bg-gradient-to-br from-orange-500 via-orange-600 to-red-500', text: 'text-orange-600', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
                     { bg: 'bg-gradient-to-b from-yellow-50/80 to-yellow-100/60', border: 'border-yellow-200/50', header: 'bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-500', text: 'text-yellow-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
@@ -385,7 +385,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                          return 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2';
                      }
                    };
-
+                   
                    const colorScheme = isDisabledPhase 
                      ? { 
                          bg: 'bg-gradient-to-b from-gray-100/60 to-gray-200/40', // Manter cinza para fases desabilitadas
@@ -413,7 +413,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                          <div className="absolute top-2 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
                          <div className="relative z-10">
                            {/* Header principal compacto */}
-                           <div className="flex items-center justify-between">
+                         <div className="flex items-center justify-between">
                              <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
                                <div className="w-3 h-3 flex items-center justify-center flex-shrink-0">
                                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
@@ -421,19 +421,19 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                  </svg>
                                </div>
                                <h2 className="phase-title text-[10px] font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
-                                 {displayPhaseName}
-                               </h2>
+                             {displayPhaseName}
+                           </h2>
                              </div>
                              
                              {/* Indicadores lado a lado - menores */}
                              <div className="flex items-center gap-1 flex-shrink-0">
                                {/* Indicador de alertas */}
-                               {!isDisabledPhase && lateOrAlertCount > 0 && (
+                              {!isDisabledPhase && lateOrAlertCount > 0 && (
                                  <div className="relative">
                                    <div className="flex items-center gap-0.5 text-amber-200 font-bold text-[9px] bg-amber-900/90 backdrop-blur-sm rounded-full px-1 py-0.5 shadow-lg border border-amber-700/50">
                                      <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                     </svg>
+                                  </svg>
                                      <span>{lateOrAlertCount}</span>
                                    </div>
                                    {/* Pulse animation */}
@@ -447,7 +447,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                  <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>
                                </div>
                              </div>
-                           </div>
+                            </div>
                          </div>
                        </div>
                        <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
@@ -466,8 +466,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
                                <svg className={`w-6 h-6 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                                  <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
-                               </svg>
-                             </div>
+                                </svg>
+                              </div>
                              
                              {/* Mensagens personalizadas por fase */}
                              {(() => {
@@ -512,7 +512,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                  );
                                }
                              })()}
-                           </div>
+                            </div>
                          )}
                        </div>
                      </div>
@@ -655,97 +655,95 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                         return (
                           <tr 
                             key={card.id} 
-                            className={`border-b border-red-100/20 hover:bg-gradient-to-r hover:from-red-50/80 hover:to-red-100/40 cursor-pointer transition-all duration-300 group relative overflow-hidden ${
+                            className={`border-b border-red-100/20 hover:bg-red-50/60 cursor-pointer transition-all duration-200 ${
                               index % 2 === 0 ? 'bg-white/40' : 'bg-red-50/20'
                             }`}
                             onClick={() => setSelectedCard(card)}
                           >
-                            {/* Efeito de brilho no hover */}
-                            <td className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out pointer-events-none" style={{ gridColumn: '1 / -1' }}></td>
-                            <td className="px-4 py-2 relative z-10">
+                            <td className="px-4 py-2">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-gradient-to-br from-red-100 to-red-200 rounded-lg flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                <div className="w-5 h-5 bg-red-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                   </svg>
                                 </div>
-                                <span className="font-bold text-gray-900 group-hover:text-[#FF355A] transition-colors text-xs" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <span className="font-bold text-gray-900 text-xs truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
                                   {card.placa}
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2 relative z-10">
+                            <td className="px-4 py-2">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                <div className="w-5 h-5 bg-green-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                   </svg>
                                 </div>
-                                <span className="text-gray-800 group-hover:text-gray-900 transition-colors text-xs font-medium">
-                                  {formatPersonName(card.nomeDriver)}
-                                </span>
+                                <span className="text-gray-800 text-xs font-medium truncate">
+                                {formatPersonName(card.nomeDriver)}
+                              </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2 relative z-10">
+                            <td className="px-4 py-2">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                <div className="w-5 h-5 bg-orange-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
                                 </div>
-                                {!card.chofer || card.chofer === 'N/A' ? (
-                                  <span className="italic text-xs text-gray-500 group-hover:text-gray-600 transition-colors">Não alocado</span>
-                                ) : (
-                                  <span className="text-gray-800 group-hover:text-gray-900 transition-colors text-xs font-medium">
-                                    {formatPersonName(card.chofer)}
-                                  </span>
-                                )}
+                              {!card.chofer || card.chofer === 'N/A' ? (
+                                  <span className="italic text-xs text-gray-500">Não alocado</span>
+                              ) : (
+                                  <span className="text-gray-800 text-xs font-medium truncate">
+                                  {formatPersonName(card.chofer)}
+                                </span>
+                              )}
                               </div>
                             </td>
-                            <td className="px-4 py-2 relative z-10">
+                            <td className="px-4 py-2">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                <div className="w-5 h-5 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                   </svg>
                                 </div>
-                                <span className="inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold bg-gradient-to-r from-red-100 to-red-200 text-red-700 group-hover:from-[#FF355A]/20 group-hover:to-[#E02E4D]/20 transition-all shadow-sm backdrop-blur-sm">
-                                  {displayPhase}
-                                </span>
+                                <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-red-100 text-red-700">
+                                {displayPhase}
+                              </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2 relative z-10">
+                            <td className="px-4 py-2">
                               <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                <div className="w-5 h-5 bg-purple-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
                                 </div>
                                 <span className="text-gray-700 text-xs font-medium">
-                                  {formattedDate}
-                                </span>
+                                {formattedDate}
+                              </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2 text-center relative z-10">
+                            <td className="px-4 py-2 text-center">
                               <div className="flex items-center justify-center gap-2">
-                                <div className="w-6 h-6 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-lg flex items-center justify-center shadow-sm">
-                                  <svg className="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                                <div className="w-5 h-5 bg-yellow-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-2.5 h-2.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
                                 </div>
                                 <div className="relative">
-                                  <span className={`inline-flex items-center justify-center w-8 h-6 rounded-lg text-xs font-bold text-white transition-all duration-300 shadow-lg backdrop-blur-sm ${
-                                    slaStatus === 'atrasado' 
-                                      ? 'bg-gradient-to-r from-red-500 to-red-600 shadow-red-500/40' 
-                                      : slaStatus === 'alerta' 
-                                      ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-yellow-500/40' 
-                                      : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/40'
-                                  }`}>
-                                    {card.sla}
-                                  </span>
-                                  {slaStatus === 'atrasado' && (
-                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse shadow-lg"></div>
-                                  )}
+                                  <span className={`inline-flex items-center justify-center w-7 h-5 rounded-md text-xs font-bold text-white ${
+                                  slaStatus === 'atrasado' 
+                                      ? 'bg-red-500' 
+                                    : slaStatus === 'alerta' 
+                                      ? 'bg-yellow-500' 
+                                      : 'bg-green-500'
+                                }`}>
+                                  {card.sla}
+                                </span>
+                                {slaStatus === 'atrasado' && (
+                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                                )}
                                 </div>
                               </div>
                             </td>

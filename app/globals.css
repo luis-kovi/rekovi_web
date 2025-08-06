@@ -821,130 +821,71 @@ body > div[style*="blur"] {
   border: none !important;
 }
 
-/* Larguras responsivas para as colunas */
+/* Larguras fixas das colunas para alinhamento perfeito */
 #list-view th:nth-child(1), #list-view td:nth-child(1) { 
-  width: 12% !important; 
-  min-width: 120px !important;
+  width: 140px !important; 
+  max-width: 140px !important;
+  min-width: 140px !important;
 }
 
 #list-view th:nth-child(2), #list-view td:nth-child(2) { 
-  width: 18% !important; 
-  min-width: 150px !important;
-}
-
-#list-view th:nth-child(3), #list-view td:nth-child(3) { 
-  width: 18% !important; 
-  min-width: 150px !important;
-}
-
-#list-view th:nth-child(4), #list-view td:nth-child(4) { 
-  width: 22% !important; 
+  width: 180px !important; 
+  max-width: 180px !important;
   min-width: 180px !important;
 }
 
+#list-view th:nth-child(3), #list-view td:nth-child(3) { 
+  width: 180px !important; 
+  max-width: 180px !important;
+  min-width: 180px !important;
+}
+
+#list-view th:nth-child(4), #list-view td:nth-child(4) { 
+  width: 200px !important; 
+  max-width: 200px !important;
+  min-width: 200px !important;
+}
+
 #list-view th:nth-child(5), #list-view td:nth-child(5) { 
-  width: 15% !important; 
-  min-width: 120px !important;
+  width: 150px !important; 
+  max-width: 150px !important;
+  min-width: 150px !important;
 }
 
 #list-view th:nth-child(6), #list-view td:nth-child(6) { 
-  width: 15% !important; 
+  width: 100px !important; 
+  max-width: 100px !important;
+  min-width: 100px !important;
   text-align: center !important; 
-  min-width: 80px !important;
 }
 
-/* Efeitos hover modernos para as linhas da tabela */
+/* Estilo simplificado para tabela sem transformações conflitantes */
+#list-view table {
+  table-layout: fixed !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  width: 100% !important;
+}
+
+#list-view thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  white-space: nowrap !important;
+}
+
 #list-view tbody tr {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative !important;
-  transform: none !important;
+  transition: background-color 0.2s ease !important;
 }
 
 #list-view tbody tr:hover {
-  box-shadow: 0 4px 12px rgba(255, 53, 90, 0.1) !important;
-  background: linear-gradient(90deg, rgba(255, 53, 90, 0.05) 0%, transparent 100%) !important;
-  transform: none !important;
+  background-color: rgba(255, 53, 90, 0.08) !important;
 }
 
-#list-view tbody tr:hover::before {
-  content: '' !important;
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  bottom: 0 !important;
-  width: 3px !important;
-  background: linear-gradient(to bottom, #FF355A, #E02E4D) !important;
-  border-radius: 0 2px 2px 0 !important;
-  z-index: 1 !important;
-}
-
-/* Garantir que o conteúdo da célula não seja afetado pelo pseudo-elemento */
-#list-view tbody tr:hover td {
-  position: relative !important;
-  z-index: 2 !important;
-  transform: none !important;
-  left: 0 !important;
-  right: auto !important;
-}
-
-/* Garantir que o conteúdo dentro das células não seja afetado */
-#list-view tbody tr:hover td * {
-  transform: none !important;
-  position: static !important;
-}
-
-/* Regra específica para prevenir qualquer transformação nas linhas da tabela */
-#list-view tbody tr,
-#list-view tbody tr:hover,
-#list-view tbody tr:focus,
-#list-view tbody tr:active {
-  transform: none !important;
-  translate: none !important;
-  left: 0 !important;
-  right: auto !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-/* Garantir que as células mantenham seu alinhamento */
-#list-view tbody td,
-#list-view tbody td:hover,
-#list-view tbody td:focus,
-#list-view tbody td:active {
-  transform: none !important;
-  translate: none !important;
-  left: 0 !important;
-  right: auto !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
-
-/* Prevenir que group-hover cause transformações indesejadas */
-#list-view tbody tr.group:hover td,
-#list-view tbody tr.group:hover td *,
-#list-view tbody tr:hover td,
-#list-view tbody tr:hover td * {
-  transform: none !important;
-  translate: none !important;
-  left: 0 !important;
-  right: auto !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
-
-/* Garantir que elementos com group-hover não causem desalinhamento */
-#list-view .group-hover\:text-\[#FF355A\],
-#list-view .group-hover\:text-gray-900,
-#list-view .group-hover\:bg-\[#FF355A\]\/10,
-#list-view .group-hover\:text-\[#FF355A\] {
-  transform: none !important;
-  translate: none !important;
-  left: 0 !important;
-  right: auto !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
+#list-view tbody td {
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
 }
 
 /* Animações suaves para os badges de SLA */
