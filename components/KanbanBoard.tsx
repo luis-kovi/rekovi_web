@@ -521,7 +521,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               </div>
             </div>
           ) : (
-            <div id="list-view" className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 p-6 relative">
+            <div id="list-view" className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 p-4 relative">
               {/* Background decorativo similar ao Kanban */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
               
@@ -741,9 +741,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                 }`}>
                                   {card.sla}
                                 </span>
-                                {slaStatus === 'atrasado' && (
-                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                                )}
+
                                 </div>
                               </div>
                             </td>
