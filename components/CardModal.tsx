@@ -67,6 +67,9 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   };
 
   const choferOptions = card.empresaResponsavel ? populateChoferOptions(card.empresaResponsavel.toLowerCase()) : [];
+  
+  // Calcular status do SLA
+  const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
 
   return (
     <div id="cardModal" className="modal-overlay fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-50" onClick={onClose}>
@@ -143,36 +146,36 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
         <div className="flex h-[calc(95vh-120px)] relative z-10">
           <div className="flex-1 p-6 overflow-y-auto scroll-container">
             <div id="modal-content" className="space-y-4">
-              {/* SLA e Fase - Card moderno */}
-                <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gradient-to-br from-red-50/80 to-red-100/60 backdrop-blur-sm rounded-xl p-4 border border-red-200/50 shadow-lg relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-red-100 to-red-200 rounded-lg flex items-center justify-center shadow-sm">
-                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm font-bold text-red-700" style={{ fontFamily: 'Inter, sans-serif' }}>SLA</p>
-                    </div>
-                    <p className="text-2xl font-bold text-red-600" style={{ fontFamily: 'Inter, sans-serif' }}>{card.sla}<span className="text-sm ml-1">dias</span></p>
+              {/* SLA e Fase - Tags compactas */}
+              <div className="flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-red-100 px-3 py-2 rounded-lg border border-red-200/50">
+                  <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
-                    </div>
+                  <span className="text-xs font-medium text-red-600">SLA:</span>
+                  <span className={`px-2 py-1 rounded-md text-xs font-bold text-white ${
+                    slaStatus === 'atrasado' 
+                      ? 'bg-red-500' 
+                      : slaStatus === 'alerta' 
+                      ? 'bg-yellow-500' 
+                      : 'bg-green-500'
+                  }`}>
+                    {card.sla} dias
+                  </span>
+                </div>
                 
-                <div className="bg-gradient-to-br from-blue-50/80 to-blue-100/60 backdrop-blur-sm rounded-xl p-4 border border-blue-200/50 shadow-lg relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center shadow-sm">
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 px-3 py-2 rounded-lg border border-blue-200/50">
+                  <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
                   </div>
-                      <p className="text-sm font-bold text-blue-700" style={{ fontFamily: 'Inter, sans-serif' }}>Fase Atual</p>
-                    </div>
-                    <p className="text-lg font-bold text-blue-600" style={{ fontFamily: 'Inter, sans-serif' }}>{displayPhase}</p>
-                  </div>
+                  <span className="text-xs font-medium text-blue-600">Fase:</span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-semibold">
+                    {displayPhase}
+                  </span>
                 </div>
               </div>
 
@@ -328,12 +331,12 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                           href={card.linkMapa} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl backdrop-blur-sm"
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors duration-200"
                         >
-                            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                           </svg>
-                            <span>Google Maps</span>
+                          <span>Maps</span>
                         </a>
                       )}
                       </div>
