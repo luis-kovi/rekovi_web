@@ -16,7 +16,10 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
   const [isDragging, setIsDragging] = useState(false)
   const [translateX, setTranslateX] = useState(0)
   const [startX, setStartX] = useState(0)
+  const [startY, setStartY] = useState(0)
   const [startTime, setStartTime] = useState(0)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const [hasMoved, setHasMoved] = useState(false)
   
   const cardRef = useRef<HTMLDivElement>(null)
   const touchStartX = useRef<number>(0)
@@ -62,52 +65,88 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
     setStartX(e.touches[0].clientX)
+    setStartY(e.touches[0].clientY)
     setStartTime(Date.now())
-    setIsDragging(true)
+    setIsDragging(false)
+    setIsScrolling(false)
+    setHasMoved(false)
+    setTranslateX(0)
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging) return
-    
     const currentX = e.touches[0].clientX
-    const deltaX = currentX - startX
-    const deltaY = Math.abs(e.touches[0].clientY - touchStartY.current)
+    const currentY = e.touches[0].clientY
+    const deltaX = Math.abs(currentX - startX)
+    const deltaY = Math.abs(currentY - startY)
     
-    // Só permite swipe horizontal se o movimento vertical for pequeno
-    if (deltaY < 50) {
+    // Marcar que houve movimento
+    if (!hasMoved && (deltaX > 5 || deltaY > 5)) {
+      setHasMoved(true)
+    }
+    
+    // Determinar direção do movimento
+    if (!isDragging && !isScrolling && (deltaX > 10 || deltaY > 10)) {
+      if (deltaY > deltaX) {
+        // Movimento vertical dominante - é scroll
+        setIsScrolling(true)
+        return
+      } else {
+        // Movimento horizontal dominante - é swipe
+        setIsDragging(true)
+        e.preventDefault()
+      }
+    }
+    
+    // Se está fazendo scroll, não interfere
+    if (isScrolling) {
+      return
+    }
+    
+    // Se está fazendo swipe, processa o movimento
+    if (isDragging) {
       e.preventDefault()
-      setTranslateX(deltaX)
+      const swipeDistance = currentX - startX
+      setTranslateX(swipeDistance)
     }
   }
 
   const handleTouchEnd = () => {
-    if (!isDragging) return
-    
-    const deltaX = translateX
     const deltaTime = Date.now() - startTime
-    const velocity = Math.abs(deltaX) / deltaTime
+    const totalDistance = Math.sqrt(
+      Math.pow(Math.abs(touchStartX.current - startX), 2) + 
+      Math.pow(Math.abs(touchStartY.current - startY), 2)
+    )
     
-    // Determinar se é um swipe válido
-    if (Math.abs(deltaX) > 100 || velocity > 0.5) {
-      if (deltaX > 0) {
-        onSwipe(card.id, 'right')
-      } else {
-        onSwipe(card.id, 'left')
+    // Se foi um swipe horizontal
+    if (isDragging) {
+      const deltaX = translateX
+      const velocity = Math.abs(deltaX) / deltaTime
+      
+      // Determinar se é um swipe válido (distância ou velocidade suficiente)
+      if (Math.abs(deltaX) > 80 || velocity > 0.3) {
+        if (deltaX > 0) {
+          onSwipe(card.id, 'right')
+        } else {
+          onSwipe(card.id, 'left')
+        }
       }
-    } else {
-      // Se não foi um swipe válido, tratar como toque simples para abrir modal
+    } 
+    // Se foi um tap simples (pouco movimento e rápido)
+    else if (!isScrolling && !hasMoved && totalDistance < 10 && deltaTime < 300) {
       onCardPress()
     }
     
-    // Reset
+    // Reset todos os estados
     setIsDragging(false)
+    setIsScrolling(false)
+    setHasMoved(false)
     setTranslateX(0)
   }
 
-  // Adicionar suporte para clique do mouse
+  // Adicionar suporte para clique do mouse (desktop)
   const handleClick = (e: React.MouseEvent) => {
-    // Se não está arrastando, tratar como clique para abrir modal
-    if (!isDragging) {
+    // Para cliques do mouse (desktop), sempre abrir modal
+    if (!isDragging && !isScrolling) {
       onCardPress()
     }
   }
@@ -155,7 +194,7 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
         }`}
         style={{
           transform: `translateX(${translateX}px)`,
-          touchAction: 'pan-y'
+          touchAction: isScrolling ? 'pan-y' : isDragging ? 'none' : 'auto'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
