@@ -525,7 +525,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               {/* Background decorativo similar ao Kanban */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
               
-              <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 h-full overflow-hidden relative z-10">
+              <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 h-full overflow-hidden relative z-10 p-0">
                 {/* Header moderno com estilo Kanban */}
                 <div className="bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846] text-white px-6 py-3 rounded-t-xl relative overflow-hidden">
                   <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
@@ -555,7 +555,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                 </div>
                 
                 {/* Container da tabela com scroll moderno e fundo cinza */}
-                <div className="overflow-y-auto h-full scroll-container bg-gray-50/50">
+                <div className="overflow-y-auto h-full scroll-container">
                   <table className="w-full text-sm bg-white">
                     <thead className="sticky top-0 z-10 bg-gradient-to-r from-red-50/90 to-red-100/70 backdrop-blur-sm border-b border-red-200/50">
                       <tr className="text-[10px] font-bold text-red-700 uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -621,7 +621,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-gradient-to-b from-white/60 to-red-50/30">
+                    <tbody className="bg-white">
                       {filteredCards.map((card, index) => {
                         const isDisabled = disabledPhases.includes(card.faseAtual);
                         const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
@@ -656,7 +656,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                           <tr 
                             key={card.id} 
                             className={`border-b border-red-100/20 hover:bg-red-50/60 cursor-pointer transition-all duration-200 ${
-                              index % 2 === 0 ? 'bg-white/40' : 'bg-red-50/20'
+                              index % 2 === 0 ? 'bg-white' : 'bg-red-50/30'
                             }`}
                             onClick={() => setSelectedCard(card)}
                           >
