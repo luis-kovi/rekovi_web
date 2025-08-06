@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { MOBILE_REGEX } from '@/utils/helpers'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -11,6 +12,27 @@ export default function SignIn() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Verificar se há erro na URL
+    const urlError = searchParams.get('error')
+    if (urlError) {
+      switch (urlError) {
+        case 'oauth_error':
+          setError('Erro na autorização Google. Tente novamente.')
+          break
+        case 'session_error':
+          setError('Erro ao criar sessão. Tente novamente.')
+          break
+        case 'no_code':
+          setError('Autorização incompleta. Tente novamente.')
+          break
+        default:
+          setError('Erro no login. Tente novamente.')
+      }
+    }
+  }, [searchParams])
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -31,7 +53,10 @@ export default function SignIn() {
       if (error) {
         setError(error.message)
       } else {
-        router.push('/kanban')
+        // Detectar se é dispositivo móvel para redirecionar corretamente
+        const isMobile = MOBILE_REGEX.test(navigator.userAgent)
+        const redirectRoute = isMobile ? '/mobile' : '/kanban'
+        router.push(redirectRoute)
       }
     } catch (err) {
       setError('Erro ao fazer login. Tente novamente.')
@@ -50,10 +75,14 @@ export default function SignIn() {
         throw new Error('Supabase client not available')
       }
 
+      // Detectar se é dispositivo móvel para redirecionar corretamente
+      const isMobile = MOBILE_REGEX.test(navigator.userAgent)
+      const redirectRoute = isMobile ? '/mobile' : '/kanban'
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/kanban`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${redirectRoute}`,
           queryParams: {
             prompt: 'consent',
           },

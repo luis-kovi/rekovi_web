@@ -121,3 +121,6 @@ export function isMobileDevice(userAgent: string): boolean {
 export function getRedirectRoute(userAgent: string): string {
   return isMobileDevice(userAgent) ? '/mobile' : '/kanban';
 }
+
+// Regex para detecção móvel no client-side (mais comum)
+export const MOBILE_REGEX = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
