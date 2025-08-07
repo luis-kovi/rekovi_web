@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import Header from '@/components/Header'
 
 // Forçar renderização dinâmica para evitar pré-renderizado
@@ -11,10 +10,11 @@ export const dynamic = 'force-dynamic'
 
 interface User {
   id: string
+  nome: string
   email: string
-  empresa?: string
   permission_type: string
   status: 'active' | 'inactive'
+  area_atuacao: string[] // Array de áreas de atuação
   ultimo_login?: string
 }
 
@@ -25,12 +25,36 @@ interface PaginationInfo {
   usersPerPage: number
 }
 
+// Áreas de atuação disponíveis (em ordem alfabética)
+const AREAS_ATUACAO = [
+  'Belo Horizonte',
+  'Brasília',
+  'Campinas',
+  'Curitiba',
+  'Florianópolis',
+  'Fortaleza',
+  'Goiania',
+  'Porto Alegre',
+  'Recife',
+  'Santos',
+  'São Paulo'
+]
+
+// Opções de permissão
+const PERMISSION_OPTIONS = [
+  { value: 'Ativa', label: 'Ativa' },
+  { value: 'OnSystem', label: 'OnSystem' },
+  { value: 'RVS', label: 'RVS' },
+  { value: 'Chofer', label: 'Chofer' },
+  { value: 'Kovi', label: 'Kovi' }
+]
+
 export default function SettingsPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [pagination, setPagination] = useState<PaginationInfo>({
-    currentPage: 0, // Inicializar com 0 para evitar carregamento prematuro
+    currentPage: 0,
     totalPages: 1,
     totalUsers: 0,
     usersPerPage: 10
@@ -38,11 +62,13 @@ export default function SettingsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({
+    nome: '',
     email: '',
-    empresa: '',
     permission_type: 'Kovi',
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive',
+    area_atuacao: [] as string[]
   })
+  const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
   const [submitting, setSubmitting] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [permissionType, setPermissionType] = useState<string>('')
@@ -55,15 +81,12 @@ export default function SettingsPage() {
     checkAuthAndLoadUsers()
   }, [])
 
-  // Debug: Log quando o componente renderiza
-  console.log('Settings: Component rendering, loading state:', loading)
-
   useEffect(() => {
     console.log('Settings: loadUsers effect triggered - currentPage:', pagination.currentPage, 'searchTerm:', searchTerm, 'loading:', loading)
-    if (pagination.currentPage > 0 && !loading) { // Só carregar se já tiver sido inicializado e não estiver carregando
+    if (pagination.currentPage > 0 && !loading) {
       loadUsers()
     }
-  }, [pagination.currentPage, searchTerm]) // Remover loading das dependências para evitar loop
+  }, [pagination.currentPage, searchTerm])
 
   const checkAuthAndLoadUsers = async () => {
     try {
@@ -83,7 +106,6 @@ export default function SettingsPage() {
 
       console.log('Settings: User session found:', session.user.email)
 
-      // Verificar se é admin usando a mesma lógica da página Kanban
       const permissionType = session.user.app_metadata?.permissionType?.toLowerCase() || 'default'
       console.log('Settings: Permission type from app_metadata:', permissionType)
 
@@ -110,7 +132,6 @@ export default function SettingsPage() {
 
   const loadUsers = async () => {
     try {
-      // Verificar se a página atual é válida
       if (pagination.currentPage <= 0) {
         console.log('Settings: Skipping loadUsers - invalid page:', pagination.currentPage)
         return
@@ -153,30 +174,65 @@ export default function SettingsPage() {
     setPagination(prev => ({ ...prev, currentPage: page }))
   }
 
+  const validateForm = () => {
+    const errors: {[key: string]: string} = {}
+
+    // Validar nome (pelo menos duas palavras)
+    if (!formData.nome.trim()) {
+      errors.nome = 'Campo obrigatório, digite o nome completo do usuário'
+    } else {
+      const words = formData.nome.trim().split(' ').filter(word => word.length > 0)
+      if (words.length < 2) {
+        errors.nome = 'Digite o nome completo do usuário (pelo menos duas palavras)'
+      }
+    }
+
+    // Validar email
+    if (!formData.email.trim()) {
+      errors.email = 'Campo obrigatório'
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        errors.email = 'Digite um e-mail válido'
+      }
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const openAddUserModal = () => {
     setEditingUser(null)
     setFormData({
+      nome: '',
       email: '',
-      empresa: '',
       permission_type: 'Kovi',
-      status: 'active'
+      status: 'active',
+      area_atuacao: []
     })
+    setFormErrors({})
     setShowModal(true)
   }
 
   const openEditUserModal = (user: User) => {
     setEditingUser(user)
     setFormData({
+      nome: user.nome,
       email: user.email,
-      empresa: user.empresa || '',
       permission_type: user.permission_type,
-      status: user.status
+      status: user.status,
+      area_atuacao: user.area_atuacao || []
     })
+    setFormErrors({})
     setShowModal(true)
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
     
     try {
       setSubmitting(true)
@@ -222,6 +278,11 @@ export default function SettingsPage() {
     )
   }
 
+  const formatAreasAtuacao = (areas: string[]) => {
+    if (!areas || areas.length === 0) return 'N/A'
+    return areas.join(', ')
+  }
+
   if (!user) {
     return (
       <div className="flex flex-col h-screen bg-gray-50">
@@ -260,7 +321,7 @@ export default function SettingsPage() {
               <div className="relative">
                 <input 
                   type="search" 
-                  placeholder="Buscar por e-mail ou empresa..." 
+                  placeholder="Buscar por nome, e-mail ou área..." 
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
                   className="w-80 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 bg-white shadow-sm hover:shadow-md"
@@ -283,10 +344,10 @@ export default function SettingsPage() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
                     <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissão</th>
                     <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Último Login</th>
+                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área de Atuação</th>
                     <th className="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                   </tr>
                 </thead>
@@ -308,12 +369,11 @@ export default function SettingsPage() {
                       <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                         <td className="py-4 px-6 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {user.email.split('@')[0]}
+                            {user.nome}
                           </div>
-                          <div className="text-sm text-gray-500">{user.email}</div>
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-500">
-                          {user.empresa || 'N/A'}
+                          {user.email}
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-500">
                           {user.permission_type}
@@ -322,7 +382,7 @@ export default function SettingsPage() {
                           {getStatusBadge(user.status)}
                         </td>
                         <td className="py-4 px-6 text-sm text-gray-500">
-                          {formatDate(user.ultimo_login)}
+                          {formatAreasAtuacao(user.area_atuacao)}
                         </td>
                         <td className="py-4 px-6 text-right">
                           <button 
@@ -387,7 +447,7 @@ export default function SettingsPage() {
       {/* User Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg transform scale-95 modal-panel">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl transform scale-95 modal-panel max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-xl font-bold">
                 {editingUser ? 'Editar Usuário' : 'Cadastrar Novo Usuário'}
@@ -401,9 +461,31 @@ export default function SettingsPage() {
             </div>
             <div className="p-6">
               <form onSubmit={handleFormSubmit} className="space-y-4">
+                {/* Nome */}
+                <div>
+                  <label htmlFor="user-nome" className="block text-sm font-medium text-gray-700">
+                    Nome *
+                  </label>
+                  <input 
+                    type="text" 
+                    id="user-nome"
+                    required
+                    value={formData.nome}
+                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                    className={`mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 ${
+                      formErrors.nome ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Digite o nome completo do usuário"
+                  />
+                  {formErrors.nome && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.nome}</p>
+                  )}
+                </div>
+
+                {/* Email */}
                 <div>
                   <label htmlFor="user-email" className="block text-sm font-medium text-gray-700">
-                    E-mail
+                    E-mail *
                   </label>
                   <input 
                     type="email" 
@@ -411,24 +493,20 @@ export default function SettingsPage() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200"
+                    className={`mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 ${
+                      formErrors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="usuario@exemplo.com"
                   />
+                  {formErrors.email && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                  )}
                 </div>
-                <div>
-                  <label htmlFor="user-empresa" className="block text-sm font-medium text-gray-700">
-                    Empresa
-                  </label>
-                  <input 
-                    type="text" 
-                    id="user-empresa"
-                    value={formData.empresa}
-                    onChange={(e) => setFormData(prev => ({ ...prev, empresa: e.target.value }))}
-                    className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200"
-                  />
-                </div>
+
+                {/* Permissão */}
                 <div>
                   <label htmlFor="user-permission" className="block text-sm font-medium text-gray-700">
-                    Permissão
+                    Permissão *
                   </label>
                   <select 
                     id="user-permission"
@@ -437,16 +515,18 @@ export default function SettingsPage() {
                     onChange={(e) => setFormData(prev => ({ ...prev, permission_type: e.target.value }))}
                     className="mt-1 block w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 appearance-none"
                   >
-                    <option value="Kovi">Kovi</option>
-                    <option value="OnSystem">OnSystem</option>
-                    <option value="Ativa">Ativa</option>
-                    <option value="Chofer">Chofer</option>
-                    <option value="Admin">Admin</option>
+                    {PERMISSION_OPTIONS.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
+
+                {/* Status */}
                 <div>
                   <label htmlFor="user-status" className="block text-sm font-medium text-gray-700">
-                    Status
+                    Status *
                   </label>
                   <select 
                     id="user-status"
@@ -459,6 +539,39 @@ export default function SettingsPage() {
                     <option value="inactive">Inativo</option>
                   </select>
                 </div>
+
+                {/* Área de Atuação */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Área de Atuação
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-3">
+                    {AREAS_ATUACAO.map((area) => (
+                      <label key={area} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.area_atuacao.includes(area)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData(prev => ({
+                                ...prev,
+                                area_atuacao: [...prev.area_atuacao, area]
+                              }))
+                            } else {
+                              setFormData(prev => ({
+                                ...prev,
+                                area_atuacao: prev.area_atuacao.filter(a => a !== area)
+                              }))
+                            }
+                          }}
+                          className="rounded border-gray-300 text-[#FF355A] focus:ring-[#FF355A]"
+                        />
+                        <span className="text-sm text-gray-700">{area}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="text-right pt-4">
                   <button 
                     type="submit"
