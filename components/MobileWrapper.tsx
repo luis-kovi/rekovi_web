@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Header from './Header'
+import MobileHeader from './MobileHeader'
 import MobileTaskManager from './MobileTaskManager'
 import type { Card } from '@/types'
 
@@ -16,7 +16,7 @@ export default function MobileWrapper({ initialCards, permissionType, user }: Mo
 
   return (
     <div className="app-mobile flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
-      <Header user={user} permissionType={permissionType} isUpdating={isUpdating} />
+      <MobileHeader user={user} permissionType={permissionType} isUpdating={isUpdating} />
       <MobileTaskManager 
         initialCards={initialCards} 
         permissionType={permissionType} 
