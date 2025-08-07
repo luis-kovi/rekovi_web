@@ -455,6 +455,30 @@ select {
   .animate-tilt {
     animation-duration: 15s;
   }
+
+  /* Garantir que dropdown móvel funcione corretamente em telas pequenas */
+  header .relative .absolute {
+    z-index: 1000001 !important;
+    position: absolute !important;
+    right: 0 !important;
+    top: 100% !important;
+    margin-top: 0.5rem !important;
+    width: 12rem !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+
+  /* Garantir que overlay do dropdown mobile funcione */
+  header + .fixed.inset-0 {
+    z-index: 999999 !important;
+    background-color: transparent !important;
+    pointer-events: auto !important;
+  }
+
+  /* Evitar que outros elementos móveis sobreponham o dropdown */
+  .mobile-card:not(.dropdown-open),
+  .mobile-modal-backdrop:not(.dropdown-open) {
+    z-index: 9999 !important;
+  }
 }
 
 /* Animações específicas para interface móvel */
@@ -1064,6 +1088,48 @@ header .relative > div[style*="z-index"] {
   pointer-events: auto !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+/* REGRAS ESPECÍFICAS PARA MOBILE HEADER DROPDOWN */
+/* Garantir que o dropdown do mobile header tenha z-index ainda maior */
+header .relative .absolute {
+  z-index: 1000000 !important;
+  position: absolute !important;
+}
+
+/* Dropdown menu específico do mobile com z-index alto */
+.absolute.right-0.top-full {
+  z-index: 1000001 !important;
+  position: absolute !important;
+}
+
+/* Garantir que o dropdown móvel apareça acima de modais */
+header .relative > .absolute {
+  z-index: 1000001 !important;
+  position: absolute !important;
+  background-color: white !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(229, 231, 235, 1) !important;
+}
+
+/* Overlay específico para mobile dropdown */
+header + .fixed.inset-0 {
+  z-index: 999999 !important;
+  position: fixed !important;
+  background-color: transparent !important;
+}
+
+/* Garantir que elementos móveis não sobreponham o dropdown */
+.mobile-card,
+.mobile-modal-backdrop,
+.mobile-modal-content {
+  z-index: 9999 !important;
+}
+
+/* Forçar z-index para dropdown do mobile header */
+[class*="z-[1000000]"] {
+  z-index: 1000000 !important;
 }
 
 
