@@ -102,7 +102,7 @@ export default function MobileHeader({ user, permissionType, isUpdating = false,
 
             {/* Dropdown menu */}
             {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[9999]">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-[999999]">
                 <div className="py-1">
                   {/* Informações do usuário */}
                   <div className="px-4 py-2 border-b border-gray-100">
@@ -146,7 +146,7 @@ export default function MobileHeader({ user, permissionType, isUpdating = false,
       {/* Overlay para fechar dropdown */}
       {showDropdown && (
         <div 
-          className="fixed inset-0 z-[9998]" 
+          className="fixed inset-0 z-[999998]" 
           onClick={() => setShowDropdown(false)}
         />
       )}
