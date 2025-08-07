@@ -12,6 +12,7 @@ interface User {
   id: string
   nome: string
   email: string
+  empresa: string
   permission_type: string
   status: 'active' | 'inactive'
   area_atuacao: string[] // Array de áreas de atuação
@@ -40,6 +41,14 @@ const AREAS_ATUACAO = [
   'São Paulo'
 ]
 
+// Opções de empresa (em ordem alfabética)
+const EMPRESA_OPTIONS = [
+  'Ativa Pronta Resposta',
+  'Kovi Tecnologia S/A',
+  'OnSystem Recuperações',
+  'RVS Monitoramento'
+]
+
 // Opções de permissão
 const PERMISSION_OPTIONS = [
   { value: 'Ativa', label: 'Ativa' },
@@ -64,6 +73,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
+    empresa: '',
     permission_type: 'Kovi',
     status: 'active' as 'active' | 'inactive',
     area_atuacao: [] as string[]
@@ -87,6 +97,16 @@ export default function SettingsPage() {
       loadUsers()
     }
   }, [pagination.currentPage, searchTerm])
+
+  // Auto-selecionar todas as áreas quando empresa e permissão são Kovi
+  useEffect(() => {
+    if (formData.empresa === 'Kovi Tecnologia S/A' && formData.permission_type === 'Kovi') {
+      setFormData(prev => ({
+        ...prev,
+        area_atuacao: [...AREAS_ATUACAO]
+      }))
+    }
+  }, [formData.empresa, formData.permission_type])
 
   const checkAuthAndLoadUsers = async () => {
     try {
@@ -197,6 +217,11 @@ export default function SettingsPage() {
       }
     }
 
+    // Validar empresa
+    if (!formData.empresa.trim()) {
+      errors.empresa = 'Campo obrigatório'
+    }
+
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -206,6 +231,7 @@ export default function SettingsPage() {
     setFormData({
       nome: '',
       email: '',
+      empresa: '',
       permission_type: 'Kovi',
       status: 'active',
       area_atuacao: []
@@ -219,6 +245,7 @@ export default function SettingsPage() {
     setFormData({
       nome: user.nome,
       email: user.email,
+      empresa: user.empresa,
       permission_type: user.permission_type,
       status: user.status,
       area_atuacao: user.area_atuacao || []
@@ -285,7 +312,7 @@ export default function SettingsPage() {
 
   if (!user) {
     return (
-      <div className="flex flex-col h-screen bg-gray-50">
+      <div className="app-settings flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
         <Header user={user} permissionType={permissionType} isUpdating={false} />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -298,148 +325,154 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="app-settings flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
       {/* Header */}
       <Header user={user} permissionType={permissionType} isUpdating={false} />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8 px-6">
-              <a href="#" className="border-[#FF355A] text-[#FF355A] whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
-                Usuários
-              </a>
-            </nav>
-          </div>
-
-          {/* Users Tab Content */}
-          <div className="p-6">
-            {/* Search and Add Button */}
-            <div className="flex justify-between items-center mb-6">
-              <div className="relative">
-                <input 
-                  type="search" 
-                  placeholder="Buscar por nome, e-mail ou área..." 
-                  value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-80 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 bg-white shadow-sm hover:shadow-md"
-                />
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M9.5 16q-2.725 0-4.612-1.888T3 9.5q0-2.725 1.888-4.612T9.5 3q2.725 0 4.612 1.888T16 9.5q0 1.1-.35 2.075t-.925 1.775l5.075 5.075q.275.275.275.7t-.275.7q-.275.275-.7.275t-.7-.275L13.15 14.2q-.8.575-1.775.925T9.5 16zm0-2q1.875 0 3.188-1.313T14 9.5q0-1.875-1.313-3.188T9.5 5Q7.625 5 6.312 6.313T5 9.5q0 1.875 1.313 3.188T9.5 14z"/>
-                </svg>
-              </div>
-              <button 
-                onClick={openAddUserModal}
-                className="bg-[#FF355A] hover:bg-[#E02E4D] text-white px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30"
-              >
-                Cadastrar Usuário
-              </button>
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8 px-6">
+                <a href="#" className="border-[#FF355A] text-[#FF355A] whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                  Usuários
+                </a>
+              </nav>
             </div>
 
-            {/* Users Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissão</th>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área de Atuação</th>
-                    <th className="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {loading ? (
+            {/* Users Tab Content */}
+            <div className="p-6">
+              {/* Search and Add Button */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="relative">
+                  <input 
+                    type="search" 
+                    placeholder="Buscar por nome, e-mail, empresa ou área..." 
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="w-80 pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+                  />
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M9.5 16q-2.725 0-4.612-1.888T3 9.5q0-2.725 1.888-4.612T9.5 3q2.725 0 4.612 1.888T16 9.5q0 1.1-.35 2.075t-.925 1.775l5.075 5.075q.275.275.275.7t-.275.7q-.275.275-.7.275t-.7-.275L13.15 14.2q-.8.575-1.775.925T9.5 16zm0-2q1.875 0 3.188-1.313T14 9.5q0-1.875-1.313-3.188T9.5 5Q7.625 5 6.312 6.313T5 9.5q0 1.875 1.313 3.188T9.5 14z"/>
+                  </svg>
+                </div>
+                <button 
+                  onClick={openAddUserModal}
+                  className="bg-[#FF355A] hover:bg-[#E02E4D] text-white px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30"
+                >
+                  Cadastrar Usuário
+                </button>
+              </div>
+
+              {/* Users Table */}
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <td colSpan={6} className="text-center py-10 text-gray-500">
-                        Carregando usuários...
-                      </td>
+                      <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                      <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-mail</th>
+                      <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Empresa</th>
+                      <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Permissão</th>
+                      <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área de Atuação</th>
+                      <th className="py-3 px-6 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                     </tr>
-                  ) : users.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="text-center py-10 text-gray-500">
-                        Nenhum usuário encontrado.
-                      </td>
-                    </tr>
-                  ) : (
-                    users.map((user) => (
-                      <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="py-4 px-6 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {user.nome}
-                          </div>
-                        </td>
-                        <td className="py-4 px-6 text-sm text-gray-500">
-                          {user.email}
-                        </td>
-                        <td className="py-4 px-6 text-sm text-gray-500">
-                          {user.permission_type}
-                        </td>
-                        <td className="py-4 px-6">
-                          {getStatusBadge(user.status)}
-                        </td>
-                        <td className="py-4 px-6 text-sm text-gray-500">
-                          {formatAreasAtuacao(user.area_atuacao)}
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <button 
-                            onClick={() => openEditUserModal(user)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                              <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                              <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                            </svg>
-                          </button>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={7} className="text-center py-10 text-gray-500">
+                          Carregando usuários...
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="mt-6 flex justify-between items-center">
-                <span className="text-sm text-gray-700">
-                  Página {pagination.currentPage} de {pagination.totalPages}
-                </span>
-                <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => handlePageChange(1)}
-                    disabled={pagination.currentPage === 1}
-                    className="pagination-btn"
-                  >
-                    «
-                  </button>
-                  <button 
-                    onClick={() => handlePageChange(pagination.currentPage - 1)}
-                    disabled={pagination.currentPage === 1}
-                    className="pagination-btn"
-                  >
-                    ‹
-                  </button>
-                  <button 
-                    onClick={() => handlePageChange(pagination.currentPage + 1)}
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    className="pagination-btn"
-                  >
-                    ›
-                  </button>
-                  <button 
-                    onClick={() => handlePageChange(pagination.totalPages)}
-                    disabled={pagination.currentPage === pagination.totalPages}
-                    className="pagination-btn"
-                  >
-                    »
-                  </button>
-                </div>
+                    ) : users.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="text-center py-10 text-gray-500">
+                          Nenhum usuário encontrado.
+                        </td>
+                      </tr>
+                    ) : (
+                      users.map((user) => (
+                        <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="py-4 px-6 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.nome}
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-sm text-gray-500">
+                            {user.email}
+                          </td>
+                          <td className="py-4 px-6 text-sm text-gray-500">
+                            {user.empresa}
+                          </td>
+                          <td className="py-4 px-6 text-sm text-gray-500">
+                            {user.permission_type}
+                          </td>
+                          <td className="py-4 px-6">
+                            {getStatusBadge(user.status)}
+                          </td>
+                          <td className="py-4 px-6 text-sm text-gray-500">
+                            {formatAreasAtuacao(user.area_atuacao)}
+                          </td>
+                          <td className="py-4 px-6 text-right">
+                            <button 
+                              onClick={() => openEditUserModal(user)}
+                              className="text-blue-600 hover:text-blue-900 transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
-            )}
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-6 flex justify-between items-center">
+                  <span className="text-sm text-gray-700">
+                    Página {pagination.currentPage} de {pagination.totalPages}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => handlePageChange(1)}
+                      disabled={pagination.currentPage === 1}
+                      className="pagination-btn"
+                    >
+                      «
+                    </button>
+                    <button 
+                      onClick={() => handlePageChange(pagination.currentPage - 1)}
+                      disabled={pagination.currentPage === 1}
+                      className="pagination-btn"
+                    >
+                      ‹
+                    </button>
+                    <button 
+                      onClick={() => handlePageChange(pagination.currentPage + 1)}
+                      disabled={pagination.currentPage === pagination.totalPages}
+                      className="pagination-btn"
+                    >
+                      ›
+                    </button>
+                    <button 
+                      onClick={() => handlePageChange(pagination.totalPages)}
+                      disabled={pagination.currentPage === pagination.totalPages}
+                      className="pagination-btn"
+                    >
+                      »
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -500,6 +533,32 @@ export default function SettingsPage() {
                   />
                   {formErrors.email && (
                     <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                  )}
+                </div>
+
+                {/* Empresa */}
+                <div>
+                  <label htmlFor="user-empresa" className="block text-sm font-medium text-gray-700">
+                    Empresa *
+                  </label>
+                  <select 
+                    id="user-empresa"
+                    required
+                    value={formData.empresa}
+                    onChange={(e) => setFormData(prev => ({ ...prev, empresa: e.target.value }))}
+                    className={`mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-[#FF355A] focus:ring-opacity-30 focus:border-[#FF355A] focus:outline-none transition-all duration-200 appearance-none ${
+                      formErrors.empresa ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  >
+                    <option value="">Selecione uma empresa</option>
+                    {EMPRESA_OPTIONS.map(empresa => (
+                      <option key={empresa} value={empresa}>
+                        {empresa}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.empresa && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.empresa}</p>
                   )}
                 </div>
 
