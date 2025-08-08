@@ -535,7 +535,7 @@ export default function SettingsPage() {
                             </button>
                               <button 
                                 onClick={() => handleInactivateUser(user)}
-                                className={`inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded-md transition-all duration-200 ${
+                                className={`p-2 rounded-full transition-all duration-200 ${
                                   user.status === 'active' 
                                     ? 'text-orange-700 bg-orange-100 hover:bg-orange-200' 
                                     : 'text-green-700 bg-green-100 hover:bg-green-200'
@@ -543,19 +543,15 @@ export default function SettingsPage() {
                                 title={user.status === 'active' ? 'Inativar usuário' : 'Ativar usuário'}
                               >
                                 {user.status === 'active' ? (
-                                  <>
-                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Pausar
-                                  </>
+                                  // Cadeado aberto - para inativar usuário ativo
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                  </svg>
                                 ) : (
-                                  <>
-                                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-8 0v6a2 2 0 002 2h4a2 2 0 002-2v-6m-8 0V8a2 2 0 012-2h4a2 2 0 012 2v2" />
-                                    </svg>
-                                    Ativar
-                                  </>
+                                  // Cadeado fechado - para ativar usuário inativo
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
                                 )}
                               </button>
                             </div>
@@ -620,26 +616,23 @@ export default function SettingsPage() {
                           </button>
                           <button 
                             onClick={() => handleInactivateUser(user)}
-                            className={`inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded-md transition-all duration-200 ${
+                            className={`p-2 rounded-full transition-all duration-200 ${
                               user.status === 'active' 
                                 ? 'text-orange-700 bg-orange-100 hover:bg-orange-200' 
                                 : 'text-green-700 bg-green-100 hover:bg-green-200'
                             }`}
+                            title={user.status === 'active' ? 'Inativar usuário' : 'Ativar usuário'}
                           >
                             {user.status === 'active' ? (
-                              <>
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Pausar
-                              </>
+                              // Cadeado aberto - para inativar usuário ativo
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                              </svg>
                             ) : (
-                              <>
-                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m-8 0v6a2 2 0 002 2h4a2 2 0 002-2v-6m-8 0V8a2 2 0 012-2h4a2 2 0 012 2v2" />
-                                </svg>
-                                Ativar
-                              </>
+                              // Cadeado fechado - para ativar usuário inativo
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
                             )}
                           </button>
                         </div>
@@ -697,11 +690,11 @@ export default function SettingsPage() {
                       onClick={() => handlePageChange(pagination.currentPage - 1)}
                       disabled={pagination.currentPage === 1}
                         className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
+                    >
                         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
-                      </button>
+                    </button>
                       
                       {/* Page Numbers */}
                       {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
