@@ -157,119 +157,221 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
         </div>
 
         {/* Content */}
-        <div className="max-h-[70vh] overflow-y-auto">
-          <div className="min-h-[500px]"> {/* Altura mínima fixa aumentada */}
+        <div className="max-h-[75vh] overflow-y-auto">
+          <div className="min-h-[400px]"> {/* Altura otimizada */}
             {activeTab === 'details' && (
-              <div className="p-6 space-y-6">
-                {/* Informações do veículo */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900">Informações do veículo</h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Placa</span>
-                      <span className="text-sm font-medium text-gray-900">{card.placa}</span>
-                    </div>
-                    {card.modeloVeiculo && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Modelo</span>
-                        <span className="text-sm font-medium text-gray-900">{card.modeloVeiculo}</span>
+              <div className="p-4 space-y-4">
+                {/* Status e Fase Atual */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
                       </div>
-                    )}
+                      Status Atual
+                    </h3>
+                    <span className="text-xs text-gray-500">{formatDate(card.dataCriacao)}</span>
+                  </div>
+                  <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${getPhaseColor(card.faseAtual)}`}>
+                    {adaptPhaseName(card.faseAtual)}
+                  </div>
+                </div>
+
+                {/* Grid Layout Compacto */}
+                <div className="grid grid-cols-1 gap-4">
+                  
+                  {/* Veículo - Layout Horizontal Compacto */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-gray-900">Informações do Veículo</h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-500 mb-1">Placa</p>
+                        <p className="font-bold text-lg text-gray-900">{card.placa}</p>
+                      </div>
+                      {card.modeloVeiculo && (
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 mb-1">Modelo</p>
+                          <p className="font-medium text-sm text-gray-900">{card.modeloVeiculo}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Localização com destaque */}
                     {card.enderecoRecolha && (
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-gray-500">Localização</span>
+                      <div className="mt-3 bg-orange-50 rounded-lg p-3 border border-orange-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-medium text-orange-700">📍 Localização</p>
                           {card.linkMapa && (
                             <button
                               onClick={() => openMap(card.linkMapa!)}
-                              className="text-xs text-[#FF355A] hover:underline flex items-center gap-1"
+                              className="flex items-center gap-1 px-2 py-1 bg-orange-100 rounded-md text-xs text-orange-700 hover:bg-orange-200 transition-colors"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
-                              Google Maps
+                              Maps
                             </button>
                           )}
                         </div>
-                        <p className="text-sm text-gray-900">{card.enderecoRecolha}</p>
+                        <p className="text-xs text-gray-800 leading-relaxed">{card.enderecoRecolha}</p>
                       </div>
                     )}
+
                     {card.origemLocacao && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Local para entrega</span>
-                        <span className="text-sm font-medium text-gray-900">{card.origemLocacao}</span>
+                      <div className="mt-3 bg-green-50 rounded-lg p-3 border border-green-100">
+                        <p className="text-xs font-medium text-green-700 mb-1">🎯 Local para Entrega</p>
+                        <p className="text-xs text-gray-800">{card.origemLocacao}</p>
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Informações do cliente */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900">Informações do cliente</h3>
-                  <div className="space-y-3">
+                  {/* Cliente - Layout Compacto com Ações */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-gray-900">Cliente</h4>
+                    </div>
+
                     {card.nomeDriver && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Nome</span>
-                        <span className="text-sm font-medium text-gray-900">{card.nomeDriver}</span>
+                      <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                        <p className="text-xs text-blue-600 mb-1">Nome</p>
+                        <p className="font-semibold text-gray-900">{card.nomeDriver}</p>
                       </div>
                     )}
-                    {card.telefoneContato && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Telefone</span>
+
+                    {/* Telefones em Grid */}
+                    <div className="grid grid-cols-1 gap-2">
+                      {card.telefoneContato && (
                         <button
                           onClick={() => makeCall(card.telefoneContato!)}
-                          className="text-sm font-medium text-[#FF355A] hover:underline"
+                          className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100 hover:bg-green-100 transition-colors"
                         >
-                          {card.telefoneContato}
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <div className="text-left">
+                              <p className="text-xs text-green-600">Telefone Principal</p>
+                              <p className="font-medium text-sm text-gray-900">{card.telefoneContato}</p>
+                            </div>
+                          </div>
+                          <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </button>
-                      </div>
-                    )}
-                    {card.telefoneOpcional && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">Telefone opcional</span>
+                      )}
+
+                      {card.telefoneOpcional && (
                         <button
                           onClick={() => makeCall(card.telefoneOpcional!)}
-                          className="text-sm font-medium text-[#FF355A] hover:underline"
+                          className="flex items-center justify-between bg-yellow-50 p-3 rounded-lg border border-yellow-100 hover:bg-yellow-100 transition-colors"
                         >
-                          {card.telefoneOpcional}
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <div className="text-left">
+                              <p className="text-xs text-yellow-600">Telefone Opcional</p>
+                              <p className="font-medium text-sm text-gray-900">{card.telefoneOpcional}</p>
+                            </div>
+                          </div>
+                          <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    {/* Endereço de Cadastro */}
                     {card.enderecoCadastro && (
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm text-gray-500">Endereço de cadastro</span>
+                      <div className="mt-3 bg-purple-50 rounded-lg p-3 border border-purple-100">
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-xs font-medium text-purple-700">🏠 Endereço de Cadastro</p>
                           <button
                             onClick={() => copyToClipboard(card.enderecoCadastro!)}
-                            className="text-xs text-[#FF355A] hover:underline"
+                            className="flex items-center gap-1 px-2 py-1 bg-purple-100 rounded-md text-xs text-purple-700 hover:bg-purple-200 transition-colors"
                           >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
                             Copiar
                           </button>
                         </div>
-                        <p className="text-sm text-gray-900">{card.enderecoCadastro}</p>
+                        <p className="text-xs text-gray-800 leading-relaxed">{card.enderecoCadastro}</p>
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Prestador */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900">Prestador</h3>
-                  <div className="space-y-3">
-                    {card.empresaResponsavel && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-500">Empresa</span>
-                        <span className="text-sm font-medium text-gray-900">{card.empresaResponsavel}</span>
+                  {/* Prestador - Layout Compacto */}
+                  <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
+                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
                       </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-500">Chofer</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        {card.chofer ? card.chofer : <em>Não há chofer alocado</em>}
-                      </span>
+                      <h4 className="font-semibold text-gray-900">Prestador</h4>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {card.empresaResponsavel && (
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 mb-1">Empresa</p>
+                          <p className="font-medium text-sm text-gray-900">{card.empresaResponsavel}</p>
+                        </div>
+                      )}
+                      
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-500 mb-1">Chofer</p>
+                        <p className="font-medium text-sm text-gray-900">
+                          {card.chofer ? card.chofer : <span className="italic text-gray-400">Não há chofer alocado</span>}
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Informações Financeiras (se disponível) */}
+                  {(card.valorRecolha || card.custoKmAdicional) && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                        </div>
+                        <h4 className="font-semibold text-gray-900">Valores</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        {card.valorRecolha && (
+                          <div className="bg-white rounded-lg p-3">
+                            <p className="text-xs text-green-600 mb-1">Valor Recolha</p>
+                            <p className="font-bold text-lg text-gray-900">{card.valorRecolha}</p>
+                          </div>
+                        )}
+                        {card.custoKmAdicional && (
+                          <div className="bg-white rounded-lg p-3">
+                            <p className="text-xs text-green-600 mb-1">Custo KM</p>
+                            <p className="font-bold text-lg text-gray-900">{card.custoKmAdicional}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
