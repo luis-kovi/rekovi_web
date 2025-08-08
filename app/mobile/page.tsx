@@ -2,6 +2,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import MobileWrapper from '@/components/MobileWrapper'
+import { getUserDataServer } from '@/utils/user-data'
+import { filterCardsByPermissionsImproved } from '@/utils/auth-validation'
 import type { Card } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -17,26 +19,22 @@ export default async function MobilePage() {
   const { data } = await supabase.auth.getUser()
   const user = data?.user
 
-  if (!user) {
+  if (!user?.email) {
     return redirect('/')
   }
 
-  const permissionType = user.app_metadata?.permissionType?.toLowerCase() || 'default';
+  // Buscar dados do usuário na tabela pre_approved_users
+  const userData = await getUserDataServer(user.email)
   
-  // Verificar se o usuário está cadastrado
-  if (!permissionType || permissionType === 'default') {
-    return redirect('/?error=unauthorized')
+  if (!userData) {
+    return redirect('/auth/signin?error=user_not_registered')
+  }
+
+  if (userData.status !== 'active') {
+    return redirect('/auth/signin?error=user_inactive')
   }
   
-  let query = supabase.from('v_pipefy_cards_detalhada').select(`
-    card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
-    phase_name, created_at, email_chofer, empresa_recolha,
-    modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
-    endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
-    valor_recolha, custo_km_adicional, public_url
-  `).order('card_id', { ascending: true }).limit(100000);
-
-  // Filtrar apenas cards com fases válidas diretamente na query
+  // Buscar todos os cards válidos (filtros serão aplicados depois)
   const validPhases = [
     'Fila de Recolha',
     'Aprovar Custo de Recolha', 
@@ -48,16 +46,18 @@ export default async function MobilePage() {
     'Nova tentativa de recolha',
     'Confirmação de Entrega no Pátio'
   ];
-  
-  // Filtrar por fases válidas
-  query = query.in('phase_name', validPhases);
-  
-  if (permissionType === 'ativa' || permissionType === 'onsystem') {
-    query = query.ilike('empresa_recolha', permissionType);
-  } else if (permissionType === 'chofer') {
+
+  let query = supabase.from('v_pipefy_cards_detalhada').select(`
+    card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
+    phase_name, created_at, email_chofer, empresa_recolha,
+    modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
+    endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
+    valor_recolha, custo_km_adicional, public_url
+  `).in('phase_name', validPhases).order('card_id', { ascending: true }).limit(100000);
+
+  // Para chofer, aplicar filtro específico por email
+  if (userData.permission_type.toLowerCase() === 'chofer') {
     query = query.eq('email_chofer', user.email);
-  } else if (permissionType !== 'kovi' && permissionType !== 'admin') {
-    query = query.eq('card_id', 'impossivel'); 
   }
 
   const { data: cardsData, error } = await query;
@@ -66,7 +66,8 @@ export default async function MobilePage() {
     console.error('Erro ao buscar os cards:', error);
   }
   
-  const initialCards: Card[] = (cardsData || []).map((card: any) => ({
+  // Converter dados para formato Card
+  const allCards: Card[] = (cardsData || []).map((card: any) => ({
     id: card.card_id || '',
     placa: card.placa_veiculo || '',
     nomeDriver: card.nome_driver || '',
@@ -86,12 +87,19 @@ export default async function MobilePage() {
     valorRecolha: card.valor_recolha || '',
     custoKmAdicional: card.custo_km_adicional || '',
     urlPublica: card.public_url || '',
-  })).filter((card: Card) => card.id && card.placa); // Filtrar apenas cards válidos
+  })).filter((card: Card) => card.id && card.placa);
+
+  // Aplicar filtros baseados nas permissões da tabela pre_approved_users
+  const filteredCards = filterCardsByPermissionsImproved(allCards, userData);
+
+  console.log('Debug Mobile - User Data:', userData);
+  console.log('Debug Mobile - Total cards before filter:', allCards.length);
+  console.log('Debug Mobile - Total cards after filter:', filteredCards.length);
 
   return (
     <MobileWrapper 
-      initialCards={initialCards} 
-      permissionType={permissionType} 
+      initialCards={filteredCards} 
+      permissionType={userData.permission_type} 
       user={user} 
     />
   )

@@ -162,22 +162,41 @@ export default function SettingsPage() {
       console.log('Settings: Loading users for page:', pagination.currentPage)
       setLoading(true)
       
-      const { data, error } = await supabase.functions.invoke('get-users', {
-        body: { 
-          search: searchTerm, 
-          page: pagination.currentPage, 
-          limit: pagination.usersPerPage 
-        }
-      })
+      // Buscar diretamente da tabela pre_approved_users
+      let query = supabase
+        .from('pre_approved_users')
+        .select('email, permission_type, status, empresa, area_atuacao', { count: 'exact' })
+
+      // Aplicar filtro de busca se existir
+      if (searchTerm) {
+        query = query.or(`email.ilike.%${searchTerm}%,empresa.ilike.%${searchTerm}%`)
+      }
+
+      // Aplicar paginação
+      const offset = (pagination.currentPage - 1) * pagination.usersPerPage
+      query = query.range(offset, offset + pagination.usersPerPage - 1)
+
+      const { data: users, error, count } = await query
 
       if (error) throw error
-      if (data.error) throw new Error(data.error)
 
-      setUsers(data.users || [])
+      // Converter para formato esperado
+      const formattedUsers = (users || []).map(user => ({
+        id: user.email, // Usar email como ID único
+        nome: user.email.split('@')[0], // Extrair nome do email
+        email: user.email,
+        empresa: user.empresa,
+        permission_type: user.permission_type,
+        status: user.status,
+        area_atuacao: user.area_atuacao || [],
+        ultimo_login: null // Campo não disponível na nova tabela
+      }))
+
+      setUsers(formattedUsers)
       setPagination(prev => ({
         ...prev,
-        totalUsers: data.count || 0,
-        totalPages: Math.ceil((data.count || 0) / pagination.usersPerPage)
+        totalUsers: count || 0,
+        totalPages: Math.ceil((count || 0) / pagination.usersPerPage)
       }))
     } catch (error) {
       console.error('Erro ao carregar usuários:', error)
@@ -267,12 +286,12 @@ export default function SettingsPage() {
     try {
       setSubmitting(true)
       const newStatus = userToToggle.status === 'active' ? 'inactive' : 'active'
-      const { error } = await supabase.functions.invoke('update-user-permission', {
-        body: { 
-          id: userToToggle.id, 
-          updates: { status: newStatus }
-        }
-      })
+      
+      // Atualizar diretamente na tabela pre_approved_users
+      const { error } = await supabase
+        .from('pre_approved_users')
+        .update({ status: newStatus })
+        .eq('email', userToToggle.email)
 
       if (error) throw error
       await loadUsers()
@@ -314,19 +333,33 @@ export default function SettingsPage() {
     try {
       setSubmitting(true)
       
-      let result
       if (editingUser) {
-        result = await supabase.functions.invoke('update-user-permission', {
-          body: { id: editingUser.id, updates: formData }
-        })
-      } else {
-        result = await supabase.functions.invoke('create-user-permission', {
-          body: formData
-        })
-      }
+        // Atualizar usuário existente na tabela pre_approved_users
+        const { error } = await supabase
+          .from('pre_approved_users')
+          .update({
+            permission_type: formData.permission_type,
+            status: formData.status,
+            empresa: formData.empresa,
+            area_atuacao: formData.area_atuacao
+          })
+          .eq('email', editingUser.email)
 
-      if (result.error) throw result.error
-      if (result.data.error) throw new Error(result.data.error)
+        if (error) throw error
+      } else {
+        // Criar novo usuário na tabela pre_approved_users
+        const { error } = await supabase
+          .from('pre_approved_users')
+          .insert({
+            email: formData.email,
+            permission_type: formData.permission_type,
+            status: formData.status,
+            empresa: formData.empresa,
+            area_atuacao: formData.area_atuacao
+          })
+
+        if (error) throw error
+      }
       
       setShowModal(false)
       await loadUsers()

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MOBILE_REGEX } from '@/utils/helpers'
+import { validateUserAccess } from '@/utils/auth-validation'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -28,6 +29,15 @@ export default function SignIn() {
         case 'no_code':
           setError('Autorização incompleta. Tente novamente.')
           break
+        case 'user_not_registered':
+          setError('Usuário não cadastrado, consulte o administrador do sistema')
+          break
+        case 'user_inactive':
+          setError('Usuário desativado, consulte o administrador do sistema')
+          break
+        case 'unauthorized':
+          setError('Usuário sem permissão de acesso')
+          break
         default:
           setError('Erro no login. Tente novamente.')
       }
@@ -45,6 +55,15 @@ export default function SignIn() {
         throw new Error('Supabase client not available')
       }
 
+      // Primeiro validar se o usuário está autorizado na tabela pre_approved_users
+      const validation = await validateUserAccess(email)
+      
+      if (!validation.canAccess) {
+        setError(validation.message || 'Acesso negado')
+        return
+      }
+
+      // Se passou na validação, tentar fazer login
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -53,7 +72,7 @@ export default function SignIn() {
       if (error) {
         setError(error.message)
       } else {
-        // Detectar se é dispositivo móvel para redirecionar corretamente
+        // Sucesso: usuário autenticado e autorizado
         const isMobile = MOBILE_REGEX.test(navigator.userAgent)
         const redirectRoute = isMobile ? '/mobile' : '/kanban'
         router.push(redirectRoute)
