@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { getRedirectRoute } from '@/utils/helpers'
+import { validateUserAccessServer } from '@/utils/auth-validation-server'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -55,7 +56,24 @@ export async function GET(request: NextRequest) {
     
     if (!exchangeError && session?.user) {
       console.log('Login Google bem-sucedido para usuário:', session.user.email)
-      // Redirecionar para a página especificada baseado no dispositivo
+      
+      // Validar se o usuário está autorizado na tabela pre_approved_users
+      if (session.user.email) {
+        const validation = await validateUserAccessServer(session.user.email)
+        
+        if (!validation.canAccess) {
+          console.log('Usuário Google não autorizado:', session.user.email)
+          // Fazer logout da sessão criada
+          await supabase.auth.signOut()
+          // Redirecionar com erro específico
+          const errorMessage = validation.message === "Usuário não cadastrado, consulte o administrador do sistema" 
+            ? 'user_not_registered' 
+            : 'user_inactive'
+          return NextResponse.redirect(`${origin}/auth/signin?error=${errorMessage}`)
+        }
+      }
+      
+      // Se passou na validação, redirecionar para a página especificada
       return NextResponse.redirect(`${origin}${next}`)
     } else {
       console.error('Erro ao trocar código por sessão:', exchangeError?.message)
