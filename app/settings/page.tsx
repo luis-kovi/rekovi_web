@@ -43,19 +43,19 @@ const AREAS_ATUACAO = [
 
 // Opções de empresa (em ordem alfabética)
 const EMPRESA_OPTIONS = [
-  'Ativa Pronta Resposta',
-  'Kovi Tecnologia S/A',
-  'OnSystem Recuperações',
-  'RVS Monitoramento'
+  'Ativa',
+  'OnSystem',
+  'RVS',
+  'Kovi'
 ]
 
 // Opções de permissão
 const PERMISSION_OPTIONS = [
-  { value: 'Ativa', label: 'Ativa' },
-  { value: 'OnSystem', label: 'OnSystem' },
-  { value: 'RVS', label: 'RVS' },
-  { value: 'Chofer', label: 'Chofer' },
-  { value: 'Kovi', label: 'Kovi' }
+  { value: 'admin', label: 'Admin' },
+  { value: 'chofer', label: 'Chofer' },
+  { value: 'ativa', label: 'Ativa' },
+  { value: 'rvs', label: 'RVS' },
+  { value: 'onsystem', label: 'OnSystem' }
 ]
 
 export default function SettingsPage() {
@@ -74,7 +74,7 @@ export default function SettingsPage() {
     nome: '',
     email: '',
     empresa: '',
-    permission_type: 'Kovi',
+    permission_type: 'admin',
     status: 'active' as 'active' | 'inactive',
     area_atuacao: [] as string[]
   })
@@ -102,7 +102,7 @@ export default function SettingsPage() {
 
   // Auto-selecionar todas as áreas quando empresa e permissão são Kovi
   useEffect(() => {
-    if (formData.empresa === 'Kovi Tecnologia S/A' && formData.permission_type === 'Kovi') {
+    if (formData.empresa === 'Kovi' && formData.permission_type === 'admin') {
       setFormData(prev => ({
         ...prev,
         area_atuacao: [...AREAS_ATUACAO]
@@ -165,11 +165,11 @@ export default function SettingsPage() {
       // Buscar diretamente da tabela pre_approved_users
       let query = supabase
         .from('pre_approved_users')
-        .select('email, permission_type, status, empresa, area_atuacao', { count: 'exact' })
+        .select('email, nome, permission_type, status, empresa, area_atuacao', { count: 'exact' })
 
       // Aplicar filtro de busca se existir
       if (searchTerm) {
-        query = query.or(`email.ilike.%${searchTerm}%,empresa.ilike.%${searchTerm}%`)
+        query = query.or(`email.ilike.%${searchTerm}%,nome.ilike.%${searchTerm}%,empresa.ilike.%${searchTerm}%`)
       }
 
       // Aplicar paginação
@@ -183,7 +183,7 @@ export default function SettingsPage() {
       // Converter para formato esperado
       const formattedUsers = (users || []).map(user => ({
         id: user.email, // Usar email como ID único
-        nome: user.email.split('@')[0], // Extrair nome do email
+        nome: user.nome || user.email.split('@')[0], // Usar nome da tabela ou extrair do email como fallback
         email: user.email,
         empresa: user.empresa,
         permission_type: user.permission_type,
@@ -338,6 +338,7 @@ export default function SettingsPage() {
         const { error } = await supabase
           .from('pre_approved_users')
           .update({
+            nome: formData.nome,
             permission_type: formData.permission_type,
             status: formData.status,
             empresa: formData.empresa,
@@ -352,6 +353,7 @@ export default function SettingsPage() {
           .from('pre_approved_users')
           .insert({
             email: formData.email,
+            nome: formData.nome,
             permission_type: formData.permission_type,
             status: formData.status,
             empresa: formData.empresa,
