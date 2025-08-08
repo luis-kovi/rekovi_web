@@ -2,7 +2,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import KanbanWrapper from '@/components/KanbanWrapper'
-import { getUserDataServer } from '@/utils/user-data'
+import { getUserDataServer } from '@/utils/user-data-server'
 import { filterCardsByPermissionsImproved } from '@/utils/auth-validation'
 import type { Card } from '@/types'
 

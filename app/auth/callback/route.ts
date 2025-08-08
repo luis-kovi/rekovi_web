@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { getRedirectRoute } from '@/utils/helpers'
-import { validateUserAccessServer } from '@/utils/auth-validation'
+import { validateUserAccessServer } from '@/utils/auth-validation-server'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
