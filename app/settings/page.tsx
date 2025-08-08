@@ -52,10 +52,11 @@ const EMPRESA_OPTIONS = [
 // Opções de permissão
 const PERMISSION_OPTIONS = [
   { value: 'admin', label: 'Admin' },
+  { value: 'kovi', label: 'Kovi' },
   { value: 'chofer', label: 'Chofer' },
   { value: 'ativa', label: 'Ativa' },
   { value: 'rvs', label: 'RVS' },
-  { value: 'onsystem', label: 'OnSystem' }
+  { value: 'onsystem', label: 'OnSystem' }  
 ]
 
 export default function SettingsPage() {
