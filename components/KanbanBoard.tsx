@@ -276,23 +276,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('Usuário não autenticado');
       }
 
-      // Buscar o card atual para obter o card_id do Pipefy
-      const { data: cardData, error: cardError } = await supabase
-        .from('cards')
-        .select('card_id')
-        .eq('id', cardId)
-        .single();
-
-      if (cardError || !cardData) {
-        throw new Error('Card não encontrado');
-      }
-
+      // O cardId já é o card_id do Pipefy (vem da view v_pipefy_cards_detalhada)
       // Query GraphQL para atualizar o chofer no Pipefy
       const pipefyQuery = `
         mutation {
           updateFieldsValues(
             input: {
-              nodeId: "${cardData.card_id}"
+              nodeId: "${cardId}"
               values: [
                 {
                   fieldId: "nome_do_chofer_que_far_a_recolha",
