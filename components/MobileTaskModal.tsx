@@ -344,34 +344,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                     </div>
                   </div>
 
-                  {/* Informações Financeiras (se disponível) */}
-                  {(card.valorRecolha || card.custoKmAdicional) && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border border-green-100">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                          </svg>
-                        </div>
-                        <h4 className="font-semibold text-gray-900">Valores</h4>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        {card.valorRecolha && (
-                          <div className="bg-white rounded-lg p-3">
-                            <p className="text-xs text-green-600 mb-1">Valor Recolha</p>
-                            <p className="font-bold text-lg text-gray-900">{card.valorRecolha}</p>
-                          </div>
-                        )}
-                        {card.custoKmAdicional && (
-                          <div className="bg-white rounded-lg p-3">
-                            <p className="text-xs text-green-600 mb-1">Custo KM</p>
-                            <p className="font-bold text-lg text-gray-900">{card.custoKmAdicional}</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               </div>
             )}
