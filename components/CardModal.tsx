@@ -1,9 +1,11 @@
 // components/CardModal.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { CardWithSLA } from '@/types'
-import { formatPersonName, keepOriginalFormat, formatDate, phaseDisplayNames, choferNames } from '@/utils/helpers'
+import { formatPersonName, keepOriginalFormat, formatDate, phaseDisplayNames } from '@/utils/helpers'
+import { createClient } from '@/utils/supabase/client'
+import { extractCityFromOrigin } from '@/utils/auth-validation'
 
 interface CardModalProps {
   card: CardWithSLA | null;
@@ -18,13 +20,88 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   const [feedback, setFeedback] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [copiedPlate, setCopiedPlate] = useState(false);
+  const [availableChofers, setAvailableChofers] = useState<{name: string, email: string}[]>([]);
+  const [loadingChofers, setLoadingChofers] = useState(false);
+
+  // Função para buscar chofers disponíveis da base de dados
+  const loadAvailableChofers = async () => {
+    if (!card || !card.empresaResponsavel || !card.origemLocacao) {
+      setAvailableChofers([]);
+      return;
+    }
+
+    setLoadingChofers(true);
+    try {
+      const supabase = createClient();
+      
+      // Extrair cidade de origem do card
+      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase();
+      
+      // Buscar usuários com as condições especificadas
+      const { data: users, error } = await supabase
+        .from('pre_approved_users')
+        .select('nome, email, empresa, permission_type, status, area_atuacao')
+        .eq('empresa', card.empresaResponsavel)
+        .eq('permission_type', 'chofer')
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Erro ao buscar chofers:', error);
+        setAvailableChofers([]);
+        return;
+      }
+
+      if (!users || users.length === 0) {
+        setAvailableChofers([]);
+        return;
+      }
+
+      // Filtrar por área de atuação e excluir o chofer atual
+      const filteredChofers = users.filter(user => {
+        // Excluir chofer atual (comparar por email se disponível, senão por nome)
+        const isCurrentChofer = user.email === card.emailChofer || 
+                               user.nome?.toLowerCase() === card.chofer?.toLowerCase();
+        if (isCurrentChofer) return false;
+
+        // Verificar se atua na região
+        if (!user.area_atuacao || !Array.isArray(user.area_atuacao)) return false;
+        
+        return user.area_atuacao.some((area: string) => {
+          const areaCity = area.toLowerCase();
+          return cardCity.includes(areaCity) || 
+                 areaCity.includes(cardCity) ||
+                 cardCity === areaCity;
+        });
+      });
+
+      // Mapear para o formato esperado
+      const choferOptions = filteredChofers.map(user => ({
+        name: user.nome || user.email.split('@')[0],
+        email: user.email
+      }));
+
+      setAvailableChofers(choferOptions);
+    } catch (error) {
+      console.error('Erro ao carregar chofers:', error);
+      setAvailableChofers([]);
+    } finally {
+      setLoadingChofers(false);
+    }
+  };
+
+  // Carregar chofers quando abrir o modal de troca ou quando o card mudar
+  useEffect(() => {
+    if (showChoferChange && card) {
+      loadAvailableChofers();
+    }
+  }, [showChoferChange, card]);
 
   if (!card) return null;
 
-  const isFila = card.faseAtual === 'Fila de Recolha';
-  const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
+  const isFila = card?.faseAtual === 'Fila de Recolha';
+  const displayPhase = phaseDisplayNames[card?.faseAtual] || card?.faseAtual;
   const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Nova tentativa de recolha', 'Confirmação de Entrega no Pátio'];
-  const allowChoferChange = editablePhases.includes(card.faseAtual);
+  const allowChoferChange = card?.faseAtual ? editablePhases.includes(card.faseAtual) : false;
 
   const handleChoferChange = async () => {
     if (!selectedChofer || !choferEmail || !onUpdateChofer) return;
@@ -55,18 +132,6 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
       console.error('Erro ao copiar placa:', error);
     }
   };
-
-  const populateChoferOptions = (empresa: string) => {
-    const names = empresa === 'ativa' ? choferNames.ativa : choferNames.onsystem;
-    const domain = empresa === 'ativa' ? 'ativa.com.br' : 'onsystem.com.br';
-    
-    return names.map(name => {
-      const email = name.toLowerCase().replace(/ /g, '-') + '@' + domain;
-      return { name, email };
-    });
-  };
-
-  const choferOptions = card.empresaResponsavel ? populateChoferOptions(card.empresaResponsavel.toLowerCase()) : [];
 
   // Calcular status do SLA
   const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
@@ -374,32 +439,54 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                   {showChoferChange && (
                       <div className="mt-4 p-4 bg-gradient-to-br from-red-50/50 to-red-100/30 backdrop-blur-sm rounded-xl border border-red-200/50">
                         <div className="space-y-4">
-                        <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>Novo Chofer</label>
-                          <select 
-                            value={selectedChofer}
-                            onChange={(e) => {
-                              setSelectedChofer(e.target.value);
-                              const option = choferOptions.find(opt => opt.name === e.target.value);
-                              setChoferEmail(option?.email || '');
-                            }}
-                              className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
-                          >
-                            <option value="">Selecione um nome...</option>
-                            {choferOptions.map(option => (
-                              <option key={option.name} value={option.name}>{option.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>E-mail do Novo Chofer</label>
-                          <input 
-                            type="email" 
-                            value={choferEmail}
-                            onChange={(e) => setChoferEmail(e.target.value)}
-                              className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
-                          />
-                        </div>
+                        {loadingChofers ? (
+                          <div className="text-center py-4">
+                            <div className="inline-flex items-center gap-2 text-gray-600">
+                              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              <span className="text-sm">Carregando chofers disponíveis...</span>
+                            </div>
+                          </div>
+                        ) : availableChofers.length === 0 ? (
+                          <div className="text-center py-4">
+                            <div className="text-gray-600 text-sm">
+                              Não há outros chofers cadastrados para a região.
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>Novo Chofer</label>
+                              <select 
+                                value={selectedChofer}
+                                onChange={(e) => {
+                                  setSelectedChofer(e.target.value);
+                                  const option = availableChofers.find(opt => opt.name === e.target.value);
+                                  setChoferEmail(option?.email || '');
+                                }}
+                                className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
+                              >
+                                <option value="">Selecione um nome...</option>
+                                {availableChofers.map(option => (
+                                  <option key={option.email} value={option.name}>{option.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                            {selectedChofer && (
+                              <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>E-mail do Novo Chofer</label>
+                                <input 
+                                  type="email" 
+                                  value={choferEmail}
+                                  readOnly
+                                  className="w-full p-3 border border-red-300/50 rounded-lg text-sm bg-gray-50/80 backdrop-blur-sm shadow-sm cursor-not-allowed"
+                                  placeholder="E-mail será preenchido automaticamente"
+                                />
+                              </div>
+                            )}
+                          </>
+                        )}
                         {feedback && (
                             <div className={`text-sm text-center p-3 rounded-lg font-medium ${
                               feedback.includes('Erro') 
@@ -409,13 +496,15 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                             {feedback}
                           </div>
                         )}
-                        <button 
-                          onClick={handleChoferChange}
-                          disabled={isUpdating || !selectedChofer || !choferEmail}
-                            className="w-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] hover:from-[#E02E4D] hover:to-[#D12846] text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl backdrop-blur-sm"
-                        >
-                          Confirmar Alteração
-                        </button>
+                        {!loadingChofers && availableChofers.length > 0 && (
+                          <button 
+                            onClick={handleChoferChange}
+                            disabled={isUpdating || !selectedChofer || !choferEmail}
+                              className="w-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] hover:from-[#E02E4D] hover:to-[#D12846] text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl backdrop-blur-sm"
+                          >
+                            Confirmar Alteração
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}
