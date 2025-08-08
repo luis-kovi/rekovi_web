@@ -23,43 +23,6 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   const [availableChofers, setAvailableChofers] = useState<{name: string, email: string}[]>([]);
   const [loadingChofers, setLoadingChofers] = useState(false);
 
-  if (!card) return null;
-
-  const isFila = card.faseAtual === 'Fila de Recolha';
-  const displayPhase = phaseDisplayNames[card.faseAtual] || card.faseAtual;
-  const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Nova tentativa de recolha', 'Confirmação de Entrega no Pátio'];
-  const allowChoferChange = editablePhases.includes(card.faseAtual);
-
-  const handleChoferChange = async () => {
-    if (!selectedChofer || !choferEmail || !onUpdateChofer) return;
-    
-    setIsUpdating(true);
-    setFeedback('Processando alterações...');
-    
-    try {
-      await onUpdateChofer(card.id, selectedChofer, choferEmail);
-      setFeedback('Os dados no campo Chofer serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowChoferChange(false);
-        setFeedback('');
-        setIsUpdating(false);
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  const handleCopyPlate = async () => {
-    try {
-      await navigator.clipboard.writeText(card.placa);
-      setCopiedPlate(true);
-      setTimeout(() => setCopiedPlate(false), 2000);
-    } catch (error) {
-      console.error('Erro ao copiar placa:', error);
-    }
-  };
-
   // Função para buscar chofers disponíveis da base de dados
   const loadAvailableChofers = async () => {
     if (!card || !card.empresaResponsavel || !card.origemLocacao) {
@@ -132,6 +95,43 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
       loadAvailableChofers();
     }
   }, [showChoferChange, card]);
+
+  if (!card) return null;
+
+  const isFila = card?.faseAtual === 'Fila de Recolha';
+  const displayPhase = phaseDisplayNames[card?.faseAtual] || card?.faseAtual;
+  const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Nova tentativa de recolha', 'Confirmação de Entrega no Pátio'];
+  const allowChoferChange = card?.faseAtual ? editablePhases.includes(card.faseAtual) : false;
+
+  const handleChoferChange = async () => {
+    if (!selectedChofer || !choferEmail || !onUpdateChofer) return;
+    
+    setIsUpdating(true);
+    setFeedback('Processando alterações...');
+    
+    try {
+      await onUpdateChofer(card.id, selectedChofer, choferEmail);
+      setFeedback('Os dados no campo Chofer serão atualizados em até 3 minutos.');
+      setTimeout(() => {
+        setShowChoferChange(false);
+        setFeedback('');
+        setIsUpdating(false);
+      }, 3000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCopyPlate = async () => {
+    try {
+      await navigator.clipboard.writeText(card.placa);
+      setCopiedPlate(true);
+      setTimeout(() => setCopiedPlate(false), 2000);
+    } catch (error) {
+      console.error('Erro ao copiar placa:', error);
+    }
+  };
 
   // Calcular status do SLA
   const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
