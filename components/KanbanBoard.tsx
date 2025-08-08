@@ -264,9 +264,93 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   }, [filteredCards, permissionType]);
 
   const handleUpdateChofer = async (cardId: string, newName: string, newEmail: string) => {
-    // Implementar a lógica de atualização do chofer
     console.log('Atualizando chofer:', { cardId, newName, newEmail });
-    // Aqui você implementaria a chamada para a API do Supabase
+    
+    try {
+      const supabase = createClient();
+      
+      // Obter o token de autenticação do usuário atual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Buscar o card atual para obter o card_id do Pipefy
+      const { data: cardData, error: cardError } = await supabase
+        .from('cards')
+        .select('card_id')
+        .eq('id', cardId)
+        .single();
+
+      if (cardError || !cardData) {
+        throw new Error('Card não encontrado');
+      }
+
+      // Query GraphQL para atualizar o chofer no Pipefy
+      const pipefyQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardData.card_id}"
+              values: [
+                {
+                  fieldId: "nome_do_chofer_que_far_a_recolha",
+                  value: "${newName}"
+                },
+                {
+                  fieldId: "e_mail_do_chofer",
+                  value: "${newEmail}"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Chamar a Function Edge do Supabase
+      // Usar a mesma URL que está nas variáveis de ambiente do cliente
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: pipefyQuery
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      console.log('Chofer atualizado com sucesso no Pipefy:', result);
+      
+      // Atualizar o estado local do card para refletir a mudança imediatamente
+      setCards(prevCards => 
+        prevCards.map(card => 
+          card.id === cardId 
+            ? { ...card, chofer: newName, emailChofer: newEmail }
+            : card
+        )
+      );
+      
+    } catch (error) {
+      console.error('Erro ao atualizar chofer:', error);
+      throw error; // Re-throw para que o CardModal possa exibir o erro
+    }
   };
 
   const handleOpenCalculator = () => {
