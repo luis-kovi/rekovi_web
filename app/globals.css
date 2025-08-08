@@ -1066,4 +1066,22 @@ header .relative > div[style*="z-index"] {
   opacity: 1 !important;
 }
 
+/* SOLUÇÃO DEFINITIVA: Dropdown via Portal com máxima prioridade */
+body > div[style*="z-index: 999999"] {
+  z-index: 999999 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Garantir que overlay do dropdown tenha prioridade alta */
+body > div[style*="z-index: 999998"] {
+  z-index: 999998 !important;
+  position: fixed !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 
