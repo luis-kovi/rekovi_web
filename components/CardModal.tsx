@@ -1244,7 +1244,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                               <img 
                                 src={photo.image} 
                                 alt={photo.label}
-                                className="w-full h-16 object-cover rounded mb-2"
+                                className="w-full h-20 object-cover rounded mb-2 aspect-square"
                               />
                               <input
                                 type="file"
@@ -1297,6 +1297,256 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                         className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
                       >
                         {isUpdating ? 'Processando...' : 'Confirmar Desbloqueio'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulário Solicitar Guincho */}
+                {showRequestTowing && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-orange-200/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowRequestTowing(false);
+                            resetTowingForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Solicitar Guincho
+                        </h3>
+                      </div>
+
+                      {/* Motivo do Guincho */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Motivo do guincho *
+                        </label>
+                        <select 
+                          value={towingReason}
+                          onChange={(e) => setTowingReason(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200"
+                        >
+                          <option value="">Selecione um motivo...</option>
+                          <option value="carro_abandonado">Carro abandonado na rua (sem chave)</option>
+                          <option value="problemas_mecanicos">Problemas mecânicos / elétricos</option>
+                          <option value="colisao">Colisão (não está rodando)</option>
+                        </select>
+                      </div>
+
+                      {/* Fotos do Veículo para Guincho */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
+                          { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
+                          { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
+                          { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                          ...(towingReason !== 'carro_abandonado' ? [
+                            { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
+                            { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                          ] : [])
+                        ].map((photo) => (
+                          <div key={photo.key} className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              {photo.label}
+                            </label>
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-orange-400 transition-colors">
+                              <img 
+                                src={photo.image} 
+                                alt={photo.label}
+                                className="w-full h-20 object-cover rounded mb-2 aspect-square"
+                              />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePhotoUpload(photo.key, file, 'towing');
+                                }}
+                                className="hidden"
+                                id={`towing-upload-${photo.key}`}
+                              />
+                              <label
+                                htmlFor={`towing-upload-${photo.key}`}
+                                className="text-xs text-orange-600 hover:text-orange-800 cursor-pointer block"
+                              >
+                                {towingPhotos[photo.key as keyof typeof towingPhotos] ? 'Trocar' : 'Upload'}
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Observações */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Observações
+                        </label>
+                        <textarea
+                          value={towingObservations}
+                          onChange={(e) => setTowingObservations(e.target.value)}
+                          rows={3}
+                          placeholder="Observações adicionais sobre a solicitação de guincho..."
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200 resize-none"
+                        />
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('selecione') || feedback.includes('pelo menos') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleRequestTowing}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar Solicitação'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulário Reportar Problema */}
+                {showReportProblem && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowReportProblem(false);
+                            resetProblemForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Reportar Problema
+                        </h3>
+                      </div>
+
+                      {/* Qual a dificuldade encontrada */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Qual a dificuldade encontrada na recolha? *
+                        </label>
+                        <select 
+                          value={problemType}
+                          onChange={(e) => setProblemType(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white shadow-sm transition-all duration-200"
+                        >
+                          <option value="">Selecione uma dificuldade...</option>
+                          <option value="cliente_regularizou">Cliente regularizou o pagamento</option>
+                          <option value="cliente_recusa_pagamento">Cliente recusa a entrega e informa que vai fazer o pagamento</option>
+                          <option value="cliente_recusa_problemas">Cliente recusa a entrega devido a problemas com a Kovi</option>
+                          <option value="carro_localizado_cliente_nao">Carro localizado, mas cliente não encontrado</option>
+                          <option value="carro_nao_localizado">Carro não localizado e sem contato com o cliente</option>
+                        </select>
+                      </div>
+
+                      {/* Evidências - até 3 fotos */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Evidências da dificuldade *
+                        </label>
+                        <p className="text-xs text-gray-600 mb-3">
+                          Envie fotos da rua, da garagem que evidencie a dificuldade na recolha (até 3 fotos)
+                        </p>
+                        <div className="grid grid-cols-3 gap-3">
+                          {[
+                            { key: 'photo1', label: 'Evidência 1' },
+                            { key: 'photo2', label: 'Evidência 2' },
+                            { key: 'photo3', label: 'Evidência 3' }
+                          ].map((photo) => (
+                            <div key={photo.key} className="space-y-2">
+                              <label className="text-xs font-bold text-gray-700 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                {photo.label}
+                              </label>
+                              <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-purple-400 transition-colors min-h-[100px] flex flex-col justify-center">
+                                {problemEvidence[photo.key as keyof typeof problemEvidence] ? (
+                                  <div className="space-y-2">
+                                    <div className="w-full h-16 bg-gray-100 rounded flex items-center justify-center">
+                                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                      </svg>
+                                    </div>
+                                    <span className="text-xs text-green-600 font-medium">Foto enviada</span>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <svg className="w-8 h-8 text-gray-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    <span className="text-xs text-gray-500">Adicionar foto</span>
+                                  </div>
+                                )}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handlePhotoUpload(photo.key, file, 'problem');
+                                  }}
+                                  className="hidden"
+                                  id={`problem-upload-${photo.key}`}
+                                />
+                                <label
+                                  htmlFor={`problem-upload-${photo.key}`}
+                                  className="text-xs text-purple-600 hover:text-purple-800 cursor-pointer block mt-2"
+                                >
+                                  {problemEvidence[photo.key as keyof typeof problemEvidence] ? 'Trocar' : 'Upload'}
+                                </label>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('selecione') || feedback.includes('pelo menos') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleReportProblem}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar Relato'}
                       </button>
                     </div>
                   </div>
