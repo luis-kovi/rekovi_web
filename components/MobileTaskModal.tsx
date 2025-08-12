@@ -68,10 +68,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     photo3: null as File | null
   });
 
-
-
-
-
   // Identificar fases
   const isFila = card.faseAtual === 'Fila de Recolha';
   const isTentativaRecolha = [
@@ -468,7 +464,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
         {/* Content */}
         <div className="max-h-[75vh] overflow-y-auto">
-          <div className="min-h-[400px]"> {/* Altura otimizada */}
+          <div className="min-h-[400px]">
             {activeTab === 'details' && (
               <div className="p-4 space-y-4">
                 {/* Status e Fase Atual */}
@@ -653,33 +649,582 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     </div>
                   </div>
-
-
                 </div>
               </div>
             )}
 
             {activeTab === 'actions' && (
-              <div className="h-full min-h-[500px]">
-                {card.urlPublica ? (
-                  <div className="h-full min-h-[500px]">
-                    <iframe
-                      src={card.urlPublica}
-                      className="w-full h-full min-h-[500px] border-0"
-                      title="Pipefy Card"
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-                      style={{ height: '500px' }}
-                    />
+              <div className="h-full min-h-[500px] p-4">
+                {isFila ? (
+                  /* Interface para Fila de Recolha */
+                  <div className="space-y-4">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">Gerenciar Recolha</h3>
+                      <p className="text-sm text-gray-600">Escolha uma das opções abaixo</p>
+                    </div>
+
+                    {!showAllocateDriver && !showRejectCollection && (
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setShowAllocateDriver(true)}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Alocar Chofer
+                        </button>
+                        
+                        <button
+                          onClick={() => setShowRejectCollection(true)}
+                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Rejeitar Recolha
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Alocar Chofer */}
+                    {showAllocateDriver && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-green-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowAllocateDriver(false);
+                              resetAllocateForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Alocar Chofer</h3>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Chofer *</label>
+                          <input
+                            type="text"
+                            value={selectedChofer}
+                            onChange={(e) => setSelectedChofer(e.target.value)}
+                            placeholder="Nome do chofer..."
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">E-mail do Chofer *</label>
+                          <input
+                            type="email"
+                            value={choferEmail}
+                            onChange={(e) => setChoferEmail(e.target.value)}
+                            placeholder="email@exemplo.com"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block">Data *</label>
+                            <input 
+                              type="date" 
+                              value={collectionDate}
+                              onChange={(e) => setCollectionDate(e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block">Hora *</label>
+                            <input 
+                              type="time" 
+                              value={collectionTime}
+                              onChange={(e) => setCollectionTime(e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Tipo de Faturamento *</label>
+                          <select 
+                            value={billingType}
+                            onChange={(e) => setBillingType(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                          >
+                            <option value="">Selecione o tipo...</option>
+                            <option value="avulso">Avulso</option>
+                            <option value="franquia">Franquia</option>
+                          </select>
+                        </div>
+
+                        {billingType === 'avulso' && (
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block">Valor da Recolha *</label>
+                            <input 
+                              type="text" 
+                              value={collectionValue}
+                              onChange={(e) => {
+                                const value = e.target.value.replace(/\D/g, '');
+                                const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                });
+                                setCollectionValue(formatted);
+                              }}
+                              placeholder="R$ 0,00"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Km Adicional *</label>
+                          <input 
+                            type="text" 
+                            value={additionalKm}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '');
+                              const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                              });
+                              setAdditionalKm(formatted);
+                            }}
+                            placeholder="R$ 0,00"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                          />
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('preencha') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleAllocateDriver}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Rejeitar Recolha */}
+                    {showRejectCollection && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-red-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowRejectCollection(false);
+                              resetRejectForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Rejeitar Recolha</h3>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Motivo da não recolha *</label>
+                          <select 
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white"
+                          >
+                            <option value="">Selecione um motivo...</option>
+                            <option value="cliente_pagamento">Cliente realizou pagamento</option>
+                            <option value="cliente_devolveu">Cliente já devolveu o veículo</option>
+                            <option value="veiculo_recolhido">Veículo já recolhido</option>
+                            <option value="fora_area">Fora da área de atuação</option>
+                            <option value="duplicada">Solicitação duplicada</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Observações *</label>
+                          <textarea 
+                            value={rejectionObservations}
+                            onChange={(e) => setRejectionObservations(e.target.value)}
+                            rows={4}
+                            placeholder="Descreva detalhes adicionais sobre a rejeição..."
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none"
+                          />
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('preencha') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleRejectCollection}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : isTentativaRecolha ? (
+                  /* Interface para Tentativas de Recolha */
+                  <div className="space-y-4">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">Ações de Recolha</h3>
+                      <p className="text-sm text-gray-600">Selecione uma ação para prosseguir</p>
+                    </div>
+
+                    {!showUnlockVehicle && !showRequestTowing && !showReportProblem && (
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setShowUnlockVehicle(true)}
+                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                          </svg>
+                          Desbloquear Veículo
+                        </button>
+                        
+                        <button
+                          onClick={() => setShowRequestTowing(true)}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                          Solicitar Guincho
+                        </button>
+
+                        <button
+                          onClick={() => setShowReportProblem(true)}
+                          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          Reportar Problema
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Desbloquear Veículo */}
+                    {showUnlockVehicle && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-blue-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowUnlockVehicle(false);
+                              resetUnlockForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Desbloquear Veículo</h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
+                            { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
+                            { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
+                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                            { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
+                            { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' },
+                          ].map((photo) => (
+                            <div key={photo.key} className="space-y-2">
+                              <p className="text-xs font-bold text-gray-700">{photo.label}</p>
+                              <div className="w-full aspect-square">
+                                <img
+                                  src={photo.image}
+                                  alt={photo.label}
+                                  className="w-full h-full object-cover rounded"
+                                />
+                              </div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    handlePhotoUpload(photo.key, file, 'vehicle');
+                                  }
+                                }}
+                                className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                              />
+                              {vehiclePhotos[photo.key as keyof typeof vehiclePhotos] && (
+                                <p className="text-xs text-green-600">✓ Foto enviada</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Observações</label>
+                          <textarea 
+                            value={unlockObservations}
+                            onChange={(e) => setUnlockObservations(e.target.value)}
+                            rows={3}
+                            placeholder="Observações adicionais (opcional)..."
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white resize-none"
+                          />
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('pelo menos') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleUnlockVehicle}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Solicitar Guincho */}
+                    {showRequestTowing && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-orange-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowRequestTowing(false);
+                              resetTowingForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Solicitar Guincho</h3>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Motivo do guincho *</label>
+                          <select 
+                            value={towingReason}
+                            onChange={(e) => setTowingReason(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white"
+                          >
+                            <option value="">Selecione o motivo...</option>
+                            <option value="carro_abandonado">Carro abandonado na rua (sem chave)</option>
+                            <option value="problemas_mecanicos">Problemas mecânicos / elétricos</option>
+                            <option value="colisao">Colisão (não está rodando)</option>
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
+                            { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
+                            { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
+                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                            ...(towingReason !== 'carro_abandonado' ? [
+                              { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
+                              { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' },
+                            ] : [])
+                          ].map((photo) => (
+                            <div key={photo.key} className="space-y-2">
+                              <p className="text-xs font-bold text-gray-700">{photo.label}</p>
+                              <div className="w-full aspect-square">
+                                <img
+                                  src={photo.image}
+                                  alt={photo.label}
+                                  className="w-full h-full object-cover rounded"
+                                />
+                              </div>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    handlePhotoUpload(photo.key, file, 'towing');
+                                  }
+                                }}
+                                className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                              />
+                              {towingPhotos[photo.key as keyof typeof towingPhotos] && (
+                                <p className="text-xs text-green-600">✓ Foto enviada</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Observações</label>
+                          <textarea 
+                            value={towingObservations}
+                            onChange={(e) => setTowingObservations(e.target.value)}
+                            rows={3}
+                            placeholder="Observações adicionais (opcional)..."
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white resize-none"
+                          />
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('selecione') || feedback.includes('pelo menos') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleRequestTowing}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Reportar Problema */}
+                    {showReportProblem && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-purple-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowReportProblem(false);
+                              resetProblemForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Reportar Problema</h3>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Qual a dificuldade encontrada na recolha? *</label>
+                          <select 
+                            value={problemType}
+                            onChange={(e) => setProblemType(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white"
+                          >
+                            <option value="">Selecione a dificuldade...</option>
+                            <option value="cliente_regularizou">Cliente regularizou o pagamento</option>
+                            <option value="cliente_recusa_pagamento">Cliente recusa a entrega e informa que vai fazer o pagamento</option>
+                            <option value="cliente_recusa_problemas">Cliente recusa a entrega devido a problemas com a Kovi</option>
+                            <option value="carro_localizado_cliente_nao">Carro localizado, mas cliente não encontrado</option>
+                            <option value="carro_nao_localizado">Carro não localizado e sem contato com o cliente</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 mb-2">Evidências da dificuldade</p>
+                          <p className="text-xs text-gray-600 mb-3">Envie fotos da rua, da garagem que evidencie a dificuldade na recolha</p>
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            {['photo1', 'photo2', 'photo3'].map((photoKey, index) => (
+                              <div key={photoKey} className="space-y-2">
+                                <p className="text-xs font-bold text-gray-700">Foto {index + 1}</p>
+                                <div className="w-full aspect-square bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
+                                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handlePhotoUpload(photoKey, file, 'problem');
+                                    }
+                                  }}
+                                  className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                                />
+                                {problemEvidence[photoKey as keyof typeof problemEvidence] && (
+                                  <p className="text-xs text-green-600">✓ Foto enviada</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('selecione') || feedback.includes('pelo menos') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleReportProblem}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="p-6 space-y-3 h-full flex items-center justify-center min-h-[500px]">
-                    <div className="bg-yellow-50 rounded-xl p-4 text-center">
-                      <svg className="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                      <p className="text-sm text-yellow-700">URL pública não disponível</p>
-                      <p className="text-xs text-yellow-600 mt-1">Este card não possui uma URL pública configurada</p>
-                    </div>
+                  /* Interface original com iframe */
+                  <div className="h-full min-h-[400px]">
+                    {card.urlPublica ? (
+                      <iframe
+                        src={card.urlPublica}
+                        className="w-full h-full min-h-[400px] border-0 rounded-xl"
+                        title="Pipefy Card"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                      />
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="bg-yellow-50 rounded-xl p-4 text-center">
+                          <svg className="w-12 h-12 text-yellow-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <p className="text-sm text-yellow-700">URL pública não disponível</p>
+                          <p className="text-xs text-yellow-600 mt-1">Este card não possui uma URL pública configurada</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -720,4 +1265,4 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       </div>
     </div>
   )
-} 
+}
