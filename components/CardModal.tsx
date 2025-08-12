@@ -22,6 +22,23 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   const [copiedPlate, setCopiedPlate] = useState(false);
   const [availableChofers, setAvailableChofers] = useState<{name: string, email: string}[]>([]);
   const [loadingChofers, setLoadingChofers] = useState(false);
+  
+  // Estados para os novos formulários da fila de recolha
+  const [showAllocateDriver, setShowAllocateDriver] = useState(false);
+  const [showRejectCollection, setShowRejectCollection] = useState(false);
+  
+  // Estados para alocar chofer
+  const [allocateDriverName, setAllocateDriverName] = useState('');
+  const [allocateDriverEmail, setAllocateDriverEmail] = useState('');
+  const [collectionDate, setCollectionDate] = useState('');
+  const [collectionTime, setCollectionTime] = useState('');
+  const [billingType, setBillingType] = useState('');
+  const [collectionValue, setCollectionValue] = useState('');
+  const [additionalKm, setAdditionalKm] = useState('');
+  
+  // Estados para rejeitar recolha
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectionObservations, setRejectionObservations] = useState('');
 
   // Função para buscar chofers disponíveis da base de dados
   const loadAvailableChofers = async () => {
@@ -96,6 +113,19 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
     }
   }, [showChoferChange, card]);
 
+  // Carregar chofers para alocar e definir data atual
+  useEffect(() => {
+    if (showAllocateDriver && card) {
+      loadAvailableChofers();
+      // Definir data atual como padrão
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      const formattedTime = today.toTimeString().slice(0, 5);
+      setCollectionDate(formattedDate);
+      setCollectionTime(formattedTime);
+    }
+  }, [showAllocateDriver, card]);
+
   if (!card) return null;
 
   const isFila = card?.faseAtual === 'Fila de Recolha';
@@ -131,6 +161,98 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
     } catch (error) {
       console.error('Erro ao copiar placa:', error);
     }
+  };
+
+  // Função para lidar com a alocação de chofer
+  const handleAllocateDriver = async () => {
+    if (!allocateDriverName || !allocateDriverEmail || !collectionDate || !collectionTime || !billingType || !additionalKm) {
+      setFeedback('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (billingType === 'avulso' && !collectionValue) {
+      setFeedback('Para faturamento avulso, o valor da recolha é obrigatório.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando alocação de chofer...');
+    
+    try {
+      // Aqui você implementaria a lógica para salvar os dados
+      // Por enquanto, vamos apenas simular o sucesso
+      console.log('Dados da alocação:', {
+        cardId: card.id,
+        driver: allocateDriverName,
+        email: allocateDriverEmail,
+        date: collectionDate,
+        time: collectionTime,
+        billing: billingType,
+        value: collectionValue,
+        additionalKm
+      });
+
+      setFeedback('Chofer alocado com sucesso!');
+      setTimeout(() => {
+        setShowAllocateDriver(false);
+        setFeedback('');
+        resetAllocateForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Função para lidar com a rejeição de recolha
+  const handleRejectCollection = async () => {
+    if (!rejectionReason || !rejectionObservations) {
+      setFeedback('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando rejeição de recolha...');
+    
+    try {
+      // Aqui você implementaria a lógica para salvar os dados
+      // Por enquanto, vamos apenas simular o sucesso
+      console.log('Dados da rejeição:', {
+        cardId: card.id,
+        reason: rejectionReason,
+        observations: rejectionObservations
+      });
+
+      setFeedback('Recolha rejeitada com sucesso!');
+      setTimeout(() => {
+        setShowRejectCollection(false);
+        setFeedback('');
+        resetRejectForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Funções para resetar os formulários
+  const resetAllocateForm = () => {
+    setAllocateDriverName('');
+    setAllocateDriverEmail('');
+    setCollectionDate('');
+    setCollectionTime('');
+    setBillingType('');
+    setCollectionValue('');
+    setAdditionalKm('');
+  };
+
+  const resetRejectForm = () => {
+    setRejectionReason('');
+    setRejectionObservations('');
   };
 
   // Calcular status do SLA
@@ -514,14 +636,294 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
             </div>
           </div>
           
-          {/* Área do iframe modernizada */}
+          {/* Área do iframe ou novos controles da fila de recolha */}
           <div className="w-1/2 bg-white/50 backdrop-blur-sm rounded-r-2xl border-l border-red-200/50 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-red-50/20 to-transparent pointer-events-none"></div>
-            <iframe 
-              id="modalFormIframe" 
-              src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
-              className="w-full h-full rounded-r-2xl relative z-10"
-            />
+            
+            {isFila ? (
+              /* Interface para Fila de Recolha */
+              <div className="h-full p-6 overflow-y-auto relative z-10">
+                <div className="space-y-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                      Gerenciar Recolha
+                    </h2>
+                    <p className="text-sm text-gray-600">
+                      Escolha uma das opções abaixo para prosseguir
+                    </p>
+                  </div>
+
+                  {/* Botões principais */}
+                  {!showAllocateDriver && !showRejectCollection && (
+                    <div className="space-y-4">
+                      <button
+                        onClick={() => setShowAllocateDriver(true)}
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Alocar Chofer
+                      </button>
+                      
+                      <button
+                        onClick={() => setShowRejectCollection(true)}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Rejeitar Recolha
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Formulário Alocar Chofer */}
+                  {showAllocateDriver && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowAllocateDriver(false);
+                            resetAllocateForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Alocar Chofer
+                        </h3>
+                      </div>
+
+                      {loadingChofers ? (
+                        <div className="text-center py-4">
+                          <div className="inline-flex items-center gap-2 text-gray-600">
+                            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span className="text-sm">Carregando chofers...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Nome do Chofer */}
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              Chofer *
+                            </label>
+                            <select 
+                              value={allocateDriverName}
+                              onChange={(e) => {
+                                setAllocateDriverName(e.target.value);
+                                const option = availableChofers.find(opt => opt.name === e.target.value);
+                                setAllocateDriverEmail(option?.email || '');
+                              }}
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                            >
+                              <option value="">Selecione um chofer...</option>
+                              {availableChofers.map(option => (
+                                <option key={option.email} value={option.name}>{option.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Data e Hora */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Data *
+                              </label>
+                              <input 
+                                type="date" 
+                                value={collectionDate}
+                                onChange={(e) => setCollectionDate(e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Hora *
+                              </label>
+                              <input 
+                                type="time" 
+                                value={collectionTime}
+                                onChange={(e) => setCollectionTime(e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Tipo de Faturamento */}
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              Tipo de Faturamento *
+                            </label>
+                            <select 
+                              value={billingType}
+                              onChange={(e) => setBillingType(e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                            >
+                              <option value="">Selecione o tipo...</option>
+                              <option value="avulso">Avulso</option>
+                              <option value="franquia">Franquia</option>
+                            </select>
+                          </div>
+
+                          {/* Valor da Recolha (apenas para Avulso) */}
+                          {billingType === 'avulso' && (
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Valor da Recolha *
+                              </label>
+                              <input 
+                                type="text" 
+                                value={collectionValue}
+                                onChange={(e) => {
+                                  // Formatação de moeda brasileira
+                                  const value = e.target.value.replace(/\D/g, '');
+                                  const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                    style: 'currency',
+                                    currency: 'BRL'
+                                  });
+                                  setCollectionValue(formatted);
+                                }}
+                                placeholder="R$ 0,00"
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                              />
+                            </div>
+                          )}
+
+                          {/* Km Adicional */}
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              Km Adicional *
+                            </label>
+                            <input 
+                              type="text" 
+                              value={additionalKm}
+                              onChange={(e) => {
+                                // Formatação de moeda brasileira
+                                const value = e.target.value.replace(/\D/g, '');
+                                const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                });
+                                setAdditionalKm(formatted);
+                              }}
+                              placeholder="R$ 0,00"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                            />
+                          </div>
+
+                          {feedback && (
+                            <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                              feedback.includes('Erro') || feedback.includes('preencha') 
+                                ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                                : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                            }`}>
+                              {feedback}
+                            </div>
+                          )}
+
+                          <button 
+                            onClick={handleAllocateDriver}
+                            disabled={isUpdating}
+                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                          >
+                            {isUpdating ? 'Processando...' : 'Confirmar'}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Formulário Rejeitar Recolha */}
+                  {showRejectCollection && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowRejectCollection(false);
+                            resetRejectForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Rejeitar Recolha
+                        </h3>
+                      </div>
+
+                      {/* Motivo da não recolha */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Motivo da não recolha *
+                        </label>
+                        <select 
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200"
+                        >
+                          <option value="">Selecione um motivo...</option>
+                          <option value="cliente_pagamento">Cliente realizou pagamento</option>
+                          <option value="cliente_devolveu">Cliente já devolveu o veículo</option>
+                          <option value="veiculo_recolhido">Veículo já recolhido</option>
+                          <option value="fora_area">Fora da área de atuação</option>
+                          <option value="duplicada">Solicitação duplicada</option>
+                        </select>
+                      </div>
+
+                      {/* Observações */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Observações *
+                        </label>
+                        <textarea 
+                          value={rejectionObservations}
+                          onChange={(e) => setRejectionObservations(e.target.value)}
+                          rows={4}
+                          placeholder="Descreva detalhes adicionais sobre a rejeição..."
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none"
+                        />
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('preencha') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleRejectCollection}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Interface original com iframe */
+              <iframe 
+                id="modalFormIframe" 
+                src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
+                className="w-full h-full rounded-r-2xl relative z-10"
+              />
+            )}
           </div>
         </div>
       </div>
