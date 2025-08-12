@@ -15,9 +15,71 @@ interface MobileTaskModalProps {
 export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details' }: MobileTaskModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
 
+  // Estados para os formulários
+  const [feedback, setFeedback] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  // Estados para fila de recolha
+  const [showAllocateDriver, setShowAllocateDriver] = useState(false);
+  const [showRejectCollection, setShowRejectCollection] = useState(false);
+  const [selectedChofer, setSelectedChofer] = useState('');
+  const [choferEmail, setChoferEmail] = useState('');
+  const [collectionDate, setCollectionDate] = useState('');
+  const [collectionTime, setCollectionTime] = useState('');
+  const [billingType, setBillingType] = useState('');
+  const [collectionValue, setCollectionValue] = useState('');
+  const [additionalKm, setAdditionalKm] = useState('');
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectionObservations, setRejectionObservations] = useState('');
+  
+  // Estados para tentativas de recolha
+  const [showUnlockVehicle, setShowUnlockVehicle] = useState(false);
+  const [showRequestTowing, setShowRequestTowing] = useState(false);
+  const [showReportProblem, setShowReportProblem] = useState(false);
+  
+  // Estados para desbloquear veículo
+  const [vehiclePhotos, setVehiclePhotos] = useState({
+    frente: null as File | null,
+    traseira: null as File | null,
+    lateralDireita: null as File | null,
+    lateralEsquerda: null as File | null,
+    estepe: null as File | null,
+    painel: null as File | null
+  });
+  const [unlockObservations, setUnlockObservations] = useState('');
+  
+  // Estados para solicitar guincho
+  const [towingReason, setTowingReason] = useState('');
+  const [towingPhotos, setTowingPhotos] = useState({
+    frente: null as File | null,
+    traseira: null as File | null,
+    lateralDireita: null as File | null,
+    lateralEsquerda: null as File | null,
+    estepe: null as File | null,
+    painel: null as File | null
+  });
+  const [towingObservations, setTowingObservations] = useState('');
+  
+  // Estados para reportar problema
+  const [problemType, setProblemType] = useState('');
+  const [problemEvidence, setProblemEvidence] = useState({
+    photo1: null as File | null,
+    photo2: null as File | null,
+    photo3: null as File | null
+  });
 
 
 
+
+
+  // Identificar fases
+  const isFila = card.faseAtual === 'Fila de Recolha';
+  const isTentativaRecolha = [
+    'Tentativa 1 de Recolha', 
+    'Tentativa 2 de Recolha', 
+    'Tentativa 3 de Recolha', 
+    'Nova tentativa de recolha'
+  ].includes(card.faseAtual);
 
   // Função para formatar data
   const formatDate = (dateString: string) => {
@@ -30,6 +92,254 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       minute: '2-digit'
     })
   }
+
+  // Funções para fila de recolha
+  const handleAllocateDriver = async () => {
+    if (!selectedChofer || !choferEmail || !collectionDate || !collectionTime || !billingType || !additionalKm) {
+      setFeedback('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    if (billingType === 'avulso' && !collectionValue) {
+      setFeedback('Para faturamento avulso, o valor da recolha é obrigatório.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando alocação de chofer...');
+    
+    try {
+      console.log('Dados da alocação (mobile):', {
+        cardId: card.id,
+        driver: selectedChofer,
+        email: choferEmail,
+        date: collectionDate,
+        time: collectionTime,
+        billing: billingType,
+        value: collectionValue,
+        additionalKm
+      });
+
+      setFeedback('Chofer alocado com sucesso!');
+      setTimeout(() => {
+        setShowAllocateDriver(false);
+        setFeedback('');
+        resetAllocateForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRejectCollection = async () => {
+    if (!rejectionReason || !rejectionObservations) {
+      setFeedback('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando rejeição de recolha...');
+    
+    try {
+      console.log('Dados da rejeição (mobile):', {
+        cardId: card.id,
+        reason: rejectionReason,
+        observations: rejectionObservations
+      });
+
+      setFeedback('Recolha rejeitada com sucesso!');
+      setTimeout(() => {
+        setShowRejectCollection(false);
+        setFeedback('');
+        resetRejectForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Funções para tentativas de recolha
+  const handleUnlockVehicle = async () => {
+    const hasAnyPhoto = Object.values(vehiclePhotos).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto do veículo.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando desbloqueio do veículo...');
+    
+    try {
+      console.log('Dados do desbloqueio (mobile):', {
+        cardId: card.id,
+        photos: vehiclePhotos,
+        observations: unlockObservations
+      });
+
+      setFeedback('Veículo desbloqueado com sucesso!');
+      setTimeout(() => {
+        setShowUnlockVehicle(false);
+        setFeedback('');
+        resetUnlockForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRequestTowing = async () => {
+    if (!towingReason) {
+      setFeedback('Por favor, selecione o motivo do guincho.');
+      return;
+    }
+
+    const hasAnyPhoto = Object.values(towingPhotos).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto do veículo.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando solicitação de guincho...');
+    
+    try {
+      console.log('Dados do guincho (mobile):', {
+        cardId: card.id,
+        reason: towingReason,
+        photos: towingPhotos,
+        observations: towingObservations
+      });
+
+      setFeedback('Guincho solicitado com sucesso!');
+      setTimeout(() => {
+        setShowRequestTowing(false);
+        setFeedback('');
+        resetTowingForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleReportProblem = async () => {
+    if (!problemType) {
+      setFeedback('Por favor, selecione a dificuldade encontrada.');
+      return;
+    }
+
+    const hasAnyPhoto = Object.values(problemEvidence).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto como evidência.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando relato do problema...');
+    
+    try {
+      console.log('Dados do problema (mobile):', {
+        cardId: card.id,
+        type: problemType,
+        evidence: problemEvidence
+      });
+
+      setFeedback('Problema reportado com sucesso!');
+      setTimeout(() => {
+        setShowReportProblem(false);
+        setFeedback('');
+        resetProblemForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Funções para resetar formulários
+  const resetAllocateForm = () => {
+    setSelectedChofer('');
+    setChoferEmail('');
+    setCollectionDate('');
+    setCollectionTime('');
+    setBillingType('');
+    setCollectionValue('');
+    setAdditionalKm('');
+  };
+
+  const resetRejectForm = () => {
+    setRejectionReason('');
+    setRejectionObservations('');
+  };
+
+  const resetUnlockForm = () => {
+    setVehiclePhotos({
+      frente: null,
+      traseira: null,
+      lateralDireita: null,
+      lateralEsquerda: null,
+      estepe: null,
+      painel: null
+    });
+    setUnlockObservations('');
+  };
+
+  const resetTowingForm = () => {
+    setTowingReason('');
+    setTowingPhotos({
+      frente: null,
+      traseira: null,
+      lateralDireita: null,
+      lateralEsquerda: null,
+      estepe: null,
+      painel: null
+    });
+    setTowingObservations('');
+  };
+
+  const resetProblemForm = () => {
+    setProblemType('');
+    setProblemEvidence({
+      photo1: null,
+      photo2: null,
+      photo3: null
+    });
+  };
+
+  // Função para lidar com upload de fotos
+  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem') => {
+    if (formType === 'vehicle') {
+      setVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'towing') {
+      setTowingPhotos(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'problem') {
+      setProblemEvidence(prev => ({ ...prev, [photoType]: file }));
+    }
+  };
+
+  // Configurar data atual ao abrir formulários
+  useEffect(() => {
+    if (showAllocateDriver) {
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      const formattedTime = today.toTimeString().slice(0, 5);
+      setCollectionDate(formattedDate);
+      setCollectionTime(formattedTime);
+    }
+  }, [showAllocateDriver]);
 
   // Função para adaptar nomes das fases para melhor legibilidade
   const adaptPhaseName = (phase: string) => {
