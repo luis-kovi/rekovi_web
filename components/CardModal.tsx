@@ -22,7 +22,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   const [copiedPlate, setCopiedPlate] = useState(false);
   const [availableChofers, setAvailableChofers] = useState<{name: string, email: string}[]>([]);
   const [loadingChofers, setLoadingChofers] = useState(false);
-  
+
   // Estados para os novos formulários da fila de recolha
   const [showAllocateDriver, setShowAllocateDriver] = useState(false);
   const [showRejectCollection, setShowRejectCollection] = useState(false);
@@ -331,7 +331,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
          </div>
         {/* Layout principal sem scroll necessário */}
         <div className="flex h-[calc(95vh-120px)] relative z-10">
-          <div className="w-full p-6 overflow-y-auto scroll-container">
+          <div className="flex-1 p-6 overflow-y-auto scroll-container">
             <div id="modal-content" className="space-y-4">
               {/* SLA, Valores e Fase - Tags compactas na mesma linha */}
               <div className="flex flex-wrap gap-2">
@@ -634,172 +634,169 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                 </div>
               )}
 
-              {/* Novos controles para Fila de Recolha */}
-              {isFila && (
-                <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-orange-200/50 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center shadow-sm">
-                        <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>Gerenciar Recolha</h3>
-                    </div>
+            </div>
+          </div>
+          
+          {/* Lado direito - Ações para Fila de Recolha */}
+          <div className="w-1/2 p-6 overflow-y-auto border-l border-red-200/50 relative">
+            {isFila ? (
+              /* Interface para ações da Fila de Recolha */
+              <div className="space-y-4">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    Gerenciar Recolha
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Escolha uma das opções abaixo para prosseguir
+                  </p>
+                </div>
 
-                    {/* Botões principais - menores e lado a lado */}
-                    {!showAllocateDriver && !showRejectCollection && (
-                      <div className="grid grid-cols-2 gap-3">
+                {/* Botões principais */}
+                {!showAllocateDriver && !showRejectCollection && (
+                  <div className="space-y-4">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-green-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
                         <button
                           onClick={() => setShowAllocateDriver(true)}
-                          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                           </svg>
                           Alocar Chofer
                         </button>
-                        
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-red-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
                         <button
                           onClick={() => setShowRejectCollection(true)}
-                          className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                           </svg>
                           Rejeitar Recolha
                         </button>
                       </div>
-                    )}
+                    </div>
+                  </div>
+                )}
 
-                    {/* Formulário Alocar Chofer */}
-                    {showAllocateDriver && (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowAllocateDriver(false);
-                              resetAllocateForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            Alocar Chofer
-                          </h3>
+                {/* Formulário Alocar Chofer */}
+                {showAllocateDriver && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-green-200/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowAllocateDriver(false);
+                            resetAllocateForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
                         </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Alocar Chofer
+                        </h3>
+                      </div>
 
-                        {loadingChofers ? (
-                          <div className="text-center py-4">
-                            <div className="inline-flex items-center gap-2 text-gray-600">
-                              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                              <span className="text-sm">Carregando chofers...</span>
+                      {loadingChofers ? (
+                        <div className="text-center py-4">
+                          <div className="inline-flex items-center gap-2 text-gray-600">
+                            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span className="text-sm">Carregando chofers...</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Nome do Chofer */}
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              Chofer *
+                            </label>
+                            <select 
+                              value={allocateDriverName}
+                              onChange={(e) => {
+                                setAllocateDriverName(e.target.value);
+                                const option = availableChofers.find(opt => opt.name === e.target.value);
+                                setAllocateDriverEmail(option?.email || '');
+                              }}
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                            >
+                              <option value="">Selecione um chofer...</option>
+                              {availableChofers.map(option => (
+                                <option key={option.email} value={option.name}>{option.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Data e Hora */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Data *
+                              </label>
+                              <input 
+                                type="date" 
+                                value={collectionDate}
+                                onChange={(e) => setCollectionDate(e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                Hora *
+                              </label>
+                              <input 
+                                type="time" 
+                                value={collectionTime}
+                                onChange={(e) => setCollectionTime(e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                              />
                             </div>
                           </div>
-                        ) : (
-                          <>
-                            {/* Nome do Chofer */}
+
+                          {/* Tipo de Faturamento */}
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              Tipo de Faturamento *
+                            </label>
+                            <select 
+                              value={billingType}
+                              onChange={(e) => setBillingType(e.target.value)}
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                            >
+                              <option value="">Selecione o tipo...</option>
+                              <option value="avulso">Avulso</option>
+                              <option value="franquia">Franquia</option>
+                            </select>
+                          </div>
+
+                          {/* Valor da Recolha (apenas para Avulso) */}
+                          {billingType === 'avulso' && (
                             <div>
                               <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                Chofer *
-                              </label>
-                              <select 
-                                value={allocateDriverName}
-                                onChange={(e) => {
-                                  setAllocateDriverName(e.target.value);
-                                  const option = availableChofers.find(opt => opt.name === e.target.value);
-                                  setAllocateDriverEmail(option?.email || '');
-                                }}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
-                              >
-                                <option value="">Selecione um chofer...</option>
-                                {availableChofers.map(option => (
-                                  <option key={option.email} value={option.name}>{option.name}</option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {/* Data e Hora */}
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                  Data *
-                                </label>
-                                <input 
-                                  type="date" 
-                                  value={collectionDate}
-                                  onChange={(e) => setCollectionDate(e.target.value)}
-                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                  Hora *
-                                </label>
-                                <input 
-                                  type="time" 
-                                  value={collectionTime}
-                                  onChange={(e) => setCollectionTime(e.target.value)}
-                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Tipo de Faturamento */}
-                            <div>
-                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                Tipo de Faturamento *
-                              </label>
-                              <select 
-                                value={billingType}
-                                onChange={(e) => setBillingType(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
-                              >
-                                <option value="">Selecione o tipo...</option>
-                                <option value="avulso">Avulso</option>
-                                <option value="franquia">Franquia</option>
-                              </select>
-                            </div>
-
-                            {/* Valor da Recolha (apenas para Avulso) */}
-                            {billingType === 'avulso' && (
-                              <div>
-                                <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                  Valor da Recolha *
-                                </label>
-                                <input 
-                                  type="text" 
-                                  value={collectionValue}
-                                  onChange={(e) => {
-                                    // Formatação de moeda brasileira
-                                    const value = e.target.value.replace(/\D/g, '');
-                                    const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
-                                      style: 'currency',
-                                      currency: 'BRL'
-                                    });
-                                    setCollectionValue(formatted);
-                                  }}
-                                  placeholder="R$ 0,00"
-                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
-                                />
-                              </div>
-                            )}
-
-                            {/* Km Adicional */}
-                            <div>
-                              <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                                Km Adicional *
+                                Valor da Recolha *
                               </label>
                               <input 
                                 type="text" 
-                                value={additionalKm}
+                                value={collectionValue}
                                 onChange={(e) => {
                                   // Formatação de moeda brasileira
                                   const value = e.target.value.replace(/\D/g, '');
@@ -807,112 +804,151 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                                     style: 'currency',
                                     currency: 'BRL'
                                   });
-                                  setAdditionalKm(formatted);
+                                  setCollectionValue(formatted);
                                 }}
                                 placeholder="R$ 0,00"
                                 className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                               />
                             </div>
+                          )}
 
-                            {feedback && (
-                              <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                                feedback.includes('Erro') || feedback.includes('preencha') 
-                                  ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
-                                  : 'text-green-700 bg-green-100/50 border border-green-200/50'
-                              }`}>
-                                {feedback}
-                              </div>
-                            )}
-
-                            <button 
-                              onClick={handleAllocateDriver}
-                              disabled={isUpdating}
-                              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                            >
-                              {isUpdating ? 'Processando...' : 'Confirmar'}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Formulário Rejeitar Recolha */}
-                    {showRejectCollection && (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowRejectCollection(false);
-                              resetRejectForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            Rejeitar Recolha
-                          </h3>
-                        </div>
-
-                        {/* Motivo da não recolha */}
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            Motivo da não recolha *
-                          </label>
-                          <select 
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200"
-                          >
-                            <option value="">Selecione um motivo...</option>
-                            <option value="cliente_pagamento">Cliente realizou pagamento</option>
-                            <option value="cliente_devolveu">Cliente já devolveu o veículo</option>
-                            <option value="veiculo_recolhido">Veículo já recolhido</option>
-                            <option value="fora_area">Fora da área de atuação</option>
-                            <option value="duplicada">Solicitação duplicada</option>
-                          </select>
-                        </div>
-
-                        {/* Observações */}
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
-                            Observações *
-                          </label>
-                          <textarea 
-                            value={rejectionObservations}
-                            onChange={(e) => setRejectionObservations(e.target.value)}
-                            rows={4}
-                            placeholder="Descreva detalhes adicionais sobre a rejeição..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none"
-                          />
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('preencha') 
-                              ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
-                              : 'text-green-700 bg-green-100/50 border border-green-200/50'
-                          }`}>
-                            {feedback}
+                          {/* Km Adicional */}
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              Km Adicional *
+                            </label>
+                            <input 
+                              type="text" 
+                              value={additionalKm}
+                              onChange={(e) => {
+                                // Formatação de moeda brasileira
+                                const value = e.target.value.replace(/\D/g, '');
+                                const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                });
+                                setAdditionalKm(formatted);
+                              }}
+                              placeholder="R$ 0,00"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
+                            />
                           </div>
-                        )}
 
-                        <button 
-                          onClick={handleRejectCollection}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
-                    )}
+                          {feedback && (
+                            <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                              feedback.includes('Erro') || feedback.includes('preencha') 
+                                ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                                : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                            }`}>
+                              {feedback}
+                            </div>
+                          )}
+
+                          <button 
+                            onClick={handleAllocateDriver}
+                            disabled={isUpdating}
+                            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                          >
+                            {isUpdating ? 'Processando...' : 'Confirmar'}
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+
+                {/* Formulário Rejeitar Recolha */}
+                {showRejectCollection && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-red-200/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowRejectCollection(false);
+                            resetRejectForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Rejeitar Recolha
+                        </h3>
+                      </div>
+
+                      {/* Motivo da não recolha */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Motivo da não recolha *
+                        </label>
+                        <select 
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200"
+                        >
+                          <option value="">Selecione um motivo...</option>
+                          <option value="cliente_pagamento">Cliente realizou pagamento</option>
+                          <option value="cliente_devolveu">Cliente já devolveu o veículo</option>
+                          <option value="veiculo_recolhido">Veículo já recolhido</option>
+                          <option value="fora_area">Fora da área de atuação</option>
+                          <option value="duplicada">Solicitação duplicada</option>
+                        </select>
+                      </div>
+
+                      {/* Observações */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Observações *
+                        </label>
+                        <textarea 
+                          value={rejectionObservations}
+                          onChange={(e) => setRejectionObservations(e.target.value)}
+                          rows={4}
+                          placeholder="Descreva detalhes adicionais sobre a rejeição..."
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none"
+                        />
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('preencha') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleRejectCollection}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Interface original com iframe para outras fases */
+              <div className="h-full flex items-center justify-center">
+            <iframe 
+              id="modalFormIframe" 
+              src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
+                  className="w-full h-full rounded-lg relative z-10"
+            />
+              </div>
+            )}
           </div>
 
         </div>
