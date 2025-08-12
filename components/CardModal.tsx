@@ -39,6 +39,42 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   // Estados para rejeitar recolha
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectionObservations, setRejectionObservations] = useState('');
+  
+  // Estados para tentativas de recolha
+  const [showUnlockVehicle, setShowUnlockVehicle] = useState(false);
+  const [showRequestTowing, setShowRequestTowing] = useState(false);
+  const [showReportProblem, setShowReportProblem] = useState(false);
+  
+  // Estados para desbloquear veículo
+  const [vehiclePhotos, setVehiclePhotos] = useState({
+    frente: null as File | null,
+    traseira: null as File | null,
+    lateralDireita: null as File | null,
+    lateralEsquerda: null as File | null,
+    estepe: null as File | null,
+    painel: null as File | null
+  });
+  const [unlockObservations, setUnlockObservations] = useState('');
+  
+  // Estados para solicitar guincho
+  const [towingReason, setTowingReason] = useState('');
+  const [towingPhotos, setTowingPhotos] = useState({
+    frente: null as File | null,
+    traseira: null as File | null,
+    lateralDireita: null as File | null,
+    lateralEsquerda: null as File | null,
+    estepe: null as File | null,
+    painel: null as File | null
+  });
+  const [towingObservations, setTowingObservations] = useState('');
+  
+  // Estados para reportar problema
+  const [problemType, setProblemType] = useState('');
+  const [problemEvidence, setProblemEvidence] = useState({
+    photo1: null as File | null,
+    photo2: null as File | null,
+    photo3: null as File | null
+  });
 
   // Função para buscar chofers disponíveis da base de dados
   const loadAvailableChofers = async () => {
@@ -129,6 +165,12 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   if (!card) return null;
 
   const isFila = card?.faseAtual === 'Fila de Recolha';
+  const isTentativaRecolha = card?.faseAtual && [
+    'Tentativa 1 de Recolha', 
+    'Tentativa 2 de Recolha', 
+    'Tentativa 3 de Recolha', 
+    'Nova tentativa de recolha'
+  ].includes(card.faseAtual);
   const displayPhase = phaseDisplayNames[card?.faseAtual] || card?.faseAtual;
   const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Nova tentativa de recolha', 'Confirmação de Entrega no Pátio'];
   const allowChoferChange = card?.faseAtual ? editablePhases.includes(card.faseAtual) : false;
@@ -253,6 +295,160 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   const resetRejectForm = () => {
     setRejectionReason('');
     setRejectionObservations('');
+  };
+
+  // Funções para tentativas de recolha
+  const handleUnlockVehicle = async () => {
+    // Validar se pelo menos uma foto foi enviada
+    const hasAnyPhoto = Object.values(vehiclePhotos).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto do veículo.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando desbloqueio do veículo...');
+    
+    try {
+      console.log('Dados do desbloqueio:', {
+        cardId: card.id,
+        photos: vehiclePhotos,
+        observations: unlockObservations
+      });
+
+      setFeedback('Veículo desbloqueado com sucesso!');
+      setTimeout(() => {
+        setShowUnlockVehicle(false);
+        setFeedback('');
+        resetUnlockForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRequestTowing = async () => {
+    if (!towingReason) {
+      setFeedback('Por favor, selecione o motivo do guincho.');
+      return;
+    }
+
+    // Validar se pelo menos uma foto foi enviada
+    const hasAnyPhoto = Object.values(towingPhotos).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto do veículo.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando solicitação de guincho...');
+    
+    try {
+      console.log('Dados do guincho:', {
+        cardId: card.id,
+        reason: towingReason,
+        photos: towingPhotos,
+        observations: towingObservations
+      });
+
+      setFeedback('Guincho solicitado com sucesso!');
+      setTimeout(() => {
+        setShowRequestTowing(false);
+        setFeedback('');
+        resetTowingForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleReportProblem = async () => {
+    if (!problemType) {
+      setFeedback('Por favor, selecione a dificuldade encontrada.');
+      return;
+    }
+
+    // Validar se pelo menos uma foto foi enviada
+    const hasAnyPhoto = Object.values(problemEvidence).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto como evidência.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando relato do problema...');
+    
+    try {
+      console.log('Dados do problema:', {
+        cardId: card.id,
+        type: problemType,
+        evidence: problemEvidence
+      });
+
+      setFeedback('Problema reportado com sucesso!');
+      setTimeout(() => {
+        setShowReportProblem(false);
+        setFeedback('');
+        resetProblemForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Funções para resetar os formulários das tentativas
+  const resetUnlockForm = () => {
+    setVehiclePhotos({
+      frente: null,
+      traseira: null,
+      lateralDireita: null,
+      lateralEsquerda: null,
+      estepe: null,
+      painel: null
+    });
+    setUnlockObservations('');
+  };
+
+  const resetTowingForm = () => {
+    setTowingReason('');
+    setTowingPhotos({
+      frente: null,
+      traseira: null,
+      lateralDireita: null,
+      lateralEsquerda: null,
+      estepe: null,
+      painel: null
+    });
+    setTowingObservations('');
+  };
+
+  const resetProblemForm = () => {
+    setProblemType('');
+    setProblemEvidence({
+      photo1: null,
+      photo2: null,
+      photo3: null
+    });
+  };
+
+  // Função para lidar com upload de fotos
+  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem') => {
+    if (formType === 'vehicle') {
+      setVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'towing') {
+      setTowingPhotos(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'problem') {
+      setProblemEvidence(prev => ({ ...prev, [photoType]: file }));
+    }
   };
 
   // Calcular status do SLA
@@ -637,7 +833,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
             </div>
           </div>
           
-          {/* Lado direito - Ações para Fila de Recolha */}
+          {/* Lado direito - Ações para Fila de Recolha e Tentativas */}
           <div className="w-1/2 p-6 overflow-y-auto border-l border-red-200/50 relative">
             {isFila ? (
               /* Interface para ações da Fila de Recolha */
@@ -937,16 +1133,184 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                       </button>
                     </div>
                   </div>
+                                )}
+              </div>
+            ) : isTentativaRecolha ? (
+              /* Interface para ações das Tentativas de Recolha */
+              <div className="space-y-4">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    Ações de Recolha
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Selecione uma ação para prosseguir com a recolha
+                  </p>
+                </div>
+
+                {/* Botões principais para tentativas */}
+                {!showUnlockVehicle && !showRequestTowing && !showReportProblem && (
+                  <div className="space-y-4">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-blue-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <button
+                          onClick={() => setShowUnlockVehicle(true)}
+                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                          </svg>
+                          Desbloquear Veículo
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-orange-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <button
+                          onClick={() => setShowRequestTowing(true)}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                          Solicitar Guincho
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-purple-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <button
+                          onClick={() => setShowReportProblem(true)}
+                          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          Reportar Problema
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 )}
+
+                {/* Formulário Desbloquear Veículo */}
+                {showUnlockVehicle && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-blue-200/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowUnlockVehicle(false);
+                            resetUnlockForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Desbloquear Veículo
+                        </h3>
+                      </div>
+
+                      {/* Fotos do Veículo */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
+                          { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
+                          { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
+                          { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                          { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
+                          { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                        ].map((photo) => (
+                          <div key={photo.key} className="space-y-2">
+                            <label className="text-xs font-bold text-gray-700 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                              {photo.label}
+                            </label>
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-blue-400 transition-colors">
+                              <img 
+                                src={photo.image} 
+                                alt={photo.label}
+                                className="w-full h-16 object-cover rounded mb-2"
+                              />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handlePhotoUpload(photo.key, file, 'vehicle');
+                                }}
+                                className="hidden"
+                                id={`upload-${photo.key}`}
+                              />
+                              <label
+                                htmlFor={`upload-${photo.key}`}
+                                className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer block"
+                              >
+                                {vehiclePhotos[photo.key as keyof typeof vehiclePhotos] ? 'Trocar' : 'Upload'}
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Observações */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Observações
+                        </label>
+                        <textarea
+                          value={unlockObservations}
+                          onChange={(e) => setUnlockObservations(e.target.value)}
+                          rows={3}
+                          placeholder="Observações adicionais sobre o desbloqueio..."
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 resize-none"
+                        />
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('pelo menos') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleUnlockVehicle}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar Desbloqueio'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
               </div>
             ) : (
               /* Interface original com iframe para outras fases */
               <div className="h-full flex items-center justify-center">
-            <iframe 
-              id="modalFormIframe" 
-              src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
+                <iframe 
+                  id="modalFormIframe" 
+                  src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
                   className="w-full h-full rounded-lg relative z-10"
-            />
+                />
               </div>
             )}
           </div>
