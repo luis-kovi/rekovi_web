@@ -1241,11 +1241,13 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                               {photo.label}
                             </label>
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-blue-400 transition-colors">
-                              <img 
-                                src={photo.image} 
-                                alt={photo.label}
-                                className="w-full h-20 object-cover rounded mb-2 aspect-square"
-                              />
+                              <div className="w-full aspect-square mb-2">
+                                <img 
+                                  src={photo.image} 
+                                  alt={photo.label}
+                                  className="w-full h-full object-cover rounded"
+                                />
+                              </div>
                               <input
                                 type="file"
                                 accept="image/*"
@@ -1365,11 +1367,13 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                               {photo.label}
                             </label>
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-orange-400 transition-colors">
-                              <img 
-                                src={photo.image} 
-                                alt={photo.label}
-                                className="w-full h-20 object-cover rounded mb-2 aspect-square"
-                              />
+                              <div className="w-full aspect-square mb-2">
+                                <img 
+                                  src={photo.image} 
+                                  alt={photo.label}
+                                  className="w-full h-full object-cover rounded"
+                                />
+                              </div>
                               <input
                                 type="file"
                                 accept="image/*"
