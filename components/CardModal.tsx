@@ -637,7 +637,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
           </div>
           
           {/* Área do iframe ou novos controles da fila de recolha */}
-          <div className="w-1/2 bg-white/90 backdrop-blur-sm rounded-r-2xl border-l border-red-200/50 relative overflow-hidden">
+          <div className="w-1/2 backdrop-blur-sm rounded-r-2xl border-l border-red-200/50 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-red-50/20 to-transparent pointer-events-none"></div>
             
             {isFila ? (
