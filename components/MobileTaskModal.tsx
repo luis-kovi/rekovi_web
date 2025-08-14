@@ -1155,23 +1155,23 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           </>
                         )}
 
-                        <div className="grid grid-cols-7 gap-2">
-                          <div className="col-span-4">
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">Data *</label>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block">Data prevista de recolha *</label>
                             <input 
                               type="date" 
                               value={collectionDate}
                               onChange={(e) => setCollectionDate(e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
                             />
                           </div>
-                          <div className="col-span-3">
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">Hora *</label>
+                          <div>
+                            <label className="text-sm font-bold text-gray-700 mb-2 block">Hora prevista de recolha *</label>
                             <input 
                               type="time" 
                               value={collectionTime}
                               onChange={(e) => setCollectionTime(e.target.value)}
-                              className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
                             />
                           </div>
                         </div>
