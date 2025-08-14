@@ -3,6 +3,8 @@
 
 import { useState, useEffect } from 'react'
 import type { Card } from '@/types'
+import { createClient } from '@/utils/supabase/client'
+import { extractCityFromOrigin } from '@/utils/auth-validation'
 
 interface MobileTaskModalProps {
   card: Card
@@ -68,6 +70,69 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     photo3: null as File | null
   });
 
+  // Estados para Confirmação de Entrega no Pátio
+  const [showConfirmPatioDelivery, setShowConfirmPatioDelivery] = useState(false);
+  const [showCarTowed, setShowCarTowed] = useState(false);
+  const [showRequestTowMechanical, setShowRequestTowMechanical] = useState(false);
+  
+  // Estados para confirmar entrega no pátio
+  const [patioVehiclePhotos, setPatioVehiclePhotos] = useState({
+    frente: null as File | null,
+    traseira: null as File | null,
+    lateralDireita: null as File | null,
+    lateralEsquerda: null as File | null,
+    estepe: null as File | null,
+    painel: null as File | null
+  });
+  const [patioExtraExpenses, setPatioExtraExpenses] = useState({
+    naoHouve: true,
+    gasolina: false,
+    pedagio: false,
+    estacionamento: false,
+    motoboy: false
+  });
+  const [patioExpenseValues, setPatioExpenseValues] = useState({
+    gasolina: '',
+    pedagio: '',
+    estacionamento: '',
+    motoboy: ''
+  });
+  const [patioExpenseReceipts, setPatioExpenseReceipts] = useState({
+    gasolina: null as File | null,
+    pedagio: null as File | null,
+    estacionamento: null as File | null,
+    motoboy: null as File | null
+  });
+  
+  // Estados para carro guinchado
+  const [towedCarPhoto, setTowedCarPhoto] = useState<File | null>(null);
+  const [towedExtraExpenses, setTowedExtraExpenses] = useState({
+    naoHouve: true,
+    gasolina: false,
+    pedagio: false,
+    estacionamento: false,
+    motoboy: false
+  });
+  const [towedExpenseValues, setTowedExpenseValues] = useState({
+    gasolina: '',
+    pedagio: '',
+    estacionamento: '',
+    motoboy: ''
+  });
+  const [towedExpenseReceipts, setTowedExpenseReceipts] = useState({
+    gasolina: null as File | null,
+    pedagio: null as File | null,
+    estacionamento: null as File | null,
+    motoboy: null as File | null
+  });
+  
+  // Estados para solicitar guincho (problemas mecânicos)
+  const [mechanicalTowReason, setMechanicalTowReason] = useState('');
+
+  // Estados para buscar chofers disponíveis
+  const [availableChofers, setAvailableChofers] = useState<{name: string, email: string}[]>([]);
+  const [loadingChofers, setLoadingChofers] = useState(false);
+
   // Identificar fases
   const isFila = card.faseAtual === 'Fila de Recolha';
   const isTentativaRecolha = [
@@ -76,6 +141,73 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     'Tentativa 3 de Recolha', 
     'Nova tentativa de recolha'
   ].includes(card.faseAtual);
+  const isConfirmacaoRecolha = card.faseAtual === 'Confirmação de Entrega no Pátio';
+
+  // Função para buscar chofers disponíveis da base de dados
+  const loadAvailableChofers = async () => {
+    if (!card || !card.empresaResponsavel || !card.origemLocacao) {
+      setAvailableChofers([]);
+      return;
+    }
+
+    setLoadingChofers(true);
+    try {
+      const supabase = createClient();
+      
+      // Extrair cidade de origem do card
+      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase();
+      
+      // Buscar usuários com as condições especificadas
+      const { data: users, error } = await supabase
+        .from('pre_approved_users')
+        .select('nome, email, empresa, permission_type, status, area_atuacao')
+        .eq('empresa', card.empresaResponsavel)
+        .eq('permission_type', 'chofer')
+        .eq('status', 'active');
+
+      if (error) {
+        console.error('Erro ao buscar chofers:', error);
+        setAvailableChofers([]);
+        return;
+      }
+
+      if (!users || users.length === 0) {
+        setAvailableChofers([]);
+        return;
+      }
+
+      // Filtrar por área de atuação e excluir o chofer atual
+      const filteredChofers = users.filter(user => {
+        // Excluir chofer atual (comparar por email se disponível, senão por nome)
+        const isCurrentChofer = user.email === card.emailChofer || 
+                               user.nome?.toLowerCase() === card.chofer?.toLowerCase();
+        if (isCurrentChofer) return false;
+
+        // Verificar se atua na região
+        if (!user.area_atuacao || !Array.isArray(user.area_atuacao)) return false;
+        
+        return user.area_atuacao.some((area: string) => {
+          const areaCity = area.toLowerCase();
+          return cardCity.includes(areaCity) || 
+                 areaCity.includes(cardCity) ||
+                 cardCity === areaCity;
+        });
+      });
+
+      // Mapear para o formato esperado
+      const choferOptions = filteredChofers.map(user => ({
+        name: user.nome || user.email.split('@')[0],
+        email: user.email
+      }));
+
+      setAvailableChofers(choferOptions);
+    } catch (error) {
+      console.error('Erro ao carregar chofers:', error);
+      setAvailableChofers([]);
+    } finally {
+      setLoadingChofers(false);
+    }
+  };
 
   // Função para formatar data
   const formatDate = (dateString: string) => {
@@ -315,20 +447,286 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     });
   };
 
+  // Função para obter URL da imagem (foto anexada ou ilustrativa)
+  const getImageUrl = (file: File | null, defaultImageUrl: string): string => {
+    if (file) {
+      return URL.createObjectURL(file);
+    }
+    return defaultImageUrl;
+  };
+
   // Função para lidar com upload de fotos
-  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem') => {
+  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem' | 'patio' | 'towed' | 'expense') => {
     if (formType === 'vehicle') {
       setVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
     } else if (formType === 'towing') {
       setTowingPhotos(prev => ({ ...prev, [photoType]: file }));
     } else if (formType === 'problem') {
       setProblemEvidence(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'patio') {
+      setPatioVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'towed') {
+      setTowedCarPhoto(file);
+    } else if (formType === 'expense') {
+      const [expenseType, receiptType] = photoType.split('-');
+      if (receiptType === 'patio') {
+        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
+      } else if (receiptType === 'towed') {
+        setTowedExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
+      }
     }
+  };
+
+  // Funções para manipular despesas extras
+  const handlePatioExpenseChange = (expenseType: string, checked: boolean) => {
+    if (expenseType === 'naoHouve') {
+      setPatioExtraExpenses({
+        naoHouve: checked,
+        gasolina: false,
+        pedagio: false,
+        estacionamento: false,
+        motoboy: false
+      });
+      if (checked) {
+        setPatioExpenseValues({
+          gasolina: '',
+          pedagio: '',
+          estacionamento: '',
+          motoboy: ''
+        });
+        setPatioExpenseReceipts({
+          gasolina: null,
+          pedagio: null,
+          estacionamento: null,
+          motoboy: null
+        });
+      }
+    } else {
+      setPatioExtraExpenses(prev => ({
+        ...prev,
+        naoHouve: false,
+        [expenseType]: checked
+      }));
+      if (!checked) {
+        setPatioExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
+        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
+      }
+    }
+  };
+
+  const handleTowedExpenseChange = (expenseType: string, checked: boolean) => {
+    if (expenseType === 'naoHouve') {
+      setTowedExtraExpenses({
+        naoHouve: checked,
+        gasolina: false,
+        pedagio: false,
+        estacionamento: false,
+        motoboy: false
+      });
+      if (checked) {
+        setTowedExpenseValues({
+          gasolina: '',
+          pedagio: '',
+          estacionamento: '',
+          motoboy: ''
+        });
+        setTowedExpenseReceipts({
+          gasolina: null,
+          pedagio: null,
+          estacionamento: null,
+          motoboy: null
+        });
+      }
+    } else {
+      setTowedExtraExpenses(prev => ({
+        ...prev,
+        naoHouve: false,
+        [expenseType]: checked
+      }));
+      if (!checked) {
+        setTowedExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
+        setTowedExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
+      }
+    }
+  };
+
+  // Funções para as ações de Confirmação de Recolha
+  const handleConfirmPatioDelivery = async () => {
+    const hasAnyPhoto = Object.values(patioVehiclePhotos).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto do veículo no pátio.');
+      return;
+    }
+
+    const selectedExpenses = Object.entries(patioExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
+    for (const [expenseType] of selectedExpenses) {
+      if (!patioExpenseValues[expenseType as keyof typeof patioExpenseValues]) {
+        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
+        return;
+      }
+      if (!patioExpenseReceipts[expenseType as keyof typeof patioExpenseReceipts]) {
+        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
+        return;
+      }
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando confirmação de entrega no pátio...');
+    
+    try {
+      console.log('Dados da entrega no pátio (mobile):', {
+        cardId: card.id,
+        photos: patioVehiclePhotos,
+        expenses: patioExtraExpenses,
+        expenseValues: patioExpenseValues,
+        expenseReceipts: patioExpenseReceipts
+      });
+
+      setFeedback('Entrega no pátio confirmada com sucesso!');
+      setTimeout(() => {
+        setShowConfirmPatioDelivery(false);
+        setFeedback('');
+        resetPatioForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCarTowed = async () => {
+    if (!towedCarPhoto) {
+      setFeedback('Por favor, envie a foto do veículo no guincho.');
+      return;
+    }
+
+    const selectedExpenses = Object.entries(towedExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
+    for (const [expenseType] of selectedExpenses) {
+      if (!towedExpenseValues[expenseType as keyof typeof towedExpenseValues]) {
+        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
+        return;
+      }
+      if (!towedExpenseReceipts[expenseType as keyof typeof towedExpenseReceipts]) {
+        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
+        return;
+      }
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando confirmação de carro guinchado...');
+    
+    try {
+      console.log('Dados do carro guinchado (mobile):', {
+        cardId: card.id,
+        towPhoto: towedCarPhoto,
+        expenses: towedExtraExpenses,
+        expenseValues: towedExpenseValues,
+        expenseReceipts: towedExpenseReceipts
+      });
+
+      setFeedback('Carro guinchado confirmado com sucesso!');
+      setTimeout(() => {
+        setShowCarTowed(false);
+        setFeedback('');
+        resetTowedForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRequestTowMechanical = async () => {
+    if (!mechanicalTowReason.trim()) {
+      setFeedback('Por favor, detalhe o motivo do guincho.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando solicitação de guincho...');
+    
+    try {
+      console.log('Dados da solicitação de guincho mecânico (mobile):', {
+        cardId: card.id,
+        reason: mechanicalTowReason
+      });
+
+      setFeedback('Guincho solicitado com sucesso!');
+      setTimeout(() => {
+        setShowRequestTowMechanical(false);
+        setFeedback('');
+        setMechanicalTowReason('');
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Funções para resetar os formulários de confirmação
+  const resetPatioForm = () => {
+    setPatioVehiclePhotos({
+      frente: null,
+      traseira: null,
+      lateralDireita: null,
+      lateralEsquerda: null,
+      estepe: null,
+      painel: null
+    });
+    setPatioExtraExpenses({
+      naoHouve: true,
+      gasolina: false,
+      pedagio: false,
+      estacionamento: false,
+      motoboy: false
+    });
+    setPatioExpenseValues({
+      gasolina: '',
+      pedagio: '',
+      estacionamento: '',
+      motoboy: ''
+    });
+    setPatioExpenseReceipts({
+      gasolina: null,
+      pedagio: null,
+      estacionamento: null,
+      motoboy: null
+    });
+  };
+
+  const resetTowedForm = () => {
+    setTowedCarPhoto(null);
+    setTowedExtraExpenses({
+      naoHouve: true,
+      gasolina: false,
+      pedagio: false,
+      estacionamento: false,
+      motoboy: false
+    });
+    setTowedExpenseValues({
+      gasolina: '',
+      pedagio: '',
+      estacionamento: '',
+      motoboy: ''
+    });
+    setTowedExpenseReceipts({
+      gasolina: null,
+      pedagio: null,
+      estacionamento: null,
+      motoboy: null
+    });
   };
 
   // Configurar data atual ao abrir formulários
   useEffect(() => {
     if (showAllocateDriver) {
+      loadAvailableChofers();
       const today = new Date();
       const formattedDate = today.toISOString().split('T')[0];
       const formattedTime = today.toTimeString().slice(0, 5);
@@ -706,27 +1104,55 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <h3 className="text-lg font-bold text-gray-800">Alocar Chofer</h3>
                         </div>
 
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Chofer *</label>
-                          <input
-                            type="text"
-                            value={selectedChofer}
-                            onChange={(e) => setSelectedChofer(e.target.value)}
-                            placeholder="Nome do chofer..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
-                          />
-                        </div>
+                        {loadingChofers ? (
+                          <div className="text-center py-4">
+                            <div className="inline-flex items-center gap-2 text-gray-600">
+                              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              <span className="text-sm">Carregando chofers...</span>
+                            </div>
+                          </div>
+                        ) : availableChofers.length === 0 ? (
+                          <div className="text-center py-4">
+                            <div className="text-gray-600 text-sm">
+                              Não há outros chofers cadastrados para a região.
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div>
+                              <label className="text-sm font-bold text-gray-700 mb-2 block">Chofer *</label>
+                              <select 
+                                value={selectedChofer}
+                                onChange={(e) => {
+                                  setSelectedChofer(e.target.value);
+                                  const option = availableChofers.find(opt => opt.name === e.target.value);
+                                  setChoferEmail(option?.email || '');
+                                }}
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                              >
+                                <option value="">Selecione um chofer...</option>
+                                {availableChofers.map(option => (
+                                  <option key={option.email} value={option.name}>{option.name}</option>
+                                ))}
+                              </select>
+                            </div>
 
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">E-mail do Chofer *</label>
-                          <input
-                            type="email"
-                            value={choferEmail}
-                            onChange={(e) => setChoferEmail(e.target.value)}
-                            placeholder="email@exemplo.com"
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
-                          />
-                        </div>
+                            {selectedChofer && (
+                              <div>
+                                <label className="text-sm font-bold text-gray-700 mb-2 block">E-mail do Chofer</label>
+                                <input
+                                  type="email"
+                                  value={choferEmail}
+                                  readOnly
+                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-not-allowed"
+                                  placeholder="E-mail será preenchido automaticamente"
+                                />
+                              </div>
+                            )}
+                          </>
+                        )}
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
@@ -961,7 +1387,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                               <p className="text-xs font-bold text-gray-700">{photo.label}</p>
                               <div className="w-full aspect-square">
                                 <img
-                                  src={photo.image}
+                                  src={getImageUrl(vehiclePhotos[photo.key as keyof typeof vehiclePhotos], photo.image)}
                                   alt={photo.label}
                                   className="w-full h-full object-cover rounded"
                                 />
@@ -1063,7 +1489,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                               <p className="text-xs font-bold text-gray-700">{photo.label}</p>
                               <div className="w-full aspect-square">
                                 <img
-                                  src={photo.image}
+                                  src={getImageUrl(towingPhotos[photo.key as keyof typeof towingPhotos], photo.image)}
                                   alt={photo.label}
                                   className="w-full h-full object-cover rounded"
                                 />
@@ -1198,6 +1624,380 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           onClick={handleReportProblem}
                           disabled={isUpdating}
                           className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : isConfirmacaoRecolha ? (
+                  /* Interface para Confirmação de Entrega no Pátio */
+                  <div className="space-y-4">
+                    <div className="text-center mb-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-2">Confirmação de Recolha</h3>
+                      <p className="text-sm text-gray-600">Selecione uma das opções para finalizar</p>
+                    </div>
+
+                    {!showConfirmPatioDelivery && !showCarTowed && !showRequestTowMechanical && (
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => setShowConfirmPatioDelivery(true)}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Confirmar entrega no pátio
+                        </button>
+                        
+                        <button
+                          onClick={() => setShowCarTowed(true)}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                          Carro guinchado
+                        </button>
+
+                        <button
+                          onClick={() => setShowRequestTowMechanical(true)}
+                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <div className="text-center">
+                            <div>Solicitar guincho</div>
+                            <div className="text-xs opacity-90">(problemas mecânicos)</div>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Confirmar Entrega no Pátio */}
+                    {showConfirmPatioDelivery && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-green-200 max-h-[60vh] overflow-y-auto">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowConfirmPatioDelivery(false);
+                              resetPatioForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Confirmar Entrega no Pátio</h3>
+                        </div>
+
+                        {/* Fotos do Veículo no Pátio */}
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 mb-3">Fotos do veículo no pátio *</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {[
+                              { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
+                              { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
+                              { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
+                              { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                              { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
+                              { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                            ].map((photo) => (
+                              <div key={photo.key} className="space-y-2">
+                                <p className="text-xs font-bold text-gray-700">{photo.label}</p>
+                                <div className="w-full aspect-square">
+                                  <img
+                                    src={getImageUrl(patioVehiclePhotos[photo.key as keyof typeof patioVehiclePhotos], photo.image)}
+                                    alt={photo.label}
+                                    className="w-full h-full object-cover rounded"
+                                  />
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      handlePhotoUpload(photo.key, file, 'patio');
+                                    }
+                                  }}
+                                  className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                                />
+                                {patioVehiclePhotos[photo.key as keyof typeof patioVehiclePhotos] && (
+                                  <p className="text-xs text-green-600">✓ Foto enviada</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Despesas Extras */}
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 mb-3">Houveram despesas extras no processo de recolha? *</p>
+                          <div className="space-y-3">
+                            {[
+                              { key: 'naoHouve', label: 'Não houve' },
+                              { key: 'gasolina', label: 'Gasolina' },
+                              { key: 'pedagio', label: 'Pedágio' },
+                              { key: 'estacionamento', label: 'Estacionamento' },
+                              { key: 'motoboy', label: 'Motoboy (busca de chave)' }
+                            ].map((expense) => (
+                              <div key={expense.key} className="space-y-2">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={patioExtraExpenses[expense.key as keyof typeof patioExtraExpenses]}
+                                    onChange={(e) => handlePatioExpenseChange(expense.key, e.target.checked)}
+                                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                  />
+                                  <span className="text-sm text-gray-700">{expense.label}</span>
+                                </label>
+                                
+                                {expense.key !== 'naoHouve' && patioExtraExpenses[expense.key as keyof typeof patioExtraExpenses] && (
+                                  <div className="ml-6 space-y-2 p-3 bg-gray-50 rounded-lg">
+                                    <div>
+                                      <label className="text-xs font-bold text-gray-700 block mb-1">
+                                        Valor do {expense.label.toLowerCase()}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={patioExpenseValues[expense.key as keyof typeof patioExpenseValues]}
+                                        onChange={(e) => {
+                                          const value = e.target.value.replace(/\D/g, '');
+                                          const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                          });
+                                          setPatioExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
+                                        }}
+                                        placeholder="R$ 0,00"
+                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs font-bold text-gray-700 block mb-1">
+                                        Comprovante de pagamento do {expense.label.toLowerCase()}
+                                      </label>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handlePhotoUpload(`${expense.key}-patio`, file, 'expense');
+                                        }}
+                                        className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                                      />
+                                      {patioExpenseReceipts[expense.key as keyof typeof patioExpenseReceipts] && (
+                                        <p className="text-xs text-green-600 mt-1">✓ Comprovante enviado</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('Por favor') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleConfirmPatioDelivery}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Carro Guinchado */}
+                    {showCarTowed && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-orange-200 max-h-[60vh] overflow-y-auto">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowCarTowed(false);
+                              resetTowedForm();
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Carro Guinchado</h3>
+                        </div>
+
+                        {/* Foto do Veículo no Guincho */}
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 mb-3">Foto do veículo no guincho *</p>
+                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
+                            <div className="mb-3">
+                              <img 
+                                src={getImageUrl(towedCarPhoto, "https://i.ibb.co/KxBvwbyz/Gemini-Generated-Image-8d4po88d4po88d4p.jpg")} 
+                                alt={towedCarPhoto ? "Foto do veículo no guincho" : "Formato esperado da imagem"}
+                                className="w-full max-w-xs mx-auto rounded-lg shadow-sm"
+                              />
+                              <p className="text-xs text-gray-600 mt-2">
+                                {towedCarPhoto ? "Foto anexada" : "Formato esperado da imagem"}
+                              </p>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handlePhotoUpload('towed', file, 'towed');
+                              }}
+                              className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Despesas Extras */}
+                        <div>
+                          <p className="text-sm font-bold text-gray-700 mb-3">Houveram despesas extras no processo de recolha? *</p>
+                          <div className="space-y-3">
+                            {[
+                              { key: 'naoHouve', label: 'Não houve' },
+                              { key: 'gasolina', label: 'Gasolina' },
+                              { key: 'pedagio', label: 'Pedágio' },
+                              { key: 'estacionamento', label: 'Estacionamento' },
+                              { key: 'motoboy', label: 'Motoboy (busca de chave)' }
+                            ].map((expense) => (
+                              <div key={expense.key} className="space-y-2">
+                                <label className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={towedExtraExpenses[expense.key as keyof typeof towedExtraExpenses]}
+                                    onChange={(e) => handleTowedExpenseChange(expense.key, e.target.checked)}
+                                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                  />
+                                  <span className="text-sm text-gray-700">{expense.label}</span>
+                                </label>
+                                
+                                {expense.key !== 'naoHouve' && towedExtraExpenses[expense.key as keyof typeof towedExtraExpenses] && (
+                                  <div className="ml-6 space-y-2 p-3 bg-gray-50 rounded-lg">
+                                    <div>
+                                      <label className="text-xs font-bold text-gray-700 block mb-1">
+                                        Valor do {expense.label.toLowerCase()}
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={towedExpenseValues[expense.key as keyof typeof towedExpenseValues]}
+                                        onChange={(e) => {
+                                          const value = e.target.value.replace(/\D/g, '');
+                                          const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                          });
+                                          setTowedExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
+                                        }}
+                                        placeholder="R$ 0,00"
+                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs font-bold text-gray-700 block mb-1">
+                                        Comprovante de pagamento do {expense.label.toLowerCase()}
+                                      </label>
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handlePhotoUpload(`${expense.key}-towed`, file, 'expense');
+                                        }}
+                                        className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
+                                      />
+                                      {towedExpenseReceipts[expense.key as keyof typeof towedExpenseReceipts] && (
+                                        <p className="text-xs text-green-600 mt-1">✓ Comprovante enviado</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('Por favor') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleCarTowed}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isUpdating ? 'Processando...' : 'Confirmar'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Formulário Solicitar Guincho (Problemas Mecânicos) */}
+                    {showRequestTowMechanical && (
+                      <div className="space-y-4 bg-white rounded-xl p-4 border border-red-200">
+                        <div className="flex items-center gap-3 mb-4">
+                          <button
+                            onClick={() => {
+                              setShowRequestTowMechanical(false);
+                              setMechanicalTowReason('');
+                              setFeedback('');
+                            }}
+                            className="text-gray-500 hover:text-gray-700 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <h3 className="text-lg font-bold text-gray-800">Solicitar Guincho</h3>
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Detalhe o motivo do guincho *</label>
+                          <textarea
+                            value={mechanicalTowReason}
+                            onChange={(e) => setMechanicalTowReason(e.target.value)}
+                            rows={6}
+                            placeholder="Descreva detalhadamente os problemas mecânicos identificados após o pedido de desbloqueio que justificam a necessidade do guincho..."
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none"
+                          />
+                        </div>
+
+                        {feedback && (
+                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                            feedback.includes('Erro') || feedback.includes('Por favor') 
+                              ? 'text-red-700 bg-red-100 border border-red-200' 
+                              : 'text-green-700 bg-green-100 border border-green-200'
+                          }`}>
+                            {feedback}
+                          </div>
+                        )}
+
+                        <button 
+                          onClick={handleRequestTowMechanical}
+                          disabled={isUpdating}
+                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isUpdating ? 'Processando...' : 'Confirmar'}
                         </button>
