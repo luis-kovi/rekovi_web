@@ -500,6 +500,14 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
     });
   };
 
+  // Função para obter URL da imagem (foto anexada ou ilustrativa)
+  const getImageUrl = (file: File | null, defaultImageUrl: string): string => {
+    if (file) {
+      return URL.createObjectURL(file);
+    }
+    return defaultImageUrl;
+  };
+
   // Função para lidar com upload de fotos
   const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem' | 'patio' | 'towed' | 'expense') => {
     if (formType === 'vehicle') {
@@ -1572,7 +1580,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                               <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-green-400 transition-colors">
                                 <div className="w-full aspect-square mb-2">
                                   <img 
-                                    src={photo.image} 
+                                    src={getImageUrl(patioVehiclePhotos[photo.key as keyof typeof patioVehiclePhotos], photo.image)} 
                                     alt={photo.label}
                                     className="w-full h-full object-cover rounded"
                                   />
@@ -1733,11 +1741,13 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
                           <div className="mb-3">
                             <img 
-                              src="https://i.ibb.co/KxBvwbyz/Gemini-Generated-Image-8d4po88d4po88d4p.jpg" 
-                              alt="Formato esperado da imagem"
+                              src={getImageUrl(towedCarPhoto, "https://i.ibb.co/KxBvwbyz/Gemini-Generated-Image-8d4po88d4po88d4p.jpg")} 
+                              alt={towedCarPhoto ? "Foto do veículo no guincho" : "Formato esperado da imagem"}
                               className="w-full max-w-xs mx-auto rounded-lg shadow-sm"
                             />
-                            <p className="text-xs text-gray-600 mt-2">Formato esperado da imagem</p>
+                            <p className="text-xs text-gray-600 mt-2">
+                              {towedCarPhoto ? "Foto anexada" : "Formato esperado da imagem"}
+                            </p>
                           </div>
                           <input
                             type="file"
@@ -2026,7 +2036,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-blue-400 transition-colors">
                               <div className="w-full aspect-square mb-2">
                                 <img 
-                                  src={photo.image} 
+                                  src={getImageUrl(vehiclePhotos[photo.key as keyof typeof vehiclePhotos], photo.image)} 
                                   alt={photo.label}
                                   className="w-full h-full object-cover rounded"
                                 />
@@ -2152,7 +2162,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                             <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-orange-400 transition-colors">
                               <div className="w-full aspect-square mb-2">
                                 <img 
-                                  src={photo.image} 
+                                  src={getImageUrl(towingPhotos[photo.key as keyof typeof towingPhotos], photo.image)} 
                                   alt={photo.label}
                                   className="w-full h-full object-cover rounded"
                                 />
