@@ -1123,14 +1123,14 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <>
                         <div>
                           <label className="text-sm font-bold text-gray-700 mb-2 block">Chofer *</label>
-                              <select 
-                            value={selectedChofer}
+                                                            <select 
+                                value={selectedChofer}
                                 onChange={(e) => {
                                   setSelectedChofer(e.target.value);
                                   const option = availableChofers.find(opt => opt.name === e.target.value);
                                   setChoferEmail(option?.email || '');
                                 }}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
                               >
                                 <option value="" className="text-gray-500">Selecione um chofer...</option>
                                 {availableChofers.map(option => (
@@ -1142,38 +1142,36 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             {selectedChofer && (
                         <div>
                                 <label className="text-sm font-bold text-gray-700 mb-2 block">E-mail do Chofer</label>
-                          <input
-                            type="email"
-                            value={choferEmail}
+                                                          <input
+                                  type="email"
+                                  value={choferEmail}
                                   readOnly
-                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-not-allowed"
+                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-not-allowed text-gray-900"
                                   placeholder="E-mail será preenchido automaticamente"
-                                  style={{ color: '#6B7280' }}
                           />
                         </div>
                             )}
                           </>
                         )}
 
-                        <div className="space-y-4">
-                          <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">Data prevista de recolha *</label>
-                            <input 
-                              type="date" 
-                              value={collectionDate}
-                              onChange={(e) => setCollectionDate(e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">Hora prevista de recolha *</label>
-                            <input 
-                              type="time" 
-                              value={collectionTime}
-                              onChange={(e) => setCollectionTime(e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
-                            />
-                          </div>
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Data prevista de recolha *</label>
+                          <input 
+                            type="date" 
+                            value={collectionDate}
+                            onChange={(e) => setCollectionDate(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-sm font-bold text-gray-700 mb-2 block">Hora prevista de recolha *</label>
+                          <input 
+                            type="time" 
+                            value={collectionTime}
+                            onChange={(e) => setCollectionTime(e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
+                          />
                         </div>
 
                         <div>
@@ -1181,7 +1179,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <select 
                             value={billingType}
                             onChange={(e) => setBillingType(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
                           >
                             <option value="" style={{ color: '#6B7280' }}>Selecione o tipo...</option>
                             <option value="avulso">Avulso</option>
@@ -1204,7 +1202,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                                 setCollectionValue(formatted);
                               }}
                               placeholder="R$ 0,00"
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-500"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-500 text-gray-900"
                             />
                           </div>
                         )}
@@ -1223,7 +1221,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                               setAdditionalKm(formatted);
                             }}
                             placeholder="R$ 0,00"
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-500"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-500 text-gray-900"
                           />
                         </div>
 
