@@ -76,6 +76,65 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
     photo3: null as File | null
   });
 
+  // Estados para Confirmação de Recolha
+  const [showConfirmPatioDelivery, setShowConfirmPatioDelivery] = useState(false);
+  const [showCarTowed, setShowCarTowed] = useState(false);
+  const [showRequestTowMechanical, setShowRequestTowMechanical] = useState(false);
+  
+  // Estados para confirmar entrega no pátio
+  const [patioVehiclePhotos, setPatioVehiclePhotos] = useState({
+    frente: null as File | null,
+    traseira: null as File | null,
+    lateralDireita: null as File | null,
+    lateralEsquerda: null as File | null,
+    estepe: null as File | null,
+    painel: null as File | null
+  });
+  const [patioExtraExpenses, setPatioExtraExpenses] = useState({
+    naoHouve: true,
+    gasolina: false,
+    pedagio: false,
+    estacionamento: false,
+    motoboy: false
+  });
+  const [patioExpenseValues, setPatioExpenseValues] = useState({
+    gasolina: '',
+    pedagio: '',
+    estacionamento: '',
+    motoboy: ''
+  });
+  const [patioExpenseReceipts, setPatioExpenseReceipts] = useState({
+    gasolina: null as File | null,
+    pedagio: null as File | null,
+    estacionamento: null as File | null,
+    motoboy: null as File | null
+  });
+  
+  // Estados para carro guinchado
+  const [towedCarPhoto, setTowedCarPhoto] = useState<File | null>(null);
+  const [towedExtraExpenses, setTowedExtraExpenses] = useState({
+    naoHouve: true,
+    gasolina: false,
+    pedagio: false,
+    estacionamento: false,
+    motoboy: false
+  });
+  const [towedExpenseValues, setTowedExpenseValues] = useState({
+    gasolina: '',
+    pedagio: '',
+    estacionamento: '',
+    motoboy: ''
+  });
+  const [towedExpenseReceipts, setTowedExpenseReceipts] = useState({
+    gasolina: null as File | null,
+    pedagio: null as File | null,
+    estacionamento: null as File | null,
+    motoboy: null as File | null
+  });
+  
+  // Estados para solicitar guincho (problemas mecânicos)
+  const [mechanicalTowReason, setMechanicalTowReason] = useState('');
+
   // Função para buscar chofers disponíveis da base de dados
   const loadAvailableChofers = async () => {
     if (!card || !card.empresaResponsavel || !card.origemLocacao) {
@@ -171,6 +230,7 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
     'Tentativa 3 de Recolha', 
     'Nova tentativa de recolha'
   ].includes(card.faseAtual);
+  const isConfirmacaoRecolha = card?.faseAtual === 'Confirmação de Recolha';
   const displayPhase = phaseDisplayNames[card?.faseAtual] || card?.faseAtual;
   const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Nova tentativa de recolha', 'Confirmação de Entrega no Pátio'];
   const allowChoferChange = card?.faseAtual ? editablePhases.includes(card.faseAtual) : false;
@@ -441,14 +501,279 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
   };
 
   // Função para lidar com upload de fotos
-  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem') => {
+  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem' | 'patio' | 'towed' | 'expense') => {
     if (formType === 'vehicle') {
       setVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
     } else if (formType === 'towing') {
       setTowingPhotos(prev => ({ ...prev, [photoType]: file }));
     } else if (formType === 'problem') {
       setProblemEvidence(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'patio') {
+      setPatioVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
+    } else if (formType === 'towed') {
+      setTowedCarPhoto(file);
+    } else if (formType === 'expense') {
+      const [expenseType, receiptType] = photoType.split('-');
+      if (receiptType === 'patio') {
+        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
+      } else if (receiptType === 'towed') {
+        setTowedExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
+      }
     }
+  };
+
+  // Funções para manipular despesas extras
+  const handlePatioExpenseChange = (expenseType: string, checked: boolean) => {
+    if (expenseType === 'naoHouve') {
+      setPatioExtraExpenses({
+        naoHouve: checked,
+        gasolina: false,
+        pedagio: false,
+        estacionamento: false,
+        motoboy: false
+      });
+      // Limpar valores quando "Não houve" é marcado
+      if (checked) {
+        setPatioExpenseValues({
+          gasolina: '',
+          pedagio: '',
+          estacionamento: '',
+          motoboy: ''
+        });
+        setPatioExpenseReceipts({
+          gasolina: null,
+          pedagio: null,
+          estacionamento: null,
+          motoboy: null
+        });
+      }
+    } else {
+      setPatioExtraExpenses(prev => ({
+        ...prev,
+        naoHouve: false,
+        [expenseType]: checked
+      }));
+      // Limpar valor e comprovante se desmarcado
+      if (!checked) {
+        setPatioExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
+        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
+      }
+    }
+  };
+
+  const handleTowedExpenseChange = (expenseType: string, checked: boolean) => {
+    if (expenseType === 'naoHouve') {
+      setTowedExtraExpenses({
+        naoHouve: checked,
+        gasolina: false,
+        pedagio: false,
+        estacionamento: false,
+        motoboy: false
+      });
+      // Limpar valores quando "Não houve" é marcado
+      if (checked) {
+        setTowedExpenseValues({
+          gasolina: '',
+          pedagio: '',
+          estacionamento: '',
+          motoboy: ''
+        });
+        setTowedExpenseReceipts({
+          gasolina: null,
+          pedagio: null,
+          estacionamento: null,
+          motoboy: null
+        });
+      }
+    } else {
+      setTowedExtraExpenses(prev => ({
+        ...prev,
+        naoHouve: false,
+        [expenseType]: checked
+      }));
+      // Limpar valor e comprovante se desmarcado
+      if (!checked) {
+        setTowedExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
+        setTowedExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
+      }
+    }
+  };
+
+  // Funções para as ações de Confirmação de Recolha
+  const handleConfirmPatioDelivery = async () => {
+    // Validar se pelo menos uma foto foi enviada
+    const hasAnyPhoto = Object.values(patioVehiclePhotos).some(photo => photo !== null);
+    if (!hasAnyPhoto) {
+      setFeedback('Por favor, envie pelo menos uma foto do veículo no pátio.');
+      return;
+    }
+
+    // Validar despesas extras
+    const selectedExpenses = Object.entries(patioExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
+    for (const [expenseType] of selectedExpenses) {
+      if (!patioExpenseValues[expenseType as keyof typeof patioExpenseValues]) {
+        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
+        return;
+      }
+      if (!patioExpenseReceipts[expenseType as keyof typeof patioExpenseReceipts]) {
+        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
+        return;
+      }
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando confirmação de entrega no pátio...');
+    
+    try {
+      console.log('Dados da entrega no pátio:', {
+        cardId: card.id,
+        photos: patioVehiclePhotos,
+        expenses: patioExtraExpenses,
+        expenseValues: patioExpenseValues,
+        expenseReceipts: patioExpenseReceipts
+      });
+
+      setFeedback('Entrega no pátio confirmada com sucesso!');
+      setTimeout(() => {
+        setShowConfirmPatioDelivery(false);
+        setFeedback('');
+        resetPatioForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleCarTowed = async () => {
+    // Validar se a foto do guincho foi enviada
+    if (!towedCarPhoto) {
+      setFeedback('Por favor, envie a foto do veículo no guincho.');
+      return;
+    }
+
+    // Validar despesas extras
+    const selectedExpenses = Object.entries(towedExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
+    for (const [expenseType] of selectedExpenses) {
+      if (!towedExpenseValues[expenseType as keyof typeof towedExpenseValues]) {
+        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
+        return;
+      }
+      if (!towedExpenseReceipts[expenseType as keyof typeof towedExpenseReceipts]) {
+        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
+        return;
+      }
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando confirmação de carro guinchado...');
+    
+    try {
+      console.log('Dados do carro guinchado:', {
+        cardId: card.id,
+        towPhoto: towedCarPhoto,
+        expenses: towedExtraExpenses,
+        expenseValues: towedExpenseValues,
+        expenseReceipts: towedExpenseReceipts
+      });
+
+      setFeedback('Carro guinchado confirmado com sucesso!');
+      setTimeout(() => {
+        setShowCarTowed(false);
+        setFeedback('');
+        resetTowedForm();
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  const handleRequestTowMechanical = async () => {
+    if (!mechanicalTowReason.trim()) {
+      setFeedback('Por favor, detalhe o motivo do guincho.');
+      return;
+    }
+
+    setIsUpdating(true);
+    setFeedback('Processando solicitação de guincho...');
+    
+    try {
+      console.log('Dados da solicitação de guincho mecânico:', {
+        cardId: card.id,
+        reason: mechanicalTowReason
+      });
+
+      setFeedback('Guincho solicitado com sucesso!');
+      setTimeout(() => {
+        setShowRequestTowMechanical(false);
+        setFeedback('');
+        setMechanicalTowReason('');
+        setIsUpdating(false);
+        onClose();
+      }, 2000);
+    } catch (error) {
+      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setIsUpdating(false);
+    }
+  };
+
+  // Funções para resetar os formulários de confirmação
+  const resetPatioForm = () => {
+    setPatioVehiclePhotos({
+      frente: null,
+      traseira: null,
+      lateralDireita: null,
+      lateralEsquerda: null,
+      estepe: null,
+      painel: null
+    });
+    setPatioExtraExpenses({
+      naoHouve: true,
+      gasolina: false,
+      pedagio: false,
+      estacionamento: false,
+      motoboy: false
+    });
+    setPatioExpenseValues({
+      gasolina: '',
+      pedagio: '',
+      estacionamento: '',
+      motoboy: ''
+    });
+    setPatioExpenseReceipts({
+      gasolina: null,
+      pedagio: null,
+      estacionamento: null,
+      motoboy: null
+    });
+  };
+
+  const resetTowedForm = () => {
+    setTowedCarPhoto(null);
+    setTowedExtraExpenses({
+      naoHouve: true,
+      gasolina: false,
+      pedagio: false,
+      estacionamento: false,
+      motoboy: false
+    });
+    setTowedExpenseValues({
+      gasolina: '',
+      pedagio: '',
+      estacionamento: '',
+      motoboy: ''
+    });
+    setTowedExpenseReceipts({
+      gasolina: null,
+      pedagio: null,
+      estacionamento: null,
+      motoboy: null
+    });
   };
 
   // Calcular status do SLA
@@ -1134,6 +1459,464 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
                     </div>
                   </div>
                                 )}
+              </div>
+            ) : isConfirmacaoRecolha ? (
+              /* Interface para ações da Confirmação de Recolha */
+              <div className="space-y-4">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+                    Confirmação de Recolha
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Selecione uma das opções para finalizar a recolha
+                  </p>
+                </div>
+
+                {/* Botões principais para confirmação */}
+                {!showConfirmPatioDelivery && !showCarTowed && !showRequestTowMechanical && (
+                  <div className="space-y-4">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-green-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <button
+                          onClick={() => setShowConfirmPatioDelivery(true)}
+                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Confirmar entrega no pátio
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-orange-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <button
+                          onClick={() => setShowCarTowed(true)}
+                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                          Carro guinchado
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-red-200/50 relative overflow-hidden group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                      <div className="relative z-10">
+                        <button
+                          onClick={() => setShowRequestTowMechanical(true)}
+                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          <span className="text-center">Solicitar guincho<br/><span className="text-xs opacity-90">(problemas mecânicos)</span></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulário Confirmar Entrega no Pátio */}
+                {showConfirmPatioDelivery && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-green-200/50 relative overflow-hidden group max-h-[70vh] overflow-y-auto">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowConfirmPatioDelivery(false);
+                            resetPatioForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Confirmar Entrega no Pátio
+                        </h3>
+                      </div>
+
+                      {/* Fotos do Veículo no Pátio */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-3 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Fotos do veículo no pátio *
+                        </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
+                            { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
+                            { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
+                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                            { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
+                            { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                          ].map((photo) => (
+                            <div key={photo.key} className="space-y-2">
+                              <label className="text-xs font-bold text-gray-700 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                {photo.label}
+                              </label>
+                              <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-green-400 transition-colors">
+                                <div className="w-full aspect-square mb-2">
+                                  <img 
+                                    src={photo.image} 
+                                    alt={photo.label}
+                                    className="w-full h-full object-cover rounded"
+                                  />
+                                </div>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handlePhotoUpload(photo.key, file, 'patio');
+                                  }}
+                                  className="hidden"
+                                  id={`patio-upload-${photo.key}`}
+                                />
+                                <label
+                                  htmlFor={`patio-upload-${photo.key}`}
+                                  className="text-xs text-green-600 hover:text-green-800 cursor-pointer block"
+                                >
+                                  {patioVehiclePhotos[photo.key as keyof typeof patioVehiclePhotos] ? 'Trocar' : 'Upload'}
+                                </label>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Despesas Extras */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-3 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Houveram despesas extras no processo de recolha? *
+                        </label>
+                        <div className="space-y-3">
+                          {[
+                            { key: 'naoHouve', label: 'Não houve' },
+                            { key: 'gasolina', label: 'Gasolina' },
+                            { key: 'pedagio', label: 'Pedágio' },
+                            { key: 'estacionamento', label: 'Estacionamento' },
+                            { key: 'motoboy', label: 'Motoboy (busca de chave)' }
+                          ].map((expense) => (
+                            <div key={expense.key} className="space-y-2">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={patioExtraExpenses[expense.key as keyof typeof patioExtraExpenses]}
+                                  onChange={(e) => handlePatioExpenseChange(expense.key, e.target.checked)}
+                                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                />
+                                <span className="text-sm text-gray-700">{expense.label}</span>
+                              </label>
+                              
+                              {/* Campos de valor e comprovante (ocultos se não marcado ou se for "Não houve") */}
+                              {expense.key !== 'naoHouve' && patioExtraExpenses[expense.key as keyof typeof patioExtraExpenses] && (
+                                <div className="ml-6 space-y-2 p-3 bg-gray-50 rounded-lg">
+                                  <div>
+                                    <label className="text-xs font-bold text-gray-700 block mb-1">
+                                      Valor do {expense.label.toLowerCase()}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={patioExpenseValues[expense.key as keyof typeof patioExpenseValues]}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '');
+                                        const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                          style: 'currency',
+                                          currency: 'BRL'
+                                        });
+                                        setPatioExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
+                                      }}
+                                      placeholder="R$ 0,00"
+                                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-bold text-gray-700 block mb-1">
+                                      Comprovante de pagamento do {expense.label.toLowerCase()}
+                                    </label>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-green-400 transition-colors">
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handlePhotoUpload(`${expense.key}-patio`, file, 'expense');
+                                        }}
+                                        className="hidden"
+                                        id={`patio-expense-${expense.key}`}
+                                      />
+                                      <label
+                                        htmlFor={`patio-expense-${expense.key}`}
+                                        className="text-xs text-green-600 hover:text-green-800 cursor-pointer block py-2"
+                                      >
+                                        {patioExpenseReceipts[expense.key as keyof typeof patioExpenseReceipts] ? 'Comprovante enviado' : 'Anexar comprovante'}
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('Por favor') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleConfirmPatioDelivery}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulário Carro Guinchado */}
+                {showCarTowed && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-orange-200/50 relative overflow-hidden group max-h-[70vh] overflow-y-auto">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowCarTowed(false);
+                            resetTowedForm();
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Carro Guinchado
+                        </h3>
+                      </div>
+
+                      {/* Foto do Veículo no Guincho */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-3 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Foto do veículo no guincho *
+                        </label>
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
+                          <div className="mb-3">
+                            <img 
+                              src="https://i.ibb.co/KxBvwbyz/Gemini-Generated-Image-8d4po88d4po88d4p.jpg" 
+                              alt="Formato esperado da imagem"
+                              className="w-full max-w-xs mx-auto rounded-lg shadow-sm"
+                            />
+                            <p className="text-xs text-gray-600 mt-2">Formato esperado da imagem</p>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handlePhotoUpload('towed', file, 'towed');
+                            }}
+                            className="hidden"
+                            id="towed-car-upload"
+                          />
+                          <label
+                            htmlFor="towed-car-upload"
+                            className="text-sm text-orange-600 hover:text-orange-800 cursor-pointer block py-2 font-medium"
+                          >
+                            {towedCarPhoto ? 'Foto enviada - Trocar' : 'Anexar foto do veículo no guincho'}
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Despesas Extras */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-3 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Houveram despesas extras no processo de recolha? *
+                        </label>
+                        <div className="space-y-3">
+                          {[
+                            { key: 'naoHouve', label: 'Não houve' },
+                            { key: 'gasolina', label: 'Gasolina' },
+                            { key: 'pedagio', label: 'Pedágio' },
+                            { key: 'estacionamento', label: 'Estacionamento' },
+                            { key: 'motoboy', label: 'Motoboy (busca de chave)' }
+                          ].map((expense) => (
+                            <div key={expense.key} className="space-y-2">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  checked={towedExtraExpenses[expense.key as keyof typeof towedExtraExpenses]}
+                                  onChange={(e) => handleTowedExpenseChange(expense.key, e.target.checked)}
+                                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                />
+                                <span className="text-sm text-gray-700">{expense.label}</span>
+                              </label>
+                              
+                              {/* Campos de valor e comprovante (ocultos se não marcado ou se for "Não houve") */}
+                              {expense.key !== 'naoHouve' && towedExtraExpenses[expense.key as keyof typeof towedExtraExpenses] && (
+                                <div className="ml-6 space-y-2 p-3 bg-gray-50 rounded-lg">
+                                  <div>
+                                    <label className="text-xs font-bold text-gray-700 block mb-1">
+                                      Valor do {expense.label.toLowerCase()}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={towedExpenseValues[expense.key as keyof typeof towedExpenseValues]}
+                                      onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '');
+                                        const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
+                                          style: 'currency',
+                                          currency: 'BRL'
+                                        });
+                                        setTowedExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
+                                      }}
+                                      placeholder="R$ 0,00"
+                                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-xs font-bold text-gray-700 block mb-1">
+                                      Comprovante de pagamento do {expense.label.toLowerCase()}
+                                    </label>
+                                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center hover:border-orange-400 transition-colors">
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handlePhotoUpload(`${expense.key}-towed`, file, 'expense');
+                                        }}
+                                        className="hidden"
+                                        id={`towed-expense-${expense.key}`}
+                                      />
+                                      <label
+                                        htmlFor={`towed-expense-${expense.key}`}
+                                        className="text-xs text-orange-600 hover:text-orange-800 cursor-pointer block py-2"
+                                      >
+                                        {towedExpenseReceipts[expense.key as keyof typeof towedExpenseReceipts] ? 'Comprovante enviado' : 'Anexar comprovante'}
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('Por favor') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleCarTowed}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Formulário Solicitar Guincho (Problemas Mecânicos) */}
+                {showRequestTowMechanical && (
+                  <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-red-200/50 relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                    <div className="relative z-10 space-y-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <button
+                          onClick={() => {
+                            setShowRequestTowMechanical(false);
+                            setMechanicalTowReason('');
+                            setFeedback('');
+                          }}
+                          className="text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center shadow-sm">
+                          <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Solicitar Guincho
+                        </h3>
+                      </div>
+
+                      {/* Campo de texto para detalhar o motivo */}
+                      <div>
+                        <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                          Detalhe o motivo do guincho *
+                        </label>
+                        <textarea
+                          value={mechanicalTowReason}
+                          onChange={(e) => setMechanicalTowReason(e.target.value)}
+                          rows={6}
+                          placeholder="Descreva detalhadamente os problemas mecânicos identificados após o pedido de desbloqueio que justificam a necessidade do guincho..."
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none"
+                        />
+                      </div>
+
+                      {feedback && (
+                        <div className={`text-sm text-center p-3 rounded-lg font-medium ${
+                          feedback.includes('Erro') || feedback.includes('Por favor') 
+                            ? 'text-red-700 bg-red-100/50 border border-red-200/50' 
+                            : 'text-green-700 bg-green-100/50 border border-green-200/50'
+                        }`}>
+                          {feedback}
+                        </div>
+                      )}
+
+                      <button 
+                        onClick={handleRequestTowMechanical}
+                        disabled={isUpdating}
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                      >
+                        {isUpdating ? 'Processando...' : 'Confirmar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : isTentativaRecolha ? (
               /* Interface para ações das Tentativas de Recolha */
