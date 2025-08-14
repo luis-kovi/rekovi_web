@@ -1155,8 +1155,8 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           </>
                         )}
 
-                        <div className="grid grid-cols-5 gap-2">
-                          <div className="col-span-3">
+                        <div className="grid grid-cols-7 gap-2">
+                          <div className="col-span-4">
                             <label className="text-sm font-bold text-gray-700 mb-2 block">Data *</label>
                             <input 
                               type="date" 
@@ -1165,7 +1165,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                               className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white"
                             />
                           </div>
-                          <div className="col-span-2">
+                          <div className="col-span-3">
                             <label className="text-sm font-bold text-gray-700 mb-2 block">Hora *</label>
                             <input 
                               type="time" 
