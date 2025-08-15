@@ -593,10 +593,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               contentType: $contentType
             }
           ) {
-            clientSignedUrl {
-              uploadUrl
-              downloadUrl
-            }
+            uploadUrl
+            downloadUrl
           }
         }
       `;
@@ -638,12 +636,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       }
 
       // Verificar se a resposta tem a estrutura esperada
-      if (!presignedData?.data?.createPresignedUrl?.clientSignedUrl) {
+      if (!presignedData?.data?.createPresignedUrl) {
         console.error('Estrutura de resposta inválida:', presignedData);
         throw new Error('Resposta inválida da API de presigned URL');
       }
 
-      const { uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl.clientSignedUrl;
+      const { uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl;
 
       if (!uploadUrl || !downloadUrl) {
         throw new Error('URLs de upload/download não fornecidas');
