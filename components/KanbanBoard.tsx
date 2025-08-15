@@ -667,20 +667,25 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       console.log('Upload realizado com sucesso');
 
-      // Passo 3: Atualizar campo com a URL da imagem
+      // Passo 3: Atualizar campo no card com o path do arquivo
+      // Extrair o path do arquivo da downloadUrl
+      const urlParts = downloadUrl.split('/uploads/');
+      const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
+      const organizationId = "870bddf7-6ce7-4b9d-81d8-9087f1c10ae2"; // ID da organização
+      const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
+      
+      console.log('Path do arquivo:', fullPath);
+
       const updateFieldQuery = `
         mutation {
           updateCardField(
             input: {
               card_id: "${cardId}"
               field_id: "${fieldId}"
-              value: "${downloadUrl}"
+              new_value: ["${fullPath}"]
             }
           ) {
-            card {
-              id
-              title
-            }
+            success
             clientMutationId
           }
         }
