@@ -668,15 +668,83 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     }
   };
 
-  // Função para mapear fase para sufixo dos campos
-  const getFieldSuffix = (phase: string): string => {
-    const phaseMap: Record<string, string> = {
-      'Tentativa 1 de Recolha': '',
-      'Tentativa 2 de Recolha': '_1',
-      'Tentativa 3 de Recolha': '_2',
-      'Nova tentativa de recolha': '_3'
+  // Função para mapear fase para os IDs corretos dos campos
+  const getPhaseFieldIds = (phase: string) => {
+    const phaseFieldMap: Record<string, any> = {
+      'Tentativa 1 de Recolha': {
+        action: 'para_seguir_com_a_recolha_nos_informe_a_a_o_necess_ria',
+        reason: 'qual_o_motivo_do_guincho',
+        difficulty: 'carro_localizado',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3',
+          lateralDireita: 'foto_da_lateral_direita_passageiro',
+          estepe: 'foto_do_estepe',
+          painel: 'foto_do_painel'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1',
+          photo2: 'evid_ncia_2',
+          photo3: 'evid_ncia_3'
+        }
+      },
+      'Tentativa 2 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria',
+        reason: 'qual_o_motivo_do_guincho_1',
+        difficulty: 'carro_localizado_1',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_1',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_1',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_1',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_1',
+          estepe: 'foto_do_estepe_1',
+          painel: 'foto_do_painel_1'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_1',
+          photo2: 'evid_ncia_2_1',
+          photo3: 'evid_ncia_3_1'
+        }
+      },
+      'Tentativa 3 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_1',
+        reason: 'qual_o_motivo_do_guincho_2',
+        difficulty: 'carro_localizado_2',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_2',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_2',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_2',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_2',
+          estepe: 'foto_do_estepe_2',
+          painel: 'foto_do_painel_2'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_2',
+          photo2: 'evid_ncia_2_2',
+          photo3: 'evid_ncia_3_2'
+        }
+      },
+      'Nova tentativa de recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2',
+        reason: 'qual_o_motivo_do_guincho_3',
+        difficulty: 'carro_localizado_3',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_3',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_3',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_3',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_3',
+          estepe: 'foto_do_estepe_3',
+          painel: 'foto_do_painel_3'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_3',
+          photo2: 'evid_ncia_2_3',
+          photo3: 'evid_ncia_3_3'
+        }
+      }
     };
-    return phaseMap[phase] || '';
+    return phaseFieldMap[phase] || phaseFieldMap['Tentativa 1 de Recolha'];
   };
 
   const handleUnlockVehicle = async (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => {
@@ -692,21 +760,11 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       const { data: { user } } = await supabase.auth.getUser();
       const userEmail = user?.email || 'Usuário desconhecido';
-      const suffix = getFieldSuffix(phase);
-
-      // Mapear as chaves das fotos para os fieldIds do Pipefy
-      const photoFieldMap: Record<string, string> = {
-        frente: `foto_do_ve_culo_e_ou_local_da_recolha_1${suffix}`,
-        traseira: `foto_do_ve_culo_e_ou_local_da_recolha_2${suffix}`,
-        lateralEsquerda: `foto_do_ve_culo_e_ou_local_da_recolha_3${suffix}`,
-        lateralDireita: `foto_da_lateral_direita_passageiro${suffix}`,
-        estepe: `foto_do_estepe${suffix}`,
-        painel: `foto_do_painel${suffix}`
-      };
+      const fieldIds = getPhaseFieldIds(phase);
 
       // Upload das imagens
       const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
-        const fieldId = photoFieldMap[key];
+        const fieldId = fieldIds.photos[key];
         if (fieldId) {
           return uploadImageToPipefy(file, fieldId, cardId, session);
         }
@@ -715,13 +773,6 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       await Promise.all(uploadPromises);
 
       // Atualizar campo de ação necessária
-      const actionFieldMap: Record<string, string> = {
-        'Tentativa 1 de Recolha': 'para_seguir_com_a_recolha_nos_informe_a_a_o_necess_ria',
-        'Tentativa 2 de Recolha': 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria',
-        'Tentativa 3 de Recolha': 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_1',
-        'Nova tentativa de recolha': 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2'
-      };
-
       const actionQuery = `
         mutation {
           updateFieldsValues(
@@ -729,7 +780,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               nodeId: "${cardId}"
               values: [
                 {
-                  fieldId: "${actionFieldMap[phase]}"
+                  fieldId: "${fieldIds.action}"
                   value: "Desbloquear Veículo"
                 }
               ]
@@ -803,17 +854,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('Usuário não autenticado');
       }
 
-      const suffix = getFieldSuffix(phase);
-
-      // Mapear as chaves das fotos para os fieldIds do Pipefy
-      const photoFieldMap: Record<string, string> = {
-        frente: `foto_do_ve_culo_e_ou_local_da_recolha_1${suffix}`,
-        traseira: `foto_do_ve_culo_e_ou_local_da_recolha_2${suffix}`,
-        lateralEsquerda: `foto_do_ve_culo_e_ou_local_da_recolha_3${suffix}`,
-        lateralDireita: `foto_da_lateral_direita_passageiro${suffix}`,
-        estepe: `foto_do_estepe${suffix}`,
-        painel: `foto_do_painel${suffix}`
-      };
+      const fieldIds = getPhaseFieldIds(phase);
 
       // Upload das imagens (excluir estepe e painel se for "sem recuperação da chave")
       const photosToUpload = reason === 'Veículo na rua sem recuperação da chave' 
@@ -821,7 +862,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         : photos;
 
       const uploadPromises = Object.entries(photosToUpload).map(async ([key, file]) => {
-        const fieldId = photoFieldMap[key];
+        const fieldId = fieldIds.photos[key];
         if (fieldId) {
           return uploadImageToPipefy(file, fieldId, cardId, session);
         }
@@ -830,13 +871,6 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       await Promise.all(uploadPromises);
 
       // Atualizar campos
-      const reasonFieldMap: Record<string, string> = {
-        'Tentativa 1 de Recolha': 'qual_o_motivo_do_guincho',
-        'Tentativa 2 de Recolha': 'qual_o_motivo_do_guincho_1',
-        'Tentativa 3 de Recolha': 'qual_o_motivo_do_guincho_2',
-        'Nova tentativa de recolha': 'qual_o_motivo_do_guincho_3'
-      };
-
       const updateQuery = `
         mutation {
           updateFieldsValues(
@@ -844,11 +878,11 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               nodeId: "${cardId}"
               values: [
                 {
-                  fieldId: "${reasonFieldMap[phase]}"
+                  fieldId: "${fieldIds.reason}"
                   value: "${reason}"
                 },
                 {
-                  fieldId: "para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2"
+                  fieldId: "${fieldIds.action}"
                   value: "Solicitar Guincho"
                 }
               ]
@@ -889,18 +923,11 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('Usuário não autenticado');
       }
 
-      const suffix = getFieldSuffix(phase);
-
-      // Mapear as evidências para os fieldIds do Pipefy
-      const evidenceFieldMap: Record<string, string> = {
-        photo1: `evid_ncia_1${suffix}`,
-        photo2: `evid_ncia_2${suffix}`,
-        photo3: `evid_ncia_3${suffix}`
-      };
+      const fieldIds = getPhaseFieldIds(phase);
 
       // Upload das evidências
       const uploadPromises = Object.entries(evidences).map(async ([key, file]) => {
-        const fieldId = evidenceFieldMap[key];
+        const fieldId = fieldIds.evidences[key];
         if (fieldId) {
           return uploadImageToPipefy(file, fieldId, cardId, session);
         }
@@ -908,14 +935,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       await Promise.all(uploadPromises);
 
-      // Atualizar campo de dificuldade
-      const difficultyFieldMap: Record<string, string> = {
-        'Tentativa 1 de Recolha': 'carro_localizado',
-        'Tentativa 2 de Recolha': 'carro_localizado_1',
-        'Tentativa 3 de Recolha': 'carro_localizado_2',
-        'Nova tentativa de recolha': 'carro_localizado_3'
-      };
-
+      // Atualizar campos
       const updateQuery = `
         mutation {
           updateFieldsValues(
@@ -923,8 +943,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               nodeId: "${cardId}"
               values: [
                 {
-                  fieldId: "${difficultyFieldMap[phase]}"
+                  fieldId: "${fieldIds.difficulty}"
                   value: "${difficulty}"
+                },
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Reportar Problema"
                 }
               ]
             }
