@@ -2283,11 +2283,11 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                           className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white shadow-sm transition-all duration-200"
                         >
                           <option value="">Selecione uma dificuldade...</option>
-                          <option value="cliente_regularizou">Cliente regularizou o pagamento</option>
-                          <option value="cliente_recusa_pagamento">Cliente recusa a entrega e informa que vai fazer o pagamento</option>
-                          <option value="cliente_recusa_problemas">Cliente recusa a entrega devido a problemas com a Kovi</option>
-                          <option value="carro_localizado_cliente_nao">Carro localizado, mas cliente não encontrado</option>
-                          <option value="carro_nao_localizado">Carro não localizado e sem contato com o cliente</option>
+                          <option value="Cliente regularizou o pagamento">Cliente regularizou o pagamento</option>
+                          <option value="Cliente recusa a entrega e informa que vai fazer o pagamento">Cliente recusa a entrega e informa que vai fazer o pagamento</option>
+                          <option value="Cliente recusa a entrega devido a problemas com a Kovi">Cliente recusa a entrega devido a problemas com a Kovi</option>
+                          <option value="Carro localizado, mas cliente não encontrado">Carro localizado, mas cliente não encontrado</option>
+                          <option value="Carro não localizado e sem contato com o cliente">Carro não localizado e sem contato com o cliente</option>
                         </select>
                       </div>
 
