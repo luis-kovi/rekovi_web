@@ -602,7 +602,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       console.log('Enviando query para presigned URL:', presignedQuery);
 
-      const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -672,7 +672,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       console.log('Atualizando campo com URL:', updateFieldQuery);
 
-      const updateResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
