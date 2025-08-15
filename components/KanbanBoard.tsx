@@ -583,13 +583,14 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const supabaseUrl = (createClient() as any).supabaseUrl;
       
       // Passo 1: Gerar URL pré-assinada
+      const fileName = `${cardId}_${fieldId}_${Date.now()}.${file.type.split('/')[1] || 'jpg'}`;
       const presignedQuery = `
-        mutation {
+        mutation CreatePresignedUrl($organizationId: ID!, $fileName: String!, $contentType: String!) {
           createPresignedUrl(
             input: {
-              organizationId: "281428"
-              fileName: "${cardId}_${fieldId}_${Date.now()}.jpg"
-              contentType: "${file.type}"
+              organizationId: $organizationId
+              fileName: $fileName
+              contentType: $contentType
             }
           ) {
             clientSignedUrl {
@@ -600,6 +601,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         }
       `;
 
+      const variables = {
+        organizationId: "281428",
+        fileName: fileName,
+        contentType: file.type
+      };
+
       console.log('Enviando query para presigned URL:', presignedQuery);
 
       const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
@@ -608,7 +615,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: presignedQuery })
+        body: JSON.stringify({ 
+          query: presignedQuery,
+          variables: variables
+        })
       });
 
       if (!presignedResponse.ok) {
@@ -619,6 +629,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       const presignedData = await presignedResponse.json();
       console.log('Resposta completa presigned URL:', presignedData);
+
+      // Verificar se há erros na resposta
+      if (presignedData.errors && presignedData.errors.length > 0) {
+        console.error('Erros da API Pipefy:', presignedData.errors);
+        const errorMessages = presignedData.errors.map((error: any) => error.message).join(', ');
+        throw new Error(`Erro na API Pipefy: ${errorMessages}`);
+      }
 
       // Verificar se a resposta tem a estrutura esperada
       if (!presignedData?.data?.createPresignedUrl?.clientSignedUrl) {
