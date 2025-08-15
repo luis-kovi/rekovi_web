@@ -577,6 +577,382 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     }
   };
 
+  // Função utilitária para upload de imagens via Pipefy
+  const uploadImageToPipefy = async (file: File, fieldId: string, cardId: string, session: any) => {
+    try {
+      const supabaseUrl = (createClient() as any).supabaseUrl;
+      
+      // Passo 1: Gerar URL pré-assinada
+      const presignedQuery = `
+        mutation {
+          createPresignedUrl(
+            input: {
+              organizationId: "281428"
+              fileName: "${cardId}_${fieldId}_${Date.now()}.jpg"
+              contentType: "${file.type}"
+            }
+          ) {
+            clientSignedUrl {
+              uploadUrl
+              downloadUrl
+            }
+          }
+        }
+      `;
+
+      const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: presignedQuery })
+      });
+
+      if (!presignedResponse.ok) {
+        throw new Error('Erro ao gerar URL de upload');
+      }
+
+      const presignedData = await presignedResponse.json();
+      const { uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl.clientSignedUrl;
+
+      // Passo 2: Upload da imagem
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Erro ao fazer upload da imagem');
+      }
+
+      // Passo 3: Atualizar campo com a URL da imagem
+      const updateFieldQuery = `
+        mutation {
+          updateCardField(
+            input: {
+              card_id: "${cardId}"
+              field_id: "${fieldId}"
+              value: "${downloadUrl}"
+            }
+          ) {
+            card {
+              id
+              title
+            }
+            clientMutationId
+          }
+        }
+      `;
+
+      const updateResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateFieldQuery })
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Erro ao atualizar campo com imagem');
+      }
+
+      return downloadUrl;
+    } catch (error) {
+      console.error('Erro no upload da imagem:', error);
+      throw error;
+    }
+  };
+
+  // Função para mapear fase para sufixo dos campos
+  const getFieldSuffix = (phase: string): string => {
+    const phaseMap: Record<string, string> = {
+      'Tentativa 1 de Recolha': '',
+      'Tentativa 2 de Recolha': '_1',
+      'Tentativa 3 de Recolha': '_2',
+      'Nova tentativa de recolha': '_3'
+    };
+    return phaseMap[phase] || '';
+  };
+
+  const handleUnlockVehicle = async (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => {
+    console.log('Desbloqueando veículo:', { cardId, phase, photos, observations });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+      const suffix = getFieldSuffix(phase);
+
+      // Mapear as chaves das fotos para os fieldIds do Pipefy
+      const photoFieldMap: Record<string, string> = {
+        frente: `foto_do_ve_culo_e_ou_local_da_recolha_1${suffix}`,
+        traseira: `foto_do_ve_culo_e_ou_local_da_recolha_2${suffix}`,
+        lateralEsquerda: `foto_do_ve_culo_e_ou_local_da_recolha_3${suffix}`,
+        lateralDireita: `foto_da_lateral_direita_passageiro${suffix}`,
+        estepe: `foto_do_estepe${suffix}`,
+        painel: `foto_do_painel${suffix}`
+      };
+
+      // Upload das imagens
+      const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = photoFieldMap[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campo de ação necessária
+      const actionFieldMap: Record<string, string> = {
+        'Tentativa 1 de Recolha': 'para_seguir_com_a_recolha_nos_informe_a_a_o_necess_ria',
+        'Tentativa 2 de Recolha': 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria',
+        'Tentativa 3 de Recolha': 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_1',
+        'Nova tentativa de recolha': 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2'
+      };
+
+      const actionQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${actionFieldMap[phase]}"
+                  value: "Desbloquear Veículo"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: actionQuery })
+      });
+
+      // Adicionar comentário se houver observações
+      if (observations) {
+        const commentQuery = `
+          mutation {
+            createComment(
+              input: {
+                card_id: "${cardId}"
+                text: "Usuário ${userEmail} inseriu a observação ${observations} na solicitação de desbloqueio."
+              }
+            ) {
+              comment {
+                id
+                text
+                created_at
+                author {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        `;
+
+        await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ query: commentQuery })
+        });
+      }
+
+      console.log('Veículo desbloqueado com sucesso no Pipefy');
+      
+    } catch (error) {
+      console.error('Erro ao desbloquear veículo:', error);
+      throw error;
+    }
+  };
+
+  const handleRequestTowing = async (cardId: string, phase: string, reason: string, photos: Record<string, File>) => {
+    console.log('Solicitando guincho:', { cardId, phase, reason, photos });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const suffix = getFieldSuffix(phase);
+
+      // Mapear as chaves das fotos para os fieldIds do Pipefy
+      const photoFieldMap: Record<string, string> = {
+        frente: `foto_do_ve_culo_e_ou_local_da_recolha_1${suffix}`,
+        traseira: `foto_do_ve_culo_e_ou_local_da_recolha_2${suffix}`,
+        lateralEsquerda: `foto_do_ve_culo_e_ou_local_da_recolha_3${suffix}`,
+        lateralDireita: `foto_da_lateral_direita_passageiro${suffix}`,
+        estepe: `foto_do_estepe${suffix}`,
+        painel: `foto_do_painel${suffix}`
+      };
+
+      // Upload das imagens (excluir estepe e painel se for "sem recuperação da chave")
+      const photosToUpload = reason === 'Veículo na rua sem recuperação da chave' 
+        ? Object.fromEntries(Object.entries(photos).filter(([key]) => !['estepe', 'painel'].includes(key)))
+        : photos;
+
+      const uploadPromises = Object.entries(photosToUpload).map(async ([key, file]) => {
+        const fieldId = photoFieldMap[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campos
+      const reasonFieldMap: Record<string, string> = {
+        'Tentativa 1 de Recolha': 'qual_o_motivo_do_guincho',
+        'Tentativa 2 de Recolha': 'qual_o_motivo_do_guincho_1',
+        'Tentativa 3 de Recolha': 'qual_o_motivo_do_guincho_2',
+        'Nova tentativa de recolha': 'qual_o_motivo_do_guincho_3'
+      };
+
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${reasonFieldMap[phase]}"
+                  value: "${reason}"
+                },
+                {
+                  fieldId: "para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2"
+                  value: "Solicitar Guincho"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Guincho solicitado com sucesso no Pipefy');
+      
+    } catch (error) {
+      console.error('Erro ao solicitar guincho:', error);
+      throw error;
+    }
+  };
+
+  const handleReportProblem = async (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => {
+    console.log('Reportando problema:', { cardId, phase, difficulty, evidences });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const suffix = getFieldSuffix(phase);
+
+      // Mapear as evidências para os fieldIds do Pipefy
+      const evidenceFieldMap: Record<string, string> = {
+        photo1: `evid_ncia_1${suffix}`,
+        photo2: `evid_ncia_2${suffix}`,
+        photo3: `evid_ncia_3${suffix}`
+      };
+
+      // Upload das evidências
+      const uploadPromises = Object.entries(evidences).map(async ([key, file]) => {
+        const fieldId = evidenceFieldMap[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campo de dificuldade
+      const difficultyFieldMap: Record<string, string> = {
+        'Tentativa 1 de Recolha': 'carro_localizado',
+        'Tentativa 2 de Recolha': 'carro_localizado_1',
+        'Tentativa 3 de Recolha': 'carro_localizado_2',
+        'Nova tentativa de recolha': 'carro_localizado_3'
+      };
+
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${difficultyFieldMap[phase]}"
+                  value: "${difficulty}"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Problema reportado com sucesso no Pipefy');
+      
+    } catch (error) {
+      console.error('Erro ao reportar problema:', error);
+      throw error;
+    }
+  };
+
   const handleOpenCalculator = () => {
     setShowCalculator(true);
     // Centralizar a calculadora na tela
@@ -1089,6 +1465,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         onUpdateChofer={handleUpdateChofer}
         onAllocateDriver={handleAllocateDriver}
         onRejectCollection={handleRejectCollection}
+        onUnlockVehicle={handleUnlockVehicle}
+        onRequestTowing={handleRequestTowing}
+        onReportProblem={handleReportProblem}
       />
 
       {/* Modal da Calculadora */}

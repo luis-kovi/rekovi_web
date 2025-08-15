@@ -13,9 +13,12 @@ interface CardModalProps {
   onUpdateChofer?: (cardId: string, newName: string, newEmail: string) => Promise<void>;
   onAllocateDriver?: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>;
   onRejectCollection?: (cardId: string, reason: string, observations: string) => Promise<void>;
+  onUnlockVehicle?: (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => Promise<void>;
+  onRequestTowing?: (cardId: string, phase: string, reason: string, photos: Record<string, File>) => Promise<void>;
+  onReportProblem?: (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => Promise<void>;
 }
 
-export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDriver, onRejectCollection }: CardModalProps) {
+export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem }: CardModalProps) {
   const [showChoferChange, setShowChoferChange] = useState(false);
   const [selectedChofer, setSelectedChofer] = useState('');
   const [choferEmail, setChoferEmail] = useState('');
@@ -367,24 +370,30 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       return;
     }
 
+    if (!onUnlockVehicle) {
+      setFeedback('Funcionalidade de desbloqueio não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando desbloqueio do veículo...');
     
     try {
-      console.log('Dados do desbloqueio:', {
-        cardId: card.id,
-        photos: vehiclePhotos,
-        observations: unlockObservations
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const photosToUpload = Object.fromEntries(
+        Object.entries(vehiclePhotos).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
 
-      setFeedback('Veículo desbloqueado com sucesso!');
+      await onUnlockVehicle(card.id, card.faseAtual, photosToUpload, unlockObservations);
+
+      setFeedback('Veículo desbloqueado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowUnlockVehicle(false);
         setFeedback('');
         resetUnlockForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -404,25 +413,30 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       return;
     }
 
+    if (!onRequestTowing) {
+      setFeedback('Funcionalidade de guincho não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando solicitação de guincho...');
     
     try {
-      console.log('Dados do guincho:', {
-        cardId: card.id,
-        reason: towingReason,
-        photos: towingPhotos,
-        observations: towingObservations
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const photosToUpload = Object.fromEntries(
+        Object.entries(towingPhotos).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
 
-      setFeedback('Guincho solicitado com sucesso!');
+      await onRequestTowing(card.id, card.faseAtual, towingReason, photosToUpload);
+
+      setFeedback('Guincho solicitado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowRequestTowing(false);
         setFeedback('');
         resetTowingForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -442,24 +456,30 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       return;
     }
 
+    if (!onReportProblem) {
+      setFeedback('Funcionalidade de reporte não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando relato do problema...');
     
     try {
-      console.log('Dados do problema:', {
-        cardId: card.id,
-        type: problemType,
-        evidence: problemEvidence
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const evidencesToUpload = Object.fromEntries(
+        Object.entries(problemEvidence).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
 
-      setFeedback('Problema reportado com sucesso!');
+      await onReportProblem(card.id, card.faseAtual, problemType, evidencesToUpload);
+
+      setFeedback('Problema reportado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowReportProblem(false);
         setFeedback('');
         resetProblemForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -2138,9 +2158,9 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                           className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200"
                         >
                           <option value="">Selecione um motivo...</option>
-                          <option value="carro_abandonado">Carro abandonado na rua (sem chave)</option>
-                          <option value="problemas_mecanicos">Problemas mecânicos / elétricos</option>
-                          <option value="colisao">Colisão (não está rodando)</option>
+                          <option value="Veículo com avarias / problemas mecânicos">Veículo com avarias / problemas mecânicos</option>
+                          <option value="Veículo na rua sem recuperação da chave">Veículo na rua sem recuperação da chave</option>
+                          <option value="Chave danificada / perdida">Chave danificada / perdida</option>
                         </select>
                       </div>
 
@@ -2151,7 +2171,7 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                           { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
                           { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
                           { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
-                          ...(towingReason !== 'carro_abandonado' ? [
+                          ...(towingReason !== 'Veículo na rua sem recuperação da chave' ? [
                             { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
                             { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
                           ] : [])
