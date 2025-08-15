@@ -11,9 +11,11 @@ interface CardModalProps {
   card: CardWithSLA | null;
   onClose: () => void;
   onUpdateChofer?: (cardId: string, newName: string, newEmail: string) => Promise<void>;
+  onAllocateDriver?: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>;
+  onRejectCollection?: (cardId: string, reason: string, observations: string) => Promise<void>;
 }
 
-export default function CardModal({ card, onClose, onUpdateChofer }: CardModalProps) {
+export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDriver, onRejectCollection }: CardModalProps) {
   const [showChoferChange, setShowChoferChange] = useState(false);
   const [selectedChofer, setSelectedChofer] = useState('');
   const [choferEmail, setChoferEmail] = useState('');
@@ -277,31 +279,31 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
       return;
     }
 
+    if (!onAllocateDriver) {
+      setFeedback('Funcionalidade de alocação não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando alocação de chofer...');
     
     try {
-      // Aqui você implementaria a lógica para salvar os dados
-      // Por enquanto, vamos apenas simular o sucesso
-      console.log('Dados da alocação:', {
-        cardId: card.id,
-        driver: allocateDriverName,
-        email: allocateDriverEmail,
-        date: collectionDate,
-        time: collectionTime,
-        billing: billingType,
-        value: collectionValue,
-        additionalKm
-      });
-
-      setFeedback('Chofer alocado com sucesso!');
+      // Concatenar data e hora no formato esperado pelo Pipefy
+      const dateTimeString = `${collectionDate} ${collectionTime}`;
+      
+      // Valor da recolha (apenas se for faturamento avulso)
+      const finalCollectionValue = billingType === 'avulso' ? collectionValue : '';
+      
+      await onAllocateDriver(card.id, allocateDriverName, allocateDriverEmail, dateTimeString, finalCollectionValue, additionalKm);
+      
+      setFeedback('Chofer alocado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowAllocateDriver(false);
         setFeedback('');
         resetAllocateForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -315,26 +317,25 @@ export default function CardModal({ card, onClose, onUpdateChofer }: CardModalPr
       return;
     }
 
+    if (!onRejectCollection) {
+      setFeedback('Funcionalidade de rejeição não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando rejeição de recolha...');
     
     try {
-      // Aqui você implementaria a lógica para salvar os dados
-      // Por enquanto, vamos apenas simular o sucesso
-      console.log('Dados da rejeição:', {
-        cardId: card.id,
-        reason: rejectionReason,
-        observations: rejectionObservations
-      });
-
-      setFeedback('Recolha rejeitada com sucesso!');
+      await onRejectCollection(card.id, rejectionReason, rejectionObservations);
+      
+      setFeedback('Recolha rejeitada com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowRejectCollection(false);
         setFeedback('');
         resetRejectForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
