@@ -139,7 +139,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     'Tentativa 1 de Recolha', 
     'Tentativa 2 de Recolha', 
     'Tentativa 3 de Recolha', 
-    'Nova tentativa de recolha'
+    'Tentativa 4 de Recolha'
   ].includes(card.faseAtual);
   const isConfirmacaoRecolha = card.faseAtual === 'Confirmação de Entrega no Pátio';
 
@@ -741,7 +741,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       'Tentativa 1 de Recolha': 'Tentativa 1',
       'Tentativa 2 de Recolha': 'Tentativa 2',
       'Tentativa 3 de Recolha': 'Tentativa 3',
-      'Nova tentativa de recolha': 'Nova Tentativa',
+      'Tentativa 4 de Recolha': 'Tentativa 4',
       'Confirmação de Entrega no Pátio': 'Confirmação de Entrega'
     }
     return adaptations[phase] || phase
@@ -757,7 +757,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       'Tentativa 3 de Recolha': 'bg-red-100 text-red-800',
       'Desbloquear Veículo': 'bg-purple-100 text-purple-800',
       'Solicitar Guincho': 'bg-indigo-100 text-indigo-800',
-      'Nova tentativa de recolha': 'bg-green-100 text-green-800',
+      'Tentativa 4 de Recolha': 'bg-green-100 text-green-800',
       'Confirmação de Entrega no Pátio': 'bg-green-100 text-green-800'
     }
     return colors[phase] || 'bg-gray-100 text-gray-800'

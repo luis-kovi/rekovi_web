@@ -43,7 +43,7 @@ export default async function KanbanPage() {
     'Tentativa 3 de Recolha',
     'Desbloquear Veículo',
     'Solicitar Guincho',
-    'Nova tentativa de recolha',
+    'Tentativa 4 de Recolha',
     'Confirmação de Entrega no Pátio'
   ];
 

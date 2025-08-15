@@ -51,7 +51,7 @@ export const fixedPhaseOrder = [
   'Tentativa 1 de Recolha',
   'Tentativa 2 de Recolha',
   'Tentativa 3 de Recolha',
-  'Nova tentativa de recolha',
+  'Tentativa 4 de Recolha',
   'Desbloquear Veículo',
   'Solicitar Guincho',
   'Confirmação de Entrega no Pátio'
@@ -63,7 +63,7 @@ export const phaseDisplayNames: { [key: string]: string } = {
   'Tentativa 1 de Recolha': 'Tentativa 1',
   'Tentativa 2 de Recolha': 'Tentativa 2',
   'Tentativa 3 de Recolha': 'Tentativa 3',
-  'Nova tentativa de recolha': 'Nova Tentativa',
+  'Tentativa 4 de Recolha': 'Tentativa 4',
   'Desbloquear Veículo': 'Desbloquear Veículo',
   'Solicitar Guincho': 'Solicitar Guincho',
   'Confirmação de Entrega no Pátio': 'Confirmação de Recolha'

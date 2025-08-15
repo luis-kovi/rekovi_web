@@ -58,7 +58,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           'Tentativa 3 de Recolha',
           'Desbloquear Veículo',
           'Solicitar Guincho',
-          'Nova tentativa de recolha',
+          'Tentativa 4 de Recolha',
           'Confirmação de Entrega no Pátio'
         ];
         
@@ -783,7 +783,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           photo3: 'evid_ncia_3_2'
         }
       },
-      'Nova tentativa de recolha': {
+      'Tentativa 4 de Recolha': {
         action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2',
         reason: 'qual_o_motivo_do_guincho_3',
         difficulty: 'carro_localizado_3',

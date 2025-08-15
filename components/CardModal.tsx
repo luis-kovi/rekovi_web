@@ -233,11 +233,11 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
     'Tentativa 1 de Recolha', 
     'Tentativa 2 de Recolha', 
     'Tentativa 3 de Recolha', 
-    'Nova tentativa de recolha'
+    'Tentativa 4 de Recolha'
   ].includes(card.faseAtual);
   const isConfirmacaoRecolha = card?.faseAtual === 'Confirmação de Entrega no Pátio';
   const displayPhase = phaseDisplayNames[card?.faseAtual] || card?.faseAtual;
-  const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Nova tentativa de recolha', 'Confirmação de Entrega no Pátio'];
+  const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Tentativa 4 de Recolha', 'Confirmação de Entrega no Pátio'];
   const allowChoferChange = card?.faseAtual ? editablePhases.includes(card.faseAtual) : false;
 
   const handleChoferChange = async () => {
