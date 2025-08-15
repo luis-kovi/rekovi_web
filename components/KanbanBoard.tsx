@@ -412,13 +412,18 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         mutation {
           createComment(
             input: {
-              pipe_id: 303086644
               card_id: "${cardId}"
-              text: "INTEGRAÇÃO REKOVI & PIPEFY DE RECOLHA: O ${userEmail} atualizou os campos: Chofer (${driverName}), Email (${driverEmail}), Data/Hora (${dateTime}), Km Adicional (${additionalKm})${collectionValue ? `, Valor da Recolha (${collectionValue})` : ''}, Veículo será recolhido (Sim)."
+              text: "O ${userEmail} alocou o chofer para recolha."
             }
           ) {
             comment {
               id
+              text
+              created_at
+              author {
+                id
+                name
+              }
             }
           }
         }
@@ -515,13 +520,18 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         mutation {
           createComment(
             input: {
-              pipe_id: 303086644
               card_id: "${cardId}"
-              text: "INTEGRAÇÃO REKOVI & PIPEFY DE RECOLHA: O ${userEmail} rejeitou a recolha pelo motivo ${reason} com o comentário: ${observations}"
+              text: "O ${userEmail} rejeitou a recolha.\\nMotivo: ${reason}\\nComentário: ${observations}"
             }
           ) {
             comment {
               id
+              text
+              created_at
+              author {
+                id
+                name
+              }
             }
           }
         }
@@ -1123,3 +1133,4 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     </>
   );
 }
+
