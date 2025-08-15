@@ -600,6 +600,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         }
       `;
 
+      console.log('Enviando query para presigned URL:', presignedQuery);
+
       const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
@@ -610,11 +612,27 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       });
 
       if (!presignedResponse.ok) {
-        throw new Error('Erro ao gerar URL de upload');
+        const errorText = await presignedResponse.text();
+        console.error('Erro na resposta presigned:', errorText);
+        throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
       }
 
       const presignedData = await presignedResponse.json();
+      console.log('Resposta completa presigned URL:', presignedData);
+
+      // Verificar se a resposta tem a estrutura esperada
+      if (!presignedData?.data?.createPresignedUrl?.clientSignedUrl) {
+        console.error('Estrutura de resposta inválida:', presignedData);
+        throw new Error('Resposta inválida da API de presigned URL');
+      }
+
       const { uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl.clientSignedUrl;
+
+      if (!uploadUrl || !downloadUrl) {
+        throw new Error('URLs de upload/download não fornecidas');
+      }
+
+      console.log('URLs obtidas:', { uploadUrl, downloadUrl });
 
       // Passo 2: Upload da imagem
       const uploadResponse = await fetch(uploadUrl, {
@@ -626,8 +644,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('Erro ao fazer upload da imagem');
+        const errorText = await uploadResponse.text();
+        console.error('Erro no upload:', errorText);
+        throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status}`);
       }
+
+      console.log('Upload realizado com sucesso');
 
       // Passo 3: Atualizar campo com a URL da imagem
       const updateFieldQuery = `
@@ -648,6 +670,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         }
       `;
 
+      console.log('Atualizando campo com URL:', updateFieldQuery);
+
       const updateResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
@@ -658,8 +682,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       });
 
       if (!updateResponse.ok) {
-        throw new Error('Erro ao atualizar campo com imagem');
+        const errorText = await updateResponse.text();
+        console.error('Erro ao atualizar campo:', errorText);
+        throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status}`);
       }
+
+      const updateData = await updateResponse.json();
+      console.log('Campo atualizado com sucesso:', updateData);
 
       return downloadUrl;
     } catch (error) {
