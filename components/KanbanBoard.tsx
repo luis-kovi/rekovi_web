@@ -593,8 +593,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               contentType: $contentType
             }
           ) {
-            uploadUrl
+            url
             downloadUrl
+            clientMutationId
           }
         }
       `;
@@ -641,7 +642,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('Resposta inválida da API de presigned URL');
       }
 
-      const { uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl;
+      const { url: uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl;
 
       if (!uploadUrl || !downloadUrl) {
         throw new Error('URLs de upload/download não fornecidas');
