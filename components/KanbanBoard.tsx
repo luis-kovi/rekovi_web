@@ -704,8 +704,16 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       }
 
       const updateData = await updateResponse.json();
-      console.log('Campo atualizado com sucesso:', updateData);
+      console.log('Resposta updateCardField completa:', updateData);
 
+      // Verificar se há erros na atualização do campo
+      if (updateData.errors && updateData.errors.length > 0) {
+        console.error('Erros ao atualizar campo:', updateData.errors);
+        const errorMessages = updateData.errors.map((error: any) => error.message).join(', ');
+        throw new Error(`Erro ao atualizar campo ${fieldId}: ${errorMessages}`);
+      }
+
+      console.log('Campo atualizado com sucesso:', updateData);
       return downloadUrl;
     } catch (error) {
       console.error('Erro no upload da imagem:', error);
