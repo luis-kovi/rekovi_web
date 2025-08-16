@@ -587,6 +587,464 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
     }
   };
 
+  // Função utilitária para upload de imagens via Pipefy
+  const uploadImageToPipefy = async (file: File, fieldId: string, cardId: string, session: any) => {
+    try {
+      const supabaseUrl = (createClient() as any).supabaseUrl;
+      
+      // Passo 1: Gerar URL pré-assinada
+      const fileName = `${cardId}_${fieldId}_${Date.now()}.${file.type.split('/')[1] || 'jpg'}`;
+      const presignedQuery = `
+        mutation CreatePresignedUrl($organizationId: ID!, $fileName: String!, $contentType: String!) {
+          createPresignedUrl(
+            input: {
+              organizationId: $organizationId
+              fileName: $fileName
+              contentType: $contentType
+            }
+          ) {
+            url
+            downloadUrl
+            clientMutationId
+          }
+        }
+      `;
+
+      const variables = {
+        organizationId: "281428",
+        fileName: fileName,
+        contentType: file.type
+      };
+
+      console.log('Enviando query para presigned URL (mobile):', presignedQuery);
+
+      const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ 
+          query: presignedQuery,
+          variables: variables
+        })
+      });
+
+      if (!presignedResponse.ok) {
+        const errorText = await presignedResponse.text();
+        console.error('Erro na resposta presigned (mobile):', errorText);
+        throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
+      }
+
+      const presignedData = await presignedResponse.json();
+      console.log('Resposta completa presigned URL (mobile):', presignedData);
+
+      // Verificar se há erros na resposta
+      if (presignedData.errors && presignedData.errors.length > 0) {
+        console.error('Erros da API Pipefy (mobile):', presignedData.errors);
+        const errorMessages = presignedData.errors.map((error: any) => error.message).join(', ');
+        throw new Error(`Erro na API Pipefy: ${errorMessages}`);
+      }
+
+      // Verificar se a resposta tem a estrutura esperada
+      if (!presignedData?.data?.createPresignedUrl) {
+        console.error('Estrutura de resposta inválida (mobile):', presignedData);
+        throw new Error('Resposta inválida da API de presigned URL');
+      }
+
+      const { url: uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl;
+
+      if (!uploadUrl || !downloadUrl) {
+        throw new Error('URLs de upload/download não fornecidas');
+      }
+
+      console.log('URLs obtidas (mobile):', { uploadUrl, downloadUrl });
+
+      // Passo 2: Upload da imagem
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error('Erro no upload (mobile):', errorText);
+        throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status}`);
+      }
+
+      console.log('Upload realizado com sucesso (mobile)');
+
+      // Passo 3: Atualizar campo no card com o path do arquivo
+      // Extrair o path do arquivo da downloadUrl
+      const urlParts = downloadUrl.split('/uploads/');
+      const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
+      const organizationId = "870bddf7-6ce7-4b9d-81d8-9087f1c10ae2"; // ID da organização
+      const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
+      
+      console.log('Path do arquivo (mobile):', fullPath);
+
+      const updateFieldQuery = `
+        mutation {
+          updateCardField(
+            input: {
+              card_id: "${cardId}"
+              field_id: "${fieldId}"
+              new_value: ["${fullPath}"]
+            }
+          ) {
+            success
+            clientMutationId
+          }
+        }
+      `;
+
+      console.log('Atualizando campo com URL (mobile):', updateFieldQuery);
+
+      const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateFieldQuery })
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        console.error('Erro ao atualizar campo (mobile):', errorText);
+        throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status}`);
+      }
+
+      const updateData = await updateResponse.json();
+      console.log('Resposta updateCardField completa (mobile):', updateData);
+
+      // Verificar se há erros na atualização do campo
+      if (updateData.errors && updateData.errors.length > 0) {
+        console.error('Erros ao atualizar campo (mobile):', updateData.errors);
+        const errorMessages = updateData.errors.map((error: any) => error.message).join(', ');
+        throw new Error(`Erro ao atualizar campo ${fieldId}: ${errorMessages}`);
+      }
+
+      console.log('Campo atualizado com sucesso (mobile):', updateData);
+      return downloadUrl;
+    } catch (error) {
+      console.error('Erro no upload da imagem (mobile):', error);
+      throw error;
+    }
+  };
+
+  // Função para mapear fase para os IDs corretos dos campos
+  const getPhaseFieldIds = (phase: string) => {
+    const phaseFieldMap: Record<string, any> = {
+      'Tentativa 1 de Recolha': {
+        action: 'para_seguir_com_a_recolha_nos_informe_a_a_o_necess_ria',
+        reason: 'qual_o_motivo_do_guincho',
+        difficulty: 'carro_localizado',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3',
+          lateralDireita: 'foto_da_lateral_direita_passageiro',
+          estepe: 'foto_do_estepe',
+          painel: 'foto_do_painel'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1',
+          photo2: 'evid_ncia_2',
+          photo3: 'evid_ncia_3'
+        }
+      },
+      'Tentativa 2 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria',
+        reason: 'qual_o_motivo_do_guincho_1',
+        difficulty: 'carro_localizado_1',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_1',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_1',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_1',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_1',
+          estepe: 'foto_do_estepe_1',
+          painel: 'foto_do_painel_1'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_1',
+          photo2: 'evid_ncia_2_1',
+          photo3: 'evid_ncia_3_1'
+        }
+      },
+      'Tentativa 3 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_1',
+        reason: 'qual_o_motivo_do_guincho_2',
+        difficulty: 'carro_localizado_2',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_2',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_2',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_2',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_2',
+          estepe: 'foto_do_estepe_2',
+          painel: 'foto_do_painel_2'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_2',
+          photo2: 'evid_ncia_2_2',
+          photo3: 'evid_ncia_3_2'
+        }
+      },
+      'Tentativa 4 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2',
+        reason: 'qual_o_motivo_do_guincho_3',
+        difficulty: 'carro_localizado_3',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_3',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_3',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_3',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_3',
+          estepe: 'foto_do_estepe_3',
+          painel: 'foto_do_painel_3'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_3',
+          photo2: 'evid_ncia_2_3',
+          photo3: 'evid_ncia_3_3'
+        }
+      }
+    };
+    return phaseFieldMap[phase] || phaseFieldMap['Tentativa 1 de Recolha'];
+  };
+
+  const handleUnlockVehicle = async (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => {
+    console.log('Desbloqueando veículo (mobile):', { cardId, phase, photos, observations });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+      const fieldIds = getPhaseFieldIds(phase);
+
+      // Upload das imagens
+      const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = fieldIds.photos[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campo de ação necessária
+      const actionQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Desbloquear Veículo"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: actionQuery })
+      });
+
+      // Adicionar comentário se houver observações
+      if (observations) {
+        const commentQuery = `
+          mutation {
+            createComment(
+              input: {
+                card_id: "${cardId}"
+                text: "Usuário ${userEmail} inseriu a observação ${observations} na solicitação de desbloqueio."
+              }
+            ) {
+              comment {
+                id
+                text
+                created_at
+                author {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        `;
+
+        await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ query: commentQuery })
+        });
+      }
+
+      console.log('Veículo desbloqueado com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao desbloquear veículo (mobile):', error);
+      throw error;
+    }
+  };
+
+  const handleRequestTowing = async (cardId: string, phase: string, reason: string, photos: Record<string, File>) => {
+    console.log('Solicitando guincho (mobile):', { cardId, phase, reason, photos });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const fieldIds = getPhaseFieldIds(phase);
+
+      // Upload das imagens (excluir estepe e painel se for "sem recuperação da chave")
+      const photosToUpload = reason === 'Veículo na rua sem recuperação da chave' 
+        ? Object.fromEntries(Object.entries(photos).filter(([key]) => !['estepe', 'painel'].includes(key)))
+        : photos;
+
+      const uploadPromises = Object.entries(photosToUpload).map(async ([key, file]) => {
+        const fieldId = fieldIds.photos[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campos
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldIds.reason}"
+                  value: "${reason}"
+                },
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Solicitar Guincho"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Guincho solicitado com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao solicitar guincho (mobile):', error);
+      throw error;
+    }
+  };
+
+  const handleReportProblem = async (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => {
+    console.log('Reportando problema (mobile):', { cardId, phase, difficulty, evidences });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const fieldIds = getPhaseFieldIds(phase);
+
+      // Upload das evidências
+      const uploadPromises = Object.entries(evidences).map(async ([key, file]) => {
+        const fieldId = fieldIds.evidences[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campos
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldIds.difficulty}"
+                  value: "${difficulty}"
+                },
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Reportar Problema"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Problema reportado com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao reportar problema (mobile):', error);
+      throw error;
+    }
+  };
+
   // Gestos de swipe
   const handleCardSwipe = (cardId: string, direction: 'left' | 'right') => {
     const card = cards.find(c => c.id === cardId)
@@ -705,6 +1163,9 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           initialTab={initialModalTab}
           onAllocateDriver={handleAllocateDriver}
           onRejectCollection={handleRejectCollection}
+          onUnlockVehicle={handleUnlockVehicle}
+          onRequestTowing={handleRequestTowing}
+          onReportProblem={handleReportProblem}
         />
       )}
 

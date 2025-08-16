@@ -14,9 +14,12 @@ interface MobileTaskModalProps {
   initialTab?: 'details' | 'actions' | 'history'
   onAllocateDriver?: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>
   onRejectCollection?: (cardId: string, reason: string, observations: string) => Promise<void>
+  onUnlockVehicle?: (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => Promise<void>
+  onRequestTowing?: (cardId: string, phase: string, reason: string, photos: Record<string, File>) => Promise<void>
+  onReportProblem?: (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => Promise<void>
 }
 
-export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection }: MobileTaskModalProps) {
+export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem }: MobileTaskModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
 
   // Estados para os formulários
@@ -305,24 +308,30 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       return;
     }
 
+    if (!onUnlockVehicle) {
+      setFeedback('Funcionalidade de desbloqueio não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando desbloqueio do veículo...');
     
     try {
-      console.log('Dados do desbloqueio (mobile):', {
-        cardId: card.id,
-        photos: vehiclePhotos,
-        observations: unlockObservations
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const photosToUpload = Object.fromEntries(
+        Object.entries(vehiclePhotos).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
 
-      setFeedback('Veículo desbloqueado com sucesso!');
+      await onUnlockVehicle(card.id, card.faseAtual, photosToUpload, unlockObservations);
+
+      setFeedback('Veículo desbloqueado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowUnlockVehicle(false);
         setFeedback('');
         resetUnlockForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -341,25 +350,30 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       return;
     }
 
+    if (!onRequestTowing) {
+      setFeedback('Funcionalidade de guincho não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando solicitação de guincho...');
     
     try {
-      console.log('Dados do guincho (mobile):', {
-        cardId: card.id,
-        reason: towingReason,
-        photos: towingPhotos,
-        observations: towingObservations
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const photosToUpload = Object.fromEntries(
+        Object.entries(towingPhotos).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
 
-      setFeedback('Guincho solicitado com sucesso!');
+      await onRequestTowing(card.id, card.faseAtual, towingReason, photosToUpload);
+
+      setFeedback('Guincho solicitado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowRequestTowing(false);
         setFeedback('');
         resetTowingForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -378,24 +392,30 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       return;
     }
 
+    if (!onReportProblem) {
+      setFeedback('Funcionalidade de reporte não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando relato do problema...');
     
     try {
-      console.log('Dados do problema (mobile):', {
-        cardId: card.id,
-        type: problemType,
-        evidence: problemEvidence
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const evidencesToUpload = Object.fromEntries(
+        Object.entries(problemEvidence).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
 
-      setFeedback('Problema reportado com sucesso!');
+      await onReportProblem(card.id, card.faseAtual, problemType, evidencesToUpload);
+
+      setFeedback('Problema reportado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowReportProblem(false);
         setFeedback('');
         resetProblemForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
