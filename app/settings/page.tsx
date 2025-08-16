@@ -733,26 +733,50 @@ export default function SettingsPage() {
                     </button>
                       
                       {/* Page Numbers */}
-                      {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                        let pageNum = pagination.currentPage - 2 + i
-                        if (pageNum < 1) pageNum = i + 1
-                        if (pageNum > pagination.totalPages) pageNum = pagination.totalPages - (4 - i)
-                        if (pageNum < 1 || pageNum > pagination.totalPages) return null
+                      {(() => {
+                        const maxVisiblePages = 5;
+                        const totalPages = pagination.totalPages;
+                        const currentPage = pagination.currentPage;
                         
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => handlePageChange(pageNum)}
-                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                              pageNum === pagination.currentPage
-                                ? 'z-10 bg-[#FF355A] border-[#FF355A] text-white'
-                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                            }`}
-                          >
-                            {pageNum}
-                    </button>
-                        )
-                      })}
+                        let startPage, endPage;
+                        
+                        if (totalPages <= maxVisiblePages) {
+                          // Se há 5 ou menos páginas, mostrar todas
+                          startPage = 1;
+                          endPage = totalPages;
+                        } else {
+                          // Mais de 5 páginas, calcular o range
+                          if (currentPage <= 3) {
+                            startPage = 1;
+                            endPage = 5;
+                          } else if (currentPage + 2 >= totalPages) {
+                            startPage = totalPages - 4;
+                            endPage = totalPages;
+                          } else {
+                            startPage = currentPage - 2;
+                            endPage = currentPage + 2;
+                          }
+                        }
+                        
+                        const pages = [];
+                        for (let i = startPage; i <= endPage; i++) {
+                          pages.push(
+                            <button
+                              key={i}
+                              onClick={() => handlePageChange(i)}
+                              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                                i === currentPage
+                                  ? 'z-10 bg-[#FF355A] border-[#FF355A] text-white'
+                                  : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                              }`}
+                            >
+                              {i}
+                            </button>
+                          );
+                        }
+                        
+                        return pages;
+                      })()}
 
                     <button 
                       onClick={() => handlePageChange(pagination.currentPage + 1)}
