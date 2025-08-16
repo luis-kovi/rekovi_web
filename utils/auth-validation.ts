@@ -10,44 +10,43 @@ export interface PreApprovedUser {
 }
 
 /**
- * Busca informações do usuário na tabela pre_approved_users (client-side)
- */
-export async function getPreApprovedUser(email: string): Promise<PreApprovedUser | null> {
-  const supabase = createClient()
-  
-  const { data, error } = await supabase
-    .from('pre_approved_users')
-    .select('email, permission_type, status, empresa, area_atuacao')
-    .eq('email', email)
-    .single()
-
-  if (error || !data) {
-    return null
-  }
-
-  return data
-}
-
-
-
-/**
- * Valida se o usuário pode acessar o sistema (client-side)
+ * Valida se o usuário pode acessar o sistema usando a função RPC segura (client-side)
  */
 export async function validateUserAccess(email: string): Promise<{
   canAccess: boolean
   message?: string
   userData?: PreApprovedUser
 }> {
-  const userData = await getPreApprovedUser(email)
+  const supabase = createClient()
+  if (!supabase || !email) {
+    return { canAccess: false, message: 'Erro de configuração do cliente.' }
+  }
 
-  if (!userData) {
+  const { data, error } = await supabase.rpc('is_user_preapproved', {
+    email_to_check: email
+  });
+
+  if (error) {
+    console.error('Erro na validação de acesso via RPC:', error)
+    return { canAccess: false, message: 'Erro ao verificar permissão. Tente novamente.' }
+  }
+
+  const userDataFromRPC = {
+    email: email,
+    permission_type: data.permission_type,
+    status: data.status,
+    empresa: data.empresa,
+    area_atuacao: data.area_atuacao
+  }
+
+  if (data.status === 'not_found') {
     return {
       canAccess: false,
       message: "Usuário não cadastrado, consulte o administrador do sistema"
     }
   }
 
-  if (userData.status !== 'active') {
+  if (data.status !== 'active') {
     return {
       canAccess: false,
       message: "Usuário desativado, consulte o administrador do sistema"
@@ -56,61 +55,21 @@ export async function validateUserAccess(email: string): Promise<{
 
   return {
     canAccess: true,
-    userData
+    userData: userDataFromRPC as PreApprovedUser
   }
-}
-
-
-
-/**
- * Filtra cards baseado nas permissões do usuário
- */
-export function filterCardsByPermissions(
-  cards: any[], 
-  userData: PreApprovedUser
-): any[] {
-  const { permission_type, empresa, area_atuacao } = userData
-
-  let filteredCards = cards
-
-  // Filtrar por empresa (exceto para Kovi que pode ver todos)
-  if (permission_type.toLowerCase() !== 'kovi') {
-    filteredCards = filteredCards.filter(card => 
-      card.empresaResponsavel?.toLowerCase() === empresa.toLowerCase()
-    )
-  }
-
-  // Filtrar por área de atuação (cidade de origem)
-  // Usar origemLocacao como cidade de origem do card
-  if (area_atuacao && area_atuacao.length > 0) {
-    filteredCards = filteredCards.filter(card => {
-      if (!card.origemLocacao) return false
-      
-      // Verificar se a cidade de origem do card está na área de atuação
-      const cardOrigem = card.origemLocacao.toLowerCase()
-      return area_atuacao.some(area => 
-        cardOrigem.includes(area.toLowerCase()) || 
-        area.toLowerCase().includes(cardOrigem)
-      )
-    })
-  }
-
-  return filteredCards
 }
 
 /**
  * Extrai a cidade do endereço de origem
- * Função auxiliar para melhorar matching entre área de atuação e origem
  */
 export function extractCityFromOrigin(origem: string): string {
   if (!origem) return ''
   
-  // Padrões comuns: "Cidade - Estado", "Cidade/Estado", "Cidade, Estado"
   const patterns = [
-    /^([^-]+)\s*-\s*[A-Z]{2}$/i,  // "São Paulo - SP"
-    /^([^/]+)\s*\/\s*[A-Z]{2}$/i, // "São Paulo/SP"
-    /^([^,]+)\s*,\s*[A-Z]{2}$/i,  // "São Paulo, SP"
-    /^([^-,/]+)/i                 // Primeira parte antes de separadores
+    /^([^-]+)\s*-\s*[A-Z]{2}$/i,
+    /^([^/]+)\s*\/\s*[A-Z]{2}$/i,
+    /^([^,]+)\s*,\s*[A-Z]{2}$/i,
+    /^([^-,/]+)/i
   ]
   
   for (const pattern of patterns) {
@@ -124,7 +83,42 @@ export function extractCityFromOrigin(origem: string): string {
 }
 
 /**
- * Versão melhorada do filtro de cards com extração de cidade
+ * Filtra cards baseado nas permissões do usuário
+ */
+export function filterCardsByPermissions(
+  cards: any[], 
+  userData: PreApprovedUser
+): any[] {
+  const { permission_type, empresa, area_atuacao } = userData
+
+  let filteredCards = cards
+
+  if (permission_type.toLowerCase() !== 'kovi' && permission_type.toLowerCase() !== 'admin') {
+    filteredCards = filteredCards.filter(card => 
+      card.empresaResponsavel?.toLowerCase() === empresa.toLowerCase()
+    )
+  }
+
+  if (area_atuacao && area_atuacao.length > 0) {
+    filteredCards = filteredCards.filter(card => {
+      if (!card.origemLocacao) return false
+      
+      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase()
+      
+      return area_atuacao.some(area => {
+        const areaCity = area.toLowerCase()
+        return cardCity.includes(areaCity) || 
+               areaCity.includes(cardCity) ||
+               cardCity === areaCity
+      })
+    })
+  }
+
+  return filteredCards
+}
+
+/**
+ * Versão melhorada do filtro de cards com extração de cidade (RE-ADICIONADA)
  */
 export function filterCardsByPermissionsImproved(
   cards: any[], 
@@ -134,14 +128,12 @@ export function filterCardsByPermissionsImproved(
 
   let filteredCards = cards
 
-  // Filtrar por empresa (exceto para Kovi que pode ver todos)
-  if (permission_type.toLowerCase() !== 'kovi') {
+  if (permission_type.toLowerCase() !== 'kovi' && permission_type.toLowerCase() !== 'admin') {
     filteredCards = filteredCards.filter(card => 
       card.empresaResponsavel?.toLowerCase() === empresa.toLowerCase()
     )
   }
 
-  // Filtrar por área de atuação com extração melhorada de cidade
   if (area_atuacao && area_atuacao.length > 0) {
     filteredCards = filteredCards.filter(card => {
       if (!card.origemLocacao) return false
