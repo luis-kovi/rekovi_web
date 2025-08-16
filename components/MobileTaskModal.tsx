@@ -1527,9 +1527,9 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white"
                           >
                             <option value="" style={{ color: '#6B7280' }}>Selecione o motivo...</option>
-                            <option value="carro_abandonado">Carro abandonado na rua (sem chave)</option>
-                            <option value="problemas_mecanicos">Problemas mecânicos / elétricos</option>
-                            <option value="colisao">Colisão (não está rodando)</option>
+                            <option value="Veículo com avarias / problemas mecânicos">Veículo com avarias / problemas mecânicos</option>
+                            <option value="Veículo na rua sem recuperação da chave">Veículo na rua sem recuperação da chave</option>
+                            <option value="Chave danificada / perdida">Chave danificada / perdida</option>
                           </select>
                         </div>
 
@@ -1539,7 +1539,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
                             { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
                             { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
-                            ...(towingReason !== 'carro_abandonado' ? [
+                            ...(towingReason !== 'Veículo na rua sem recuperação da chave' ? [
                               { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
                               { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' },
                             ] : [])
