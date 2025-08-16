@@ -1035,6 +1035,322 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     }
   };
 
+  // Funções para fase "Confirmação de Entrega no Pátio"
+  const handleConfirmPatioDelivery = async (
+    cardId: string,
+    photos: Record<string, File>,
+    expenses: string[],
+    expenseValues: Record<string, string>,
+    expenseReceipts: Record<string, File>
+  ) => {
+    console.log('Confirmando entrega no pátio:', { cardId, photos, expenses, expenseValues, expenseReceipts });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Upload das fotos do veículo no pátio
+      const photoFieldMapping: Record<string, string> = {
+        frente: 'anexe_imagem_do_carro_no_p_tio',
+        traseira: 'foto_da_traseira_do_ve_culo',
+        lateralDireita: 'foto_da_lateral_direita_passageiro_4',
+        lateralEsquerda: 'foto_da_lateral_esquerda_motorista',
+        estepe: 'foto_do_estepe_4',
+        painel: 'foto_do_painel_4'
+      };
+
+      const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = photoFieldMapping[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Upload dos comprovantes de despesas
+      const expenseFieldMapping: Record<string, string> = {
+        gasolina: 'comprovante_ou_nota_do_abastecimento',
+        pedagio: 'comprovante_do_ped_gio',
+        estacionamento: 'comprovante_do_estacionamento',
+        motoboy: 'comprovante_de_pagamento_ou_nota_do_motoboy'
+      };
+
+      const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
+        const fieldId = expenseFieldMapping[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(receiptPromises);
+
+      // Preparar valores das despesas
+      const expenseValueFields: Record<string, string> = {
+        gasolina: 'valor_do_abastecimento',
+        pedagio: 'valor_do_s_ped_gio_s',
+        estacionamento: 'valor_do_estacionamento',
+        motoboy: 'valor_do_motoboy'
+      };
+
+      // Montar lista de campos para atualizar
+      const fieldsToUpdate = [
+        {
+          fieldId: 'selecione_uma_op_o',
+          value: 'Carro entregue no pátio'
+        },
+        {
+          fieldId: 'houveram_despesas_extras_no_processo_de_recolha',
+          value: expenses
+        }
+      ];
+
+      // Adicionar valores de despesas
+      Object.entries(expenseValues).forEach(([key, value]) => {
+        const fieldId = expenseValueFields[key];
+        if (fieldId && value) {
+          fieldsToUpdate.push({
+            fieldId: fieldId,
+            value: value
+          });
+        }
+      });
+
+      // Atualizar campos no Pipefy
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Entrega no pátio confirmada com sucesso no Pipefy');
+      
+    } catch (error) {
+      console.error('Erro ao confirmar entrega no pátio:', error);
+      throw error;
+    }
+  };
+
+  const handleConfirmCarTowed = async (
+    cardId: string,
+    photo: File,
+    expenses: string[],
+    expenseValues: Record<string, string>,
+    expenseReceipts: Record<string, File>
+  ) => {
+    console.log('Confirmando carro guinchado:', { cardId, photo, expenses, expenseValues, expenseReceipts });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Upload da foto do veículo no guincho
+      await uploadImageToPipefy(photo, 'anexe_imagem_do_carro_no_guincho', cardId, session);
+
+      // Upload dos comprovantes de despesas (mesmo mapeamento da entrega no pátio)
+      const expenseFieldMapping: Record<string, string> = {
+        gasolina: 'comprovante_ou_nota_do_abastecimento',
+        pedagio: 'comprovante_do_ped_gio',
+        estacionamento: 'comprovante_do_estacionamento',
+        motoboy: 'comprovante_de_pagamento_ou_nota_do_motoboy'
+      };
+
+      const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
+        const fieldId = expenseFieldMapping[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(receiptPromises);
+
+      // Preparar valores das despesas
+      const expenseValueFields: Record<string, string> = {
+        gasolina: 'valor_do_abastecimento',
+        pedagio: 'valor_do_s_ped_gio_s',
+        estacionamento: 'valor_do_estacionamento',
+        motoboy: 'valor_do_motoboy'
+      };
+
+      // Montar lista de campos para atualizar
+      const fieldsToUpdate = [
+        {
+          fieldId: 'selecione_uma_op_o',
+          value: 'Carro guinchado'
+        },
+        {
+          fieldId: 'houveram_despesas_extras_no_processo_de_recolha',
+          value: expenses
+        }
+      ];
+
+      // Adicionar valores de despesas
+      Object.entries(expenseValues).forEach(([key, value]) => {
+        const fieldId = expenseValueFields[key];
+        if (fieldId && value) {
+          fieldsToUpdate.push({
+            fieldId: fieldId,
+            value: value
+          });
+        }
+      });
+
+      // Atualizar campos no Pipefy
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Carro guinchado confirmado com sucesso no Pipefy');
+      
+    } catch (error) {
+      console.error('Erro ao confirmar carro guinchado:', error);
+      throw error;
+    }
+  };
+
+  const handleRequestTowMechanical = async (cardId: string, reason: string) => {
+    console.log('Solicitando guincho mecânico:', { cardId, reason });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Obter email do usuário logado
+      const { data: userData } = await supabase.auth.getUser();
+      const userEmail = userData.user?.email || 'usuário';
+
+      // Atualizar campo selecione_uma_op_o
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "selecione_uma_op_o"
+                  value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Criar comentário
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "O ${userEmail} inseriu a seguinte observação no pedido do guincho: ${reason}"
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Executar ambas as mutations
+      await Promise.all([
+        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ query: updateQuery })
+        }),
+        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ query: commentQuery })
+        })
+      ]);
+
+      console.log('Guincho mecânico solicitado com sucesso no Pipefy');
+      
+    } catch (error) {
+      console.error('Erro ao solicitar guincho mecânico:', error);
+      throw error;
+    }
+  };
+
   const handleOpenCalculator = () => {
     setShowCalculator(true);
     // Centralizar a calculadora na tela
@@ -1550,6 +1866,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         onUnlockVehicle={handleUnlockVehicle}
         onRequestTowing={handleRequestTowing}
         onReportProblem={handleReportProblem}
+        onConfirmPatioDelivery={handleConfirmPatioDelivery}
+        onConfirmCarTowed={handleConfirmCarTowed}
+        onRequestTowMechanical={handleRequestTowMechanical}
       />
 
       {/* Modal da Calculadora */}

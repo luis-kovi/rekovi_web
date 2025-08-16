@@ -16,9 +16,12 @@ interface CardModalProps {
   onUnlockVehicle?: (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => Promise<void>;
   onRequestTowing?: (cardId: string, phase: string, reason: string, photos: Record<string, File>) => Promise<void>;
   onReportProblem?: (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => Promise<void>;
+  onConfirmPatioDelivery?: (cardId: string, photos: Record<string, File>, expenses: string[], expenseValues: Record<string, string>, expenseReceipts: Record<string, File>) => Promise<void>;
+  onConfirmCarTowed?: (cardId: string, photo: File, expenses: string[], expenseValues: Record<string, string>, expenseReceipts: Record<string, File>) => Promise<void>;
+  onRequestTowMechanical?: (cardId: string, reason: string) => Promise<void>;
 }
 
-export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem }: CardModalProps) {
+export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem, onConfirmPatioDelivery, onConfirmCarTowed, onRequestTowMechanical }: CardModalProps) {
   const [showChoferChange, setShowChoferChange] = useState(false);
   const [selectedChofer, setSelectedChofer] = useState('');
   const [choferEmail, setChoferEmail] = useState('');
@@ -650,17 +653,46 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       }
     }
 
+    if (!onConfirmPatioDelivery) {
+      setFeedback('Funcionalidade de confirmação não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando confirmação de entrega no pátio...');
     
     try {
-      console.log('Dados da entrega no pátio:', {
-        cardId: card.id,
-        photos: patioVehiclePhotos,
-        expenses: patioExtraExpenses,
-        expenseValues: patioExpenseValues,
-        expenseReceipts: patioExpenseReceipts
-      });
+      // Filtrar apenas as fotos que foram enviadas
+      const photosToUpload = Object.fromEntries(
+        Object.entries(patioVehiclePhotos).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
+
+      // Preparar lista de despesas selecionadas
+      const expensesList = Object.entries(patioExtraExpenses)
+        .filter(([key, value]) => value)
+        .map(([key]) => {
+          const expenseNames: Record<string, string> = {
+            naoHouve: 'Não houve',
+            gasolina: 'Gasolina',
+            pedagio: 'Pedágio',
+            estacionamento: 'Estacionamento',
+            motoboy: 'Motoboy (busca de chave)'
+          };
+          return expenseNames[key] || key;
+        });
+
+      // Filtrar apenas os recibos que foram enviados
+      const receiptsToUpload = Object.fromEntries(
+        Object.entries(patioExpenseReceipts).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
+
+      await onConfirmPatioDelivery(
+        card.id, 
+        photosToUpload, 
+        expensesList, 
+        patioExpenseValues, 
+        receiptsToUpload
+      );
 
       setFeedback('Entrega no pátio confirmada com sucesso!');
       setTimeout(() => {
@@ -696,17 +728,41 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       }
     }
 
+    if (!onConfirmCarTowed) {
+      setFeedback('Funcionalidade de confirmação não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando confirmação de carro guinchado...');
     
     try {
-      console.log('Dados do carro guinchado:', {
-        cardId: card.id,
-        towPhoto: towedCarPhoto,
-        expenses: towedExtraExpenses,
-        expenseValues: towedExpenseValues,
-        expenseReceipts: towedExpenseReceipts
-      });
+      // Preparar lista de despesas selecionadas
+      const expensesList = Object.entries(towedExtraExpenses)
+        .filter(([key, value]) => value)
+        .map(([key]) => {
+          const expenseNames: Record<string, string> = {
+            naoHouve: 'Não houve',
+            gasolina: 'Gasolina',
+            pedagio: 'Pedágio',
+            estacionamento: 'Estacionamento',
+            motoboy: 'Motoboy (busca de chave)'
+          };
+          return expenseNames[key] || key;
+        });
+
+      // Filtrar apenas os recibos que foram enviados
+      const receiptsToUpload = Object.fromEntries(
+        Object.entries(towedExpenseReceipts).filter(([key, file]) => file !== null)
+      ) as Record<string, File>;
+
+      await onConfirmCarTowed(
+        card.id,
+        towedCarPhoto,
+        expensesList,
+        towedExpenseValues,
+        receiptsToUpload
+      );
 
       setFeedback('Carro guinchado confirmado com sucesso!');
       setTimeout(() => {
@@ -728,14 +784,16 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       return;
     }
 
+    if (!onRequestTowMechanical) {
+      setFeedback('Funcionalidade de solicitação não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando solicitação de guincho...');
     
     try {
-      console.log('Dados da solicitação de guincho mecânico:', {
-        cardId: card.id,
-        reason: mechanicalTowReason
-      });
+      await onRequestTowMechanical(card.id, mechanicalTowReason);
 
       setFeedback('Guincho solicitado com sucesso!');
       setTimeout(() => {
