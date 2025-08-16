@@ -22,7 +22,6 @@ export async function validateUserAccess(email: string): Promise<{
     return { canAccess: false, message: 'Erro de configuração do cliente.' }
   }
 
-  // Chamando a função SQL segura via RPC em vez de um SELECT direto
   const { data, error } = await supabase.rpc('is_user_preapproved', {
     email_to_check: email
   });
@@ -33,7 +32,7 @@ export async function validateUserAccess(email: string): Promise<{
   }
 
   const userDataFromRPC = {
-    email: email, // O e-mail que passamos
+    email: email,
     permission_type: data.permission_type,
     status: data.status,
     empresa: data.empresa,
@@ -60,47 +59,6 @@ export async function validateUserAccess(email: string): Promise<{
   }
 }
 
-
-// As funções abaixo podem ser mantidas como estão, pois operam em dados já carregados
-// e não fazem novas chamadas diretas que o RLS bloquearia.
-
-/**
- * Filtra cards baseado nas permissões do usuário
- */
-export function filterCardsByPermissions(
-  cards: any[], 
-  userData: PreApprovedUser
-): any[] {
-  const { permission_type, empresa, area_atuacao } = userData
-
-  let filteredCards = cards
-
-  // Filtrar por empresa (exceto para Kovi que pode ver todos)
-  if (permission_type.toLowerCase() !== 'kovi' && permission_type.toLowerCase() !== 'admin') {
-    filteredCards = filteredCards.filter(card => 
-      card.empresaResponsavel?.toLowerCase() === empresa.toLowerCase()
-    )
-  }
-
-  // Filtrar por área de atuação (cidade de origem)
-  if (area_atuacao && area_atuacao.length > 0) {
-    filteredCards = filteredCards.filter(card => {
-      if (!card.origemLocacao) return false
-      
-      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase()
-      
-      return area_atuacao.some(area => {
-        const areaCity = area.toLowerCase()
-        return cardCity.includes(areaCity) || 
-               areaCity.includes(cardCity) ||
-               cardCity === areaCity
-      })
-    })
-  }
-
-  return filteredCards
-}
-
 /**
  * Extrai a cidade do endereço de origem
  */
@@ -122,4 +80,74 @@ export function extractCityFromOrigin(origem: string): string {
   }
   
   return origem.trim()
+}
+
+/**
+ * Filtra cards baseado nas permissões do usuário
+ */
+export function filterCardsByPermissions(
+  cards: any[], 
+  userData: PreApprovedUser
+): any[] {
+  const { permission_type, empresa, area_atuacao } = userData
+
+  let filteredCards = cards
+
+  if (permission_type.toLowerCase() !== 'kovi' && permission_type.toLowerCase() !== 'admin') {
+    filteredCards = filteredCards.filter(card => 
+      card.empresaResponsavel?.toLowerCase() === empresa.toLowerCase()
+    )
+  }
+
+  if (area_atuacao && area_atuacao.length > 0) {
+    filteredCards = filteredCards.filter(card => {
+      if (!card.origemLocacao) return false
+      
+      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase()
+      
+      return area_atuacao.some(area => {
+        const areaCity = area.toLowerCase()
+        return cardCity.includes(areaCity) || 
+               areaCity.includes(cardCity) ||
+               cardCity === areaCity
+      })
+    })
+  }
+
+  return filteredCards
+}
+
+/**
+ * Versão melhorada do filtro de cards com extração de cidade (RE-ADICIONADA)
+ */
+export function filterCardsByPermissionsImproved(
+  cards: any[], 
+  userData: PreApprovedUser
+): any[] {
+  const { permission_type, empresa, area_atuacao } = userData
+
+  let filteredCards = cards
+
+  if (permission_type.toLowerCase() !== 'kovi' && permission_type.toLowerCase() !== 'admin') {
+    filteredCards = filteredCards.filter(card => 
+      card.empresaResponsavel?.toLowerCase() === empresa.toLowerCase()
+    )
+  }
+
+  if (area_atuacao && area_atuacao.length > 0) {
+    filteredCards = filteredCards.filter(card => {
+      if (!card.origemLocacao) return false
+      
+      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase()
+      
+      return area_atuacao.some(area => {
+        const areaCity = area.toLowerCase()
+        return cardCity.includes(areaCity) || 
+               areaCity.includes(cardCity) ||
+               cardCity === areaCity
+      })
+    })
+  }
+
+  return filteredCards
 }
