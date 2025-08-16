@@ -12,9 +12,11 @@ interface MobileTaskModalProps {
   onClose: () => void
   permissionType: string
   initialTab?: 'details' | 'actions' | 'history'
+  onAllocateDriver?: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>
+  onRejectCollection?: (cardId: string, reason: string, observations: string) => Promise<void>
 }
 
-export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details' }: MobileTaskModalProps) {
+export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection }: MobileTaskModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
 
   // Estados para os formulários
@@ -233,29 +235,31 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       return;
     }
 
+    if (!onAllocateDriver) {
+      setFeedback('Funcionalidade de alocação não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando alocação de chofer...');
     
     try {
-      console.log('Dados da alocação (mobile):', {
-        cardId: card.id,
-        driver: selectedChofer,
-        email: choferEmail,
-        date: collectionDate,
-        time: collectionTime,
-        billing: billingType,
-        value: collectionValue,
-        additionalKm
-      });
-
-      setFeedback('Chofer alocado com sucesso!');
+      // Concatenar data e hora no formato esperado pelo Pipefy
+      const dateTimeString = `${collectionDate} ${collectionTime}`;
+      
+      // Valor da recolha (apenas se for faturamento avulso)
+      const finalCollectionValue = billingType === 'avulso' ? collectionValue : '';
+      
+      await onAllocateDriver(card.id, selectedChofer, choferEmail, dateTimeString, finalCollectionValue, additionalKm);
+      
+      setFeedback('Chofer alocado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowAllocateDriver(false);
         setFeedback('');
         resetAllocateForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -268,24 +272,25 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       return;
     }
 
+    if (!onRejectCollection) {
+      setFeedback('Funcionalidade de rejeição não disponível.');
+      return;
+    }
+
     setIsUpdating(true);
     setFeedback('Processando rejeição de recolha...');
     
     try {
-      console.log('Dados da rejeição (mobile):', {
-        cardId: card.id,
-        reason: rejectionReason,
-        observations: rejectionObservations
-      });
-
-      setFeedback('Recolha rejeitada com sucesso!');
+      await onRejectCollection(card.id, rejectionReason, rejectionObservations);
+      
+      setFeedback('Recolha rejeitada com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowRejectCollection(false);
         setFeedback('');
         resetRejectForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);

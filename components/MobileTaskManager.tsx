@@ -352,6 +352,241 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
   const [initialModalTab, setInitialModalTab] = useState<'details' | 'actions' | 'history'>('details')
 
+  // Funções do Pipefy para mobile
+  const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
+    console.log('Alocando chofer (mobile):', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
+    
+    try {
+      const supabase = createClient();
+      
+      // Obter o token de autenticação e dados do usuário atual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Obter dados do usuário para o comentário
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+
+      // Preparar os valores para atualização
+      const fieldsToUpdate = [
+        {
+          fieldId: "nome_do_chofer_que_far_a_recolha",
+          value: driverName
+        },
+        {
+          fieldId: "e_mail_do_chofer",
+          value: driverEmail
+        },
+        {
+          fieldId: "data_e_hora_prevista_para_recolha",
+          value: dateTime
+        },
+        {
+          fieldId: "custo_de_km_adicional",
+          value: additionalKm
+        },
+        {
+          fieldId: "ve_culo_ser_recolhido",
+          value: "Sim"
+        }
+      ];
+
+      // Adicionar valor da recolha se fornecido
+      if (collectionValue) {
+        fieldsToUpdate.push({
+          fieldId: "valor_da_recolha",
+          value: collectionValue
+        });
+      }
+
+      // Query GraphQL para atualizar os campos no Pipefy
+      const pipefyQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Adicionar comentário
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "O ${userEmail} alocou o chofer para recolha."
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      // Usar a mesma URL que está nas variáveis de ambiente do cliente
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Executar a mutation para atualizar campos
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: pipefyQuery
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      }
+
+      // Executar a mutation para adicionar comentário
+      const commentResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: commentQuery
+        })
+      });
+
+      console.log('Chofer alocado com sucesso no Pipefy (mobile)');
+      
+      // Atualizar o estado local do card
+      setCards(prevCards => 
+        prevCards.map(card => 
+          card.id === cardId 
+            ? { ...card, chofer: driverName, emailChofer: driverEmail }
+            : card
+        )
+      );
+      
+    } catch (error) {
+      console.error('Erro ao alocar chofer (mobile):', error);
+      throw error;
+    }
+  };
+
+  const handleRejectCollection = async (cardId: string, reason: string, observations: string) => {
+    console.log('Rejeitando recolha (mobile):', { cardId, reason, observations });
+    
+    try {
+      const supabase = createClient();
+      
+      // Obter o token de autenticação e dados do usuário atual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Obter dados do usuário para o comentário
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+
+      // Query GraphQL para atualizar o campo no Pipefy
+      const pipefyQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "ve_culo_ser_recolhido",
+                  value: "Não"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Adicionar comentário
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "O ${userEmail} rejeitou a recolha.\\nMotivo: ${reason}\\nComentário: ${observations}"
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      // Usar a mesma URL que está nas variáveis de ambiente do cliente
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Executar a mutation para atualizar campo
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: pipefyQuery
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      }
+
+      // Executar a mutation para adicionar comentário
+      const commentResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: commentQuery
+        })
+      });
+
+      console.log('Recolha rejeitada com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao rejeitar recolha (mobile):', error);
+      throw error;
+    }
+  };
+
   // Gestos de swipe
   const handleCardSwipe = (cardId: string, direction: 'left' | 'right') => {
     const card = cards.find(c => c.id === cardId)
@@ -468,6 +703,8 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }}
           permissionType={permissionType}
           initialTab={initialModalTab}
+          onAllocateDriver={handleAllocateDriver}
+          onRejectCollection={handleRejectCollection}
         />
       )}
 
