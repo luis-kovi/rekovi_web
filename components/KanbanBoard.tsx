@@ -65,7 +65,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         query = query.in('phase_name', validPhases);
         
         // Aplicar filtros de permissão
-        if (permissionType === 'ativa' || permissionType === 'onsystem') {
+        if (permissionType === 'ativa' || permissionType === 'onsystem' || permissionType === 'rvs') {
           query = query.ilike('empresa_recolha', permissionType);
         } else if (permissionType === 'chofer') {
           // Para chofer, precisamos do email do usuário atual
