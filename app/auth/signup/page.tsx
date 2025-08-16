@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { validateUserAccess } from '@/utils/auth-validation'
 
 export default function SignUp() {
   const [email, setEmail] = useState('')
@@ -12,34 +13,46 @@ export default function SignUp() {
   const [error, setError] = useState('')
   const router = useRouter()
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
+// auth/signup/page.tsx
 
-    try {
-      const supabase = createClient()
-      if (!supabase) {
-        throw new Error('Supabase client not available')
-      }
+const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  setLoading(true)
+  setError('')
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-      } else {
-        // Redirecionar para verificação de email ou login
-        router.push('/auth/signin?message=Check your email to confirm your account')
-      }
-    } catch (err) {
-      setError('Erro ao criar conta. Tente novamente.')
-    } finally {
-      setLoading(false)
+  try {
+    const supabase = createClient()
+    if (!supabase) {
+      throw new Error('Supabase client not available')
     }
+
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // 1. Validar se o usuário está autorizado ANTES de criar a conta
+    const validation = await validateUserAccess(email)
+
+    if (!validation.canAccess) {
+      setError(validation.message || 'Seu e-mail não tem permissão para se cadastrar.')
+      setLoading(false) // Para o loading
+      return // Para a execução
+    }
+    // --- FIM DA ALTERAÇÃO ---
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      router.push('/auth/signin?message=Verifique seu e-mail para confirmar a conta')
+    }
+  } catch (err) {
+    setError('Erro ao criar conta. Tente novamente.')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
