@@ -41,5 +41,5 @@ export interface User {
 }
 
 export interface PermissionType {
-  type: 'admin' | 'kovi' | 'ativa' | 'onsystem' | 'chofer';
+  type: 'admin' | 'kovi' | 'ativa' | 'onsystem' | 'rvs' | 'chofer';
 }

@@ -4,6 +4,11 @@ import { createServerClient } from '@supabase/ssr'
 import { getRedirectRoute } from '@/utils/helpers'
 
 export async function middleware(request: NextRequest) {
+  // Excluir explicitamente o callback de autenticação para evitar interferências
+  if (request.nextUrl.pathname === '/auth/callback') {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -85,7 +90,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Se o usuário estiver autenticado e tentar acessar páginas de auth
+  // Se o usuário estiver autenticado e tentar acessar páginas de auth (exceto callback)
   const authRoutes = ['/auth/signin', '/auth/signup']
   const isAuthRoute = authRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)

@@ -103,16 +103,20 @@ export default function SignIn() {
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${redirectRoute}`,
           queryParams: {
-            prompt: 'consent',
+            access_type: 'offline',
+            prompt: 'select_account',
           },
+          skipBrowserRedirect: false,
         },
       })
 
       if (error) {
+        console.error('Erro OAuth Google:', error)
         setError(error.message)
         setGoogleLoading(false)
       }
     } catch (err) {
+      console.error('Erro no handleSignInWithGoogle:', err)
       setError('Erro ao fazer login com Google. Tente novamente.')
       setGoogleLoading(false)
     }

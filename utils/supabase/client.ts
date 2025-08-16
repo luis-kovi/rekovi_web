@@ -18,7 +18,14 @@ export function createClient() {
   }
 
   try {
-    const client = createBrowserClient(supabaseUrl, supabaseKey)
+    const client = createBrowserClient(supabaseUrl, supabaseKey, {
+      auth: {
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true,
+        flowType: 'pkce'
+      }
+    })
     return client
   } catch (error) {
     console.error('Error creating Supabase client:', error)

@@ -66,7 +66,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         query = query.in('phase_name', validPhases);
         
         // Aplicar filtros de permissão
-        if (permissionType === 'ativa' || permissionType === 'onsystem') {
+        if (permissionType === 'ativa' || permissionType === 'onsystem' || permissionType === 'rvs') {
           query = query.ilike('empresa_recolha', permissionType);
         } else if (permissionType === 'chofer') {
           // Para chofer, precisamos do email do usuário atual
@@ -277,7 +277,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
             
             query = query.in('phase_name', validPhases);
             
-            if (permissionType === 'ativa' || permissionType === 'onsystem') {
+            if (permissionType === 'ativa' || permissionType === 'onsystem' || permissionType === 'rvs') {
               query = query.ilike('empresa_recolha', permissionType);
             } else if (permissionType === 'chofer') {
               const { data: { user } } = await supabase.auth.getUser();
@@ -351,6 +351,1035 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
   }
 
   const [initialModalTab, setInitialModalTab] = useState<'details' | 'actions' | 'history'>('details')
+
+  // Funções do Pipefy para mobile
+  const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
+    console.log('Alocando chofer (mobile):', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
+    
+    try {
+      const supabase = createClient();
+      
+      // Obter o token de autenticação e dados do usuário atual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Obter dados do usuário para o comentário
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+
+      // Preparar os valores para atualização
+      const fieldsToUpdate = [
+        {
+          fieldId: "nome_do_chofer_que_far_a_recolha",
+          value: driverName
+        },
+        {
+          fieldId: "e_mail_do_chofer",
+          value: driverEmail
+        },
+        {
+          fieldId: "data_e_hora_prevista_para_recolha",
+          value: dateTime
+        },
+        {
+          fieldId: "custo_de_km_adicional",
+          value: additionalKm
+        },
+        {
+          fieldId: "ve_culo_ser_recolhido",
+          value: "Sim"
+        }
+      ];
+
+      // Adicionar valor da recolha se fornecido
+      if (collectionValue) {
+        fieldsToUpdate.push({
+          fieldId: "valor_da_recolha",
+          value: collectionValue
+        });
+      }
+
+      // Query GraphQL para atualizar os campos no Pipefy
+      const pipefyQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Adicionar comentário
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "O ${userEmail} alocou o chofer para recolha."
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      // Usar a mesma URL que está nas variáveis de ambiente do cliente
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Executar a mutation para atualizar campos
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: pipefyQuery
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      }
+
+      // Executar a mutation para adicionar comentário
+      const commentResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: commentQuery
+        })
+      });
+
+      console.log('Chofer alocado com sucesso no Pipefy (mobile)');
+      
+      // Atualizar o estado local do card
+      setCards(prevCards => 
+        prevCards.map(card => 
+          card.id === cardId 
+            ? { ...card, chofer: driverName, emailChofer: driverEmail }
+            : card
+        )
+      );
+      
+    } catch (error) {
+      console.error('Erro ao alocar chofer (mobile):', error);
+      throw error;
+    }
+  };
+
+  const handleRejectCollection = async (cardId: string, reason: string, observations: string) => {
+    console.log('Rejeitando recolha (mobile):', { cardId, reason, observations });
+    
+    try {
+      const supabase = createClient();
+      
+      // Obter o token de autenticação e dados do usuário atual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Obter dados do usuário para o comentário
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+
+      // Query GraphQL para atualizar o campo no Pipefy
+      const pipefyQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "ve_culo_ser_recolhido",
+                  value: "Não"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Adicionar comentário
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "O ${userEmail} rejeitou a recolha.\\nMotivo: ${reason}\\nComentário: ${observations}"
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      // Usar a mesma URL que está nas variáveis de ambiente do cliente
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Executar a mutation para atualizar campo
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: pipefyQuery
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      }
+
+      // Executar a mutation para adicionar comentário
+      const commentResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          query: commentQuery
+        })
+      });
+
+      console.log('Recolha rejeitada com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao rejeitar recolha (mobile):', error);
+      throw error;
+    }
+  };
+
+  // Função utilitária para upload de imagens via Pipefy
+  const uploadImageToPipefy = async (file: File, fieldId: string, cardId: string, session: any) => {
+    try {
+      const supabaseUrl = (createClient() as any).supabaseUrl;
+      
+      // Passo 1: Gerar URL pré-assinada
+      const fileName = `${cardId}_${fieldId}_${Date.now()}.${file.type.split('/')[1] || 'jpg'}`;
+      const presignedQuery = `
+        mutation CreatePresignedUrl($organizationId: ID!, $fileName: String!, $contentType: String!) {
+          createPresignedUrl(
+            input: {
+              organizationId: $organizationId
+              fileName: $fileName
+              contentType: $contentType
+            }
+          ) {
+            url
+            downloadUrl
+            clientMutationId
+          }
+        }
+      `;
+
+      const variables = {
+        organizationId: "281428",
+        fileName: fileName,
+        contentType: file.type
+      };
+
+      console.log('Enviando query para presigned URL (mobile):', presignedQuery);
+
+      const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ 
+          query: presignedQuery,
+          variables: variables
+        })
+      });
+
+      if (!presignedResponse.ok) {
+        const errorText = await presignedResponse.text();
+        console.error('Erro na resposta presigned (mobile):', errorText);
+        throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
+      }
+
+      const presignedData = await presignedResponse.json();
+      console.log('Resposta completa presigned URL (mobile):', presignedData);
+
+      // Verificar se há erros na resposta
+      if (presignedData.errors && presignedData.errors.length > 0) {
+        console.error('Erros da API Pipefy (mobile):', presignedData.errors);
+        const errorMessages = presignedData.errors.map((error: any) => error.message).join(', ');
+        throw new Error(`Erro na API Pipefy: ${errorMessages}`);
+      }
+
+      // Verificar se a resposta tem a estrutura esperada
+      if (!presignedData?.data?.createPresignedUrl) {
+        console.error('Estrutura de resposta inválida (mobile):', presignedData);
+        throw new Error('Resposta inválida da API de presigned URL');
+      }
+
+      const { url: uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl;
+
+      if (!uploadUrl || !downloadUrl) {
+        throw new Error('URLs de upload/download não fornecidas');
+      }
+
+      console.log('URLs obtidas (mobile):', { uploadUrl, downloadUrl });
+
+      // Passo 2: Upload da imagem
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        }
+      });
+
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error('Erro no upload (mobile):', errorText);
+        throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status}`);
+      }
+
+      console.log('Upload realizado com sucesso (mobile)');
+
+      // Passo 3: Atualizar campo no card com o path do arquivo
+      // Extrair o path do arquivo da downloadUrl
+      const urlParts = downloadUrl.split('/uploads/');
+      const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
+      const organizationId = "870bddf7-6ce7-4b9d-81d8-9087f1c10ae2"; // ID da organização
+      const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
+      
+      console.log('Path do arquivo (mobile):', fullPath);
+
+      const updateFieldQuery = `
+        mutation {
+          updateCardField(
+            input: {
+              card_id: "${cardId}"
+              field_id: "${fieldId}"
+              new_value: ["${fullPath}"]
+            }
+          ) {
+            success
+            clientMutationId
+          }
+        }
+      `;
+
+      console.log('Atualizando campo com URL (mobile):', updateFieldQuery);
+
+      const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateFieldQuery })
+      });
+
+      if (!updateResponse.ok) {
+        const errorText = await updateResponse.text();
+        console.error('Erro ao atualizar campo (mobile):', errorText);
+        throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status}`);
+      }
+
+      const updateData = await updateResponse.json();
+      console.log('Resposta updateCardField completa (mobile):', updateData);
+
+      // Verificar se há erros na atualização do campo
+      if (updateData.errors && updateData.errors.length > 0) {
+        console.error('Erros ao atualizar campo (mobile):', updateData.errors);
+        const errorMessages = updateData.errors.map((error: any) => error.message).join(', ');
+        throw new Error(`Erro ao atualizar campo ${fieldId}: ${errorMessages}`);
+      }
+
+      console.log('Campo atualizado com sucesso (mobile):', updateData);
+      return downloadUrl;
+    } catch (error) {
+      console.error('Erro no upload da imagem (mobile):', error);
+      throw error;
+    }
+  };
+
+  // Função para mapear fase para os IDs corretos dos campos
+  const getPhaseFieldIds = (phase: string) => {
+    const phaseFieldMap: Record<string, any> = {
+      'Tentativa 1 de Recolha': {
+        action: 'para_seguir_com_a_recolha_nos_informe_a_a_o_necess_ria',
+        reason: 'qual_o_motivo_do_guincho',
+        difficulty: 'carro_localizado',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3',
+          lateralDireita: 'foto_da_lateral_direita_passageiro',
+          estepe: 'foto_do_estepe',
+          painel: 'foto_do_painel'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1',
+          photo2: 'evid_ncia_2',
+          photo3: 'evid_ncia_3'
+        }
+      },
+      'Tentativa 2 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria',
+        reason: 'qual_o_motivo_do_guincho_1',
+        difficulty: 'carro_localizado_1',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_1',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_1',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_1',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_1',
+          estepe: 'foto_do_estepe_1',
+          painel: 'foto_do_painel_1'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_1',
+          photo2: 'evid_ncia_2_1',
+          photo3: 'evid_ncia_3_1'
+        }
+      },
+      'Tentativa 3 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_1',
+        reason: 'qual_o_motivo_do_guincho_2',
+        difficulty: 'carro_localizado_2',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_2',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_2',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_2',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_2',
+          estepe: 'foto_do_estepe_2',
+          painel: 'foto_do_painel_2'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_2',
+          photo2: 'evid_ncia_2_2',
+          photo3: 'evid_ncia_3_2'
+        }
+      },
+      'Tentativa 4 de Recolha': {
+        action: 'para_seguir_com_a_recolha_informe_a_a_o_necess_ria_2',
+        reason: 'qual_o_motivo_do_guincho_3',
+        difficulty: 'carro_localizado_3',
+        photos: {
+          frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1_3',
+          traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2_3',
+          lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3_3',
+          lateralDireita: 'foto_da_lateral_direita_passageiro_3',
+          estepe: 'foto_do_estepe_3',
+          painel: 'foto_do_painel_3'
+        },
+        evidences: {
+          photo1: 'evid_ncia_1_3',
+          photo2: 'evid_ncia_2_3',
+          photo3: 'evid_ncia_3_3'
+        }
+      }
+    };
+    return phaseFieldMap[phase] || phaseFieldMap['Tentativa 1 de Recolha'];
+  };
+
+  const handleUnlockVehicle = async (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => {
+    console.log('Desbloqueando veículo (mobile):', { cardId, phase, photos, observations });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+      const fieldIds = getPhaseFieldIds(phase);
+
+      // Upload das imagens
+      const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = fieldIds.photos[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campo de ação necessária
+      const actionQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Desbloquear Veículo"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: actionQuery })
+      });
+
+      // Adicionar comentário se houver observações
+      if (observations) {
+        const commentQuery = `
+          mutation {
+            createComment(
+              input: {
+                card_id: "${cardId}"
+                text: "Usuário ${userEmail} inseriu a observação ${observations} na solicitação de desbloqueio."
+              }
+            ) {
+              comment {
+                id
+                text
+                created_at
+                author {
+                  id
+                  name
+                }
+              }
+            }
+          }
+        `;
+
+        await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ query: commentQuery })
+        });
+      }
+
+      console.log('Veículo desbloqueado com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao desbloquear veículo (mobile):', error);
+      throw error;
+    }
+  };
+
+  const handleRequestTowing = async (cardId: string, phase: string, reason: string, photos: Record<string, File>) => {
+    console.log('Solicitando guincho (mobile):', { cardId, phase, reason, photos });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const fieldIds = getPhaseFieldIds(phase);
+
+      // Upload das imagens (excluir estepe e painel se for "sem recuperação da chave")
+      const photosToUpload = reason === 'Veículo na rua sem recuperação da chave' 
+        ? Object.fromEntries(Object.entries(photos).filter(([key]) => !['estepe', 'painel'].includes(key)))
+        : photos;
+
+      const uploadPromises = Object.entries(photosToUpload).map(async ([key, file]) => {
+        const fieldId = fieldIds.photos[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campos
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldIds.reason}"
+                  value: "${reason}"
+                },
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Solicitar Guincho"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Guincho solicitado com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao solicitar guincho (mobile):', error);
+      throw error;
+    }
+  };
+
+  const handleReportProblem = async (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => {
+    console.log('Reportando problema (mobile):', { cardId, phase, difficulty, evidences });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const fieldIds = getPhaseFieldIds(phase);
+
+      // Upload das evidências
+      const uploadPromises = Object.entries(evidences).map(async ([key, file]) => {
+        const fieldId = fieldIds.evidences[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Atualizar campos
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldIds.difficulty}"
+                  value: "${difficulty}"
+                },
+                {
+                  fieldId: "${fieldIds.action}"
+                  value: "Reportar Problema"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateQuery })
+      });
+
+      console.log('Problema reportado com sucesso no Pipefy (mobile)');
+      
+    } catch (error) {
+      console.error('Erro ao reportar problema (mobile):', error);
+      throw error;
+    }
+  };
+
+  // Funções para fase "Confirmação de Entrega no Pátio"
+  const handleConfirmPatioDelivery = async (
+    cardId: string,
+    photos: Record<string, File>,
+    expenses: string[],
+    expenseValues: Record<string, string>,
+    expenseReceipts: Record<string, File>
+  ) => {
+    console.log('Confirmando entrega no pátio (mobile):', { cardId, photos, expenses, expenseValues, expenseReceipts });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Upload das fotos do veículo no pátio
+      const photoFieldMapping: Record<string, string> = {
+        frente: 'anexe_imagem_do_carro_no_p_tio',
+        traseira: 'foto_da_traseira_do_ve_culo',
+        lateralDireita: 'foto_da_lateral_direita_passageiro_4',
+        lateralEsquerda: 'foto_da_lateral_esquerda_motorista',
+        estepe: 'foto_do_estepe_4',
+        painel: 'foto_do_painel_4'
+      };
+
+      const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = photoFieldMapping[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(uploadPromises);
+
+      // Upload dos comprovantes de despesas
+      const expenseFieldMapping: Record<string, string> = {
+        gasolina: 'comprovante_ou_nota_do_abastecimento',
+        pedagio: 'comprovante_do_ped_gio',
+        estacionamento: 'comprovante_do_estacionamento',
+        motoboy: 'comprovante_de_pagamento_ou_nota_do_motoboy'
+      };
+
+      const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
+        const fieldId = expenseFieldMapping[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(receiptPromises);
+
+      // Preparar valores das despesas
+      const expenseValueFields: Record<string, string> = {
+        gasolina: 'valor_do_abastecimento',
+        pedagio: 'valor_do_s_ped_gio_s',
+        estacionamento: 'valor_do_estacionamento',
+        motoboy: 'valor_do_motoboy'
+      };
+
+      // Montar lista de campos para atualizar
+      const fieldsToUpdate = [
+        {
+          fieldId: 'selecione_uma_op_o',
+          value: 'Confirmar entrega no pátio'
+        },
+        {
+          fieldId: 'houveram_despesas_extras_no_processo_de_recolha',
+          value: expenses
+        }
+      ];
+
+      // Adicionar valores de despesas
+      Object.entries(expenseValues).forEach(([key, value]) => {
+        const fieldId = expenseValueFields[key];
+        if (fieldId && value) {
+          fieldsToUpdate.push({
+            fieldId: fieldId,
+            value: value
+          });
+        }
+      });
+
+      // Atualizar campos no Pipefy
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const response = await fetch('https://api.pipefy.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: updateQuery }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const result = await response.json();
+      if (result.errors) {
+        throw new Error(`Erro do Pipefy: ${result.errors[0].message}`);
+      }
+
+    } catch (error) {
+      console.error('Erro ao confirmar entrega no pátio:', error);
+      throw error;
+    }
+  };
+
+  const handleConfirmCarTowed = async (
+    cardId: string,
+    photo: File,
+    expenses: string[],
+    expenseValues: Record<string, string>,
+    expenseReceipts: Record<string, File>
+  ) => {
+    console.log('Confirmando carro guinchado (mobile):', { cardId, photo, expenses, expenseValues, expenseReceipts });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Upload da foto do veículo no guincho
+      await uploadImageToPipefy(photo, 'anexe_imagem_do_carro_no_guincho', cardId, session);
+
+      // Upload dos comprovantes de despesas (mesmo mapeamento da entrega no pátio)
+      const expenseFieldMapping: Record<string, string> = {
+        gasolina: 'comprovante_ou_nota_do_abastecimento',
+        pedagio: 'comprovante_do_ped_gio',
+        estacionamento: 'comprovante_do_estacionamento',
+        motoboy: 'comprovante_de_pagamento_ou_nota_do_motoboy'
+      };
+
+      const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
+        const fieldId = expenseFieldMapping[key];
+        if (fieldId) {
+          return uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      });
+
+      await Promise.all(receiptPromises);
+
+      // Preparar valores das despesas
+      const expenseValueFields: Record<string, string> = {
+        gasolina: 'valor_do_abastecimento',
+        pedagio: 'valor_do_s_ped_gio_s',
+        estacionamento: 'valor_do_estacionamento',
+        motoboy: 'valor_do_motoboy'
+      };
+
+      // Montar lista de campos para atualizar
+      const fieldsToUpdate = [
+        {
+          fieldId: 'selecione_uma_op_o',
+          value: 'Carro guinchado'
+        },
+        {
+          fieldId: 'houveram_despesas_extras_no_processo_de_recolha',
+          value: expenses
+        }
+      ];
+
+      // Adicionar valores de despesas
+      Object.entries(expenseValues).forEach(([key, value]) => {
+        const fieldId = expenseValueFields[key];
+        if (fieldId && value) {
+          fieldsToUpdate.push({
+            fieldId: fieldId,
+            value: value
+          });
+        }
+      });
+
+      // Atualizar campos no Pipefy
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      const response = await fetch('https://api.pipefy.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: updateQuery }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const result = await response.json();
+      if (result.errors) {
+        throw new Error(`Erro do Pipefy: ${result.errors[0].message}`);
+      }
+
+    } catch (error) {
+      console.error('Erro ao confirmar carro guinchado:', error);
+      throw error;
+    }
+  };
+
+  const handleRequestTowMechanical = async (cardId: string, reason: string) => {
+    console.log('Solicitando guincho mecânico (mobile):', { cardId, reason });
+    
+    try {
+      const supabase = createClient();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Obter email do usuário logado
+      const { data: userData } = await supabase.auth.getUser();
+      const userEmail = userData.user?.email || 'usuário';
+
+      // Atualizar campo selecione_uma_op_o
+      const updateQuery = `
+        mutation {
+          updateFieldsValues(
+            input: {
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "selecione_uma_op_o"
+                  value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
+                }
+              ]
+            }
+          ) {
+            clientMutationId
+            success
+          }
+        }
+      `;
+
+      // Criar comentário
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "O ${userEmail} inseriu a seguinte observação no pedido do guincho: ${reason}"
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const [updateResponse, commentResponse] = await Promise.all([
+        fetch('https://api.pipefy.com/graphql', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: updateQuery }),
+        }),
+        fetch('https://api.pipefy.com/graphql', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: commentQuery }),
+        })
+      ]);
+
+      if (!updateResponse.ok || !commentResponse.ok) {
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const [updateResult, commentResult] = await Promise.all([
+        updateResponse.json(),
+        commentResponse.json()
+      ]);
+
+      if (updateResult.errors || commentResult.errors) {
+        throw new Error(`Erro do Pipefy: ${updateResult.errors?.[0]?.message || commentResult.errors?.[0]?.message}`);
+      }
+
+    } catch (error) {
+      console.error('Erro ao solicitar guincho mecânico:', error);
+      throw error;
+    }
+  };
 
   // Gestos de swipe
   const handleCardSwipe = (cardId: string, direction: 'left' | 'right') => {
@@ -468,6 +1497,14 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }}
           permissionType={permissionType}
           initialTab={initialModalTab}
+          onAllocateDriver={handleAllocateDriver}
+          onRejectCollection={handleRejectCollection}
+          onUnlockVehicle={handleUnlockVehicle}
+          onRequestTowing={handleRequestTowing}
+          onReportProblem={handleReportProblem}
+          onConfirmPatioDelivery={handleConfirmPatioDelivery}
+          onConfirmCarTowed={handleConfirmCarTowed}
+          onRequestTowMechanical={handleRequestTowMechanical}
         />
       )}
 

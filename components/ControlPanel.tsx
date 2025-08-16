@@ -22,7 +22,7 @@ export default function ControlPanel({
   permissionType,
   onOpenCalculator
 }: ControlPanelProps) {
-  const showCalculator = permissionType && ['kovi', 'onsystem', 'admin'].includes(permissionType.toLowerCase());
+  const showCalculator = permissionType && ['kovi', 'onsystem', 'rvs', 'admin'].includes(permissionType.toLowerCase());
 
   return (
     <div className="py-3 bg-white border-b border-gray-200 flex-shrink-0 shadow-sm">

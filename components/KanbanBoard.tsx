@@ -65,7 +65,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         query = query.in('phase_name', validPhases);
         
         // Aplicar filtros de permissão
-        if (permissionType === 'ativa' || permissionType === 'onsystem') {
+        if (permissionType === 'ativa' || permissionType === 'onsystem' || permissionType === 'rvs') {
           query = query.ilike('empresa_recolha', permissionType);
         } else if (permissionType === 'chofer') {
           // Para chofer, precisamos do email do usuário atual
@@ -1637,8 +1637,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                 </div>
                 
                 {/* Container da tabela com scroll moderno e fundo cinza */}
-                <div className="overflow-y-auto h-full scroll-container">
-                  <table className="w-full text-sm bg-white">
+                <div className="overflow-y-auto scroll-container" style={{ height: 'calc(100% - 4rem)' }}>
+                  <table className="w-full text-sm bg-white mb-4">
                     <thead className="sticky top-0 z-10 bg-gradient-to-r from-red-50/90 to-red-100/70 backdrop-blur-sm border-b border-red-200/50">
                       <tr className="text-[10px] font-bold text-red-700 uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>
                         <th className="px-4 py-2.5 text-left">
