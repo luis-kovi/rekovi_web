@@ -17,9 +17,12 @@ interface MobileTaskModalProps {
   onUnlockVehicle?: (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => Promise<void>
   onRequestTowing?: (cardId: string, phase: string, reason: string, photos: Record<string, File>) => Promise<void>
   onReportProblem?: (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => Promise<void>
+  onConfirmPatioDelivery?: (cardId: string, photos: Record<string, File>, expenses: string[], expenseValues: Record<string, string>, expenseReceipts: Record<string, File>) => Promise<void>
+  onConfirmCarTowed?: (cardId: string, photo: File, expenses: string[], expenseValues: Record<string, string>, expenseReceipts: Record<string, File>) => Promise<void>
+  onRequestTowMechanical?: (cardId: string, reason: string) => Promise<void>
 }
 
-export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem }: MobileTaskModalProps) {
+export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem, onConfirmPatioDelivery, onConfirmCarTowed, onRequestTowMechanical }: MobileTaskModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
 
   // Estados para os formulários
@@ -599,22 +602,41 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     setFeedback('Processando confirmação de entrega no pátio...');
     
     try {
-      console.log('Dados da entrega no pátio (mobile):', {
-        cardId: card.id,
-        photos: patioVehiclePhotos,
-        expenses: patioExtraExpenses,
-        expenseValues: patioExpenseValues,
-        expenseReceipts: patioExpenseReceipts
-      });
+      if (onConfirmPatioDelivery) {
+        // Filtrar apenas as fotos que foram realmente selecionadas
+        const selectedPhotos = Object.fromEntries(
+          Object.entries(patioVehiclePhotos).filter(([key, file]) => file !== null)
+        ) as Record<string, File>;
 
-      setFeedback('Entrega no pátio confirmada com sucesso!');
+        // Filtrar despesas selecionadas (exceto "naoHouve")
+        const selectedExpensesList = Object.entries(patioExtraExpenses)
+          .filter(([key, value]) => key !== 'naoHouve' && value)
+          .map(([key]) => key);
+
+        // Filtrar comprovantes apenas das despesas selecionadas
+        const selectedExpenseReceipts = Object.fromEntries(
+          Object.entries(patioExpenseReceipts).filter(([key, file]) => 
+            selectedExpensesList.includes(key) && file !== null
+          )
+        ) as Record<string, File>;
+
+        await onConfirmPatioDelivery(
+          card.id,
+          selectedPhotos,
+          selectedExpensesList,
+          patioExpenseValues,
+          selectedExpenseReceipts
+        );
+      }
+
+      setFeedback('Entrega no pátio confirmada com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowConfirmPatioDelivery(false);
         setFeedback('');
         resetPatioForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -643,22 +665,36 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     setFeedback('Processando confirmação de carro guinchado...');
     
     try {
-      console.log('Dados do carro guinchado (mobile):', {
-        cardId: card.id,
-        towPhoto: towedCarPhoto,
-        expenses: towedExtraExpenses,
-        expenseValues: towedExpenseValues,
-        expenseReceipts: towedExpenseReceipts
-      });
+      if (onConfirmCarTowed && towedCarPhoto) {
+        // Filtrar despesas selecionadas (exceto "naoHouve")
+        const selectedExpensesList = Object.entries(towedExtraExpenses)
+          .filter(([key, value]) => key !== 'naoHouve' && value)
+          .map(([key]) => key);
 
-      setFeedback('Carro guinchado confirmado com sucesso!');
+        // Filtrar comprovantes apenas das despesas selecionadas
+        const selectedExpenseReceipts = Object.fromEntries(
+          Object.entries(towedExpenseReceipts).filter(([key, file]) => 
+            selectedExpensesList.includes(key) && file !== null
+          )
+        ) as Record<string, File>;
+
+        await onConfirmCarTowed(
+          card.id,
+          towedCarPhoto,
+          selectedExpensesList,
+          towedExpenseValues,
+          selectedExpenseReceipts
+        );
+      }
+
+      setFeedback('Carro guinchado confirmado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowCarTowed(false);
         setFeedback('');
         resetTowedForm();
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
@@ -675,19 +711,18 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     setFeedback('Processando solicitação de guincho...');
     
     try {
-      console.log('Dados da solicitação de guincho mecânico (mobile):', {
-        cardId: card.id,
-        reason: mechanicalTowReason
-      });
+      if (onRequestTowMechanical) {
+        await onRequestTowMechanical(card.id, mechanicalTowReason);
+      }
 
-      setFeedback('Guincho solicitado com sucesso!');
+      setFeedback('Guincho solicitado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {
         setShowRequestTowMechanical(false);
         setFeedback('');
         setMechanicalTowReason('');
         setIsUpdating(false);
         onClose();
-      }, 2000);
+      }, 3000);
     } catch (error) {
       setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setIsUpdating(false);
