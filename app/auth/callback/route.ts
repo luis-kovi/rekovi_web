@@ -46,14 +46,27 @@ export async function GET(request: NextRequest) {
           },
           set(name: string, value: string, options) {
             try {
-              cookieStore.set({ name, value, ...options })
+              // Melhorar configurações de cookies para resolver problemas de primeira tentativa
+              const cookieOptions = {
+                ...options,
+                sameSite: 'lax' as const,
+                secure: process.env.NODE_ENV === 'production',
+                path: '/',
+              }
+              cookieStore.set({ name, value, ...cookieOptions })
             } catch (error) {
               console.error('⚠️ Erro ao definir cookie:', error)
             }
           },
           remove(name: string, options) {
             try {
-              cookieStore.set({ name, value: '', ...options })
+              const cookieOptions = {
+                ...options,
+                sameSite: 'lax' as const,
+                secure: process.env.NODE_ENV === 'production',
+                path: '/',
+              }
+              cookieStore.set({ name, value: '', ...cookieOptions })
             } catch (error) {
               console.error('⚠️ Erro ao remover cookie:', error)
             }
