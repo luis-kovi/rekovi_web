@@ -168,7 +168,7 @@ export default function SignIn() {
           <div className="flex flex-col items-center mb-6">
             <div className="mb-4 transform hover:scale-105 transition-transform duration-300">
               <img 
-                src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
+                src="/images/logos/kovi-logo.webp" 
                 alt="Logo Kovi" 
                 className="h-40 w-auto object-contain" 
                 style={{ aspectRatio: '406/130' }}
@@ -197,7 +197,7 @@ export default function SignIn() {
               ) : (
                 <>
                   <img 
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+                    src="/images/icons/google-logo.svg" 
                     alt="Google" 
                     className="h-4 w-4" 
                   />

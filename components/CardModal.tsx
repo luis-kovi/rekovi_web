@@ -1655,12 +1655,12 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                           {[
-                            { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
-                            { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
-                            { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
-                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
-                            { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
-                            { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                            { key: 'frente', label: 'Foto da Frente', image: '/images/placeholders/vehicle-front.webp' },
+                            { key: 'traseira', label: 'Foto da Traseira', image: '/images/placeholders/vehicle-rear.webp' },
+                            { key: 'lateralDireita', label: 'Lateral Direita', image: '/images/placeholders/vehicle-right.jpg' },
+                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: '/images/placeholders/vehicle-left.jpg' },
+                            { key: 'estepe', label: 'Foto do Estepe', image: '/images/placeholders/vehicle-spare.jpg' },
+                            { key: 'painel', label: 'Foto do Painel', image: '/images/placeholders/vehicle-dashboard.jpg' }
                           ].map((photo) => (
                             <div key={photo.key} className="space-y-2">
                               <label className="text-xs font-bold text-gray-700 block" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -1830,7 +1830,7 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                         <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
                           <div className="mb-3">
                             <img 
-                              src={getImageUrl(towedCarPhoto, "https://i.ibb.co/KxBvwbyz/Gemini-Generated-Image-8d4po88d4po88d4p.jpg")} 
+                              src={getImageUrl(towedCarPhoto, "/images/placeholders/vehicle-on-tow.jpg")} 
                               alt={towedCarPhoto ? "Foto do veículo no guincho" : "Formato esperado da imagem"}
                               className="w-full max-w-xs mx-auto rounded-lg shadow-sm"
                             />
@@ -2111,12 +2111,12 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                       {/* Fotos do Veículo */}
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
-                          { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
-                          { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
-                          { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
-                          { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
-                          { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                          { key: 'frente', label: 'Foto da Frente', image: '/images/placeholders/vehicle-front.webp' },
+                          { key: 'traseira', label: 'Foto da Traseira', image: '/images/placeholders/vehicle-rear.webp' },
+                          { key: 'lateralDireita', label: 'Lateral Direita', image: '/images/placeholders/vehicle-right.jpg' },
+                          { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: '/images/placeholders/vehicle-left.jpg' },
+                          { key: 'estepe', label: 'Foto do Estepe', image: '/images/placeholders/vehicle-spare.jpg' },
+                          { key: 'painel', label: 'Foto do Painel', image: '/images/placeholders/vehicle-dashboard.jpg' }
                         ].map((photo) => (
                           <div key={photo.key} className="space-y-2">
                             <label className="text-xs font-bold text-gray-700 block" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -2235,13 +2235,13 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                       {/* Fotos do Veículo para Guincho */}
                       <div className="grid grid-cols-2 gap-3">
                         {[
-                          { key: 'frente', label: 'Foto da Frente', image: 'https://i.ibb.co/tMqXPvs9/frente.png' },
-                          { key: 'traseira', label: 'Foto da Traseira', image: 'https://i.ibb.co/YTWw79s1/traseira.jpg' },
-                          { key: 'lateralDireita', label: 'Lateral Direita', image: 'https://i.ibb.co/mrDwHRn6/lateral-d.jpg' },
-                          { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: 'https://i.ibb.co/jZPXMq92/lateral-e.jpg' },
+                          { key: 'frente', label: 'Foto da Frente', image: '/images/placeholders/vehicle-front.webp' },
+                          { key: 'traseira', label: 'Foto da Traseira', image: '/images/placeholders/vehicle-rear.webp' },
+                          { key: 'lateralDireita', label: 'Lateral Direita', image: '/images/placeholders/vehicle-right.jpg' },
+                          { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: '/images/placeholders/vehicle-left.jpg' },
                           ...(towingReason !== 'Veículo na rua sem recuperação da chave' ? [
-                            { key: 'estepe', label: 'Foto do Estepe', image: 'https://i.ibb.co/Y4jmyW7v/estepe.jpg' },
-                            { key: 'painel', label: 'Foto do Painel', image: 'https://i.ibb.co/PGX4bNd8/painel.jpg' }
+                            { key: 'estepe', label: 'Foto do Estepe', image: '/images/placeholders/vehicle-spare.jpg' },
+                            { key: 'painel', label: 'Foto do Painel', image: '/images/placeholders/vehicle-dashboard.jpg' }
                           ] : [])
                         ].map((photo) => (
                           <div key={photo.key} className="space-y-2">

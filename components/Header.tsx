@@ -132,7 +132,7 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
         <div className="flex items-center">
           <div className="transform hover:scale-105 transition-transform duration-300">
             <img 
-              src="https://i.ibb.co/d4kbJGGY/rekovi-identity-updated-1-removebg-preview.png" 
+              src="/images/logos/kovi-logo.webp" 
               alt="Logo Kovi" 
               className="h-14 w-auto object-contain" 
               style={{ aspectRatio: '406/130' }}
