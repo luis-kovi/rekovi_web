@@ -3,10 +3,10 @@ const nextConfig = {
   // Configuração para melhor performance
   experimental: {
     // Manter configurações experimentais seguras
-    optimizePackageImports: ['@supabase/ssr'],
-    // Habilitar middleware Node.js para compatibilidade com Supabase
-    serverComponentsExternalPackages: ['@supabase/ssr', '@supabase/supabase-js']
+    optimizePackageImports: ['@supabase/ssr']
   },
+  // Configuração de pacotes externos para server components (movido do experimental)
+  serverExternalPackages: ['@supabase/supabase-js'],
   // Configuração de saída - remover standalone para Vercel
   // output: 'standalone', // Comentado para compatibilidade com Vercel
   // Configuração de trailing slash
