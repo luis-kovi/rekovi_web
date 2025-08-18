@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
     // Otimizar imports de pacotes específicos
     optimizePackageImports: ['@supabase/ssr']
   },
+  // Configuração de imagens
+  images: {
+    domains: [
+      'i.ibb.co',
+      'www.gstatic.com',
+      'lh3.googleusercontent.com', // Para avatares do Google
+    ],
+    formats: ['image/avif', 'image/webp'],
+  },
   // Configuração de trailing slash
   trailingSlash: false,
   // Habilitar verificação de tipos durante o build (recomendado)
