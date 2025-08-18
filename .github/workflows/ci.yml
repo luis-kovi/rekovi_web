@@ -3,9 +3,9 @@ name: CI
 # Trigger on push to main/master and pull requests
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
-    branches: [main, master]
+    branches: [main]
 
 # Cancel previous runs if a new one is triggered
 concurrency:

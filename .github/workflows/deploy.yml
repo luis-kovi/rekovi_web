@@ -3,12 +3,12 @@ name: Deploy to Vercel
 # Trigger only on push to main/master
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   workflow_run:
     workflows: ["CI"]
     types:
       - completed
-    branches: [main, master]
+    branches: [main]
 
 # Cancel previous deploys if a new one is triggered
 concurrency:
@@ -22,9 +22,8 @@ jobs:
     # Only deploy if CI passed or if it's a direct push
     if: |
       (github.event_name == 'push') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && !contains(github.event.head_commit.message, '[skip deploy]'))
     timeout-minutes: 15
-    # Skip deployment if commit message contains [skip ci] or [skip deploy]
 
     steps:
       - name: Checkout repository
