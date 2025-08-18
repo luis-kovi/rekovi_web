@@ -49,6 +49,8 @@ export interface DatabaseUser {
   nome?: string;
   empresa?: string;
   permission_type?: string;
+  status?: string;
+  area_atuacao?: string[];
 }
 
 export interface RealtimePayload {

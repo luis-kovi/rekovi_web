@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import { logger } from '@/utils/logger'
+import type { DatabaseUser } from '@/types'
 
 // Forçar renderização dinâmica para evitar pré-renderizado
 export const dynamic = 'force-dynamic'

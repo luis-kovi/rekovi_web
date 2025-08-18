@@ -7,6 +7,15 @@ import { createClient } from '@/utils/supabase/client'
 import { extractCityFromOrigin } from '@/utils/auth-validation'
 import { logger } from '@/utils/logger'
 
+interface PreApprovedUser {
+  nome: string
+  email: string
+  empresa: string
+  permission_type: string
+  status: string
+  area_atuacao: string[]
+}
+
 interface MobileTaskModalProps {
   card: Card
   isOpen: boolean
@@ -186,7 +195,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       }
 
       // Filtrar por área de atuação e excluir o chofer atual
-      const filteredChofers = users.filter(user => {
+      const filteredChofers = users.filter((user: PreApprovedUser) => {
         // Excluir chofer atual (comparar por email se disponível, senão por nome)
         const isCurrentChofer = user.email === card.emailChofer || 
                                user.nome?.toLowerCase() === card.chofer?.toLowerCase();
@@ -204,7 +213,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       });
 
       // Mapear para o formato esperado
-      const choferOptions = filteredChofers.map(user => ({
+      const choferOptions = filteredChofers.map((user: PreApprovedUser) => ({
         name: user.nome || user.email.split('@')[0],
         email: user.email
       }));

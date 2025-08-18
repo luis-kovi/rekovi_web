@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import type { Card } from '@/types'
+import type { Card, RealtimePayload } from '@/types'
 import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
 import MobileFilterPanel from './MobileFilterPanel'
@@ -142,7 +142,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           schema: 'public',
           table: 'v_pipefy_cards_detalhada'
         },
-        (payload) => {
+        (payload: RealtimePayload) => {
           logger.log('Mudança detectada no Supabase (mobile):', payload);
           // Atualizar dados quando houver mudanças
           fetchUpdatedData();

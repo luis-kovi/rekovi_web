@@ -8,7 +8,7 @@ import CardComponent from './Card'
 import CardModal from './CardModal'
 import LoadingIndicator from './LoadingIndicator'
 import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabledPhaseMessages, formatPersonName, formatDate } from '@/utils/helpers'
-import type { Card, CardWithSLA } from '@/types'
+import type { Card, CardWithSLA, RealtimePayload } from '@/types'
 import { logger } from '@/utils/logger'
 
 interface KanbanBoardProps {
@@ -148,7 +148,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           schema: 'public',
           table: 'v_pipefy_cards_detalhada'
         },
-        (payload) => {
+        (payload: RealtimePayload) => {
           logger.log('Mudança detectada no Supabase:', payload);
           // Atualizar dados quando houver mudanças
           fetchUpdatedData();
