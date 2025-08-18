@@ -82,9 +82,11 @@ A aplicação agora possui um sistema de autenticação completo:
 - Os erros são tratados de forma mais robusta
 - A configuração de build foi otimizada para segurança
 
+
+
 ## 🚨 Antes do Deploy
 
 1. Configure as variáveis de ambiente no Vercel
 2. Verifique se o Supabase está configurado corretamente
 3. Teste o fluxo de autenticação localmente
-4. Execute `npm run build` para verificar se não há erros.
+4. Execute `npm run build` para verificar se não há erros

@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import type { Card, RealtimePayload } from '@/types'
+import type { Card } from '@/types'
+import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
 import MobileFilterPanel from './MobileFilterPanel'
@@ -1154,7 +1155,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       const response = await fetch('https://api.pipefy.com/graphql', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+          ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query: updateQuery }),
@@ -1266,7 +1267,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       const response = await fetch('https://api.pipefy.com/graphql', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+          ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ query: updateQuery }),
@@ -1348,7 +1349,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         fetch('https://api.pipefy.com/graphql', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+            ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query: updateQuery }),
@@ -1356,7 +1357,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         fetch('https://api.pipefy.com/graphql', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}`,
+            ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ query: commentQuery }),

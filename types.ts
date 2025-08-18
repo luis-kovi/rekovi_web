@@ -1,6 +1,6 @@
 // types.ts
 import type { Database } from './types/database.types'
-import type { CardView } from './types/supabase'
+import type { CardView, CardRealtimePayload } from './types/supabase'
 
 export interface Card {
   id: string;
@@ -55,4 +55,5 @@ export interface DatabaseUser {
   area_atuacao?: string[];
 }
 
-// RealtimePayload foi movido para types/supabase.ts com tipagem correta do SDK
+// Export RealtimePayload from supabase types
+export type { CardRealtimePayload as RealtimePayload } from './types/supabase'

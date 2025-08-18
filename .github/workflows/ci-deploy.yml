@@ -18,7 +18,7 @@ jobs:
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     outputs:
       should_deploy: ${{ steps.check.outputs.should_deploy }}
 
@@ -34,6 +34,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run type checking
+        run: npm run type-check
 
       - name: Run ESLint
         run: npm run lint

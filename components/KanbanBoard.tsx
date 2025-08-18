@@ -8,7 +8,8 @@ import CardComponent from './Card'
 import CardModal from './CardModal'
 import LoadingIndicator from './LoadingIndicator'
 import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabledPhaseMessages, formatPersonName, formatDate } from '@/utils/helpers'
-import type { Card, CardWithSLA, RealtimePayload } from '@/types'
+import type { Card, CardWithSLA } from '@/types'
+import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import { logger } from '@/utils/logger'
 
 interface KanbanBoardProps {
