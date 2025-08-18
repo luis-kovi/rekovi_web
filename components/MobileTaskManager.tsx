@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import type { Card, RealtimePayload } from '@/types'
+import type { Card } from '@/types'
+import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
 import MobileFilterPanel from './MobileFilterPanel'
