@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/utils/logger'
 
 export default function LogoutButton() {
   const router = useRouter()
@@ -16,12 +17,12 @@ export default function LogoutButton() {
       const { error } = await supabase.auth.signOut()
       
       if (error) {
-        console.error('Error signing out:', error)
+        logger.error('Error signing out:', error)
       } else {
         router.push('/auth/signin')
       }
     } catch (err) {
-      console.error('Error during logout:', err)
+      logger.error('Error during logout:', err)
     }
   }
 

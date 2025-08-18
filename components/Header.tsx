@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
+import { logger } from '@/utils/logger'
 
 interface HeaderProps {
   user: any
@@ -28,12 +29,12 @@ export default function Header({ user, permissionType, isUpdating = false }: Hea
       .channel('connection-status')
       .on('system', { event: 'disconnect' }, () => {
         setIsConnected(false)
-        console.log('Conexão perdida com Supabase')
+        logger.log('Conexão perdida com Supabase')
       })
       .on('system', { event: 'reconnect' }, () => {
         setIsConnected(true)
         setLastUpdate(new Date())
-        console.log('Reconectado ao Supabase')
+        logger.log('Reconectado ao Supabase')
       })
       .subscribe()
 

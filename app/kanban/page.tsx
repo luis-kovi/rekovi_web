@@ -5,6 +5,7 @@ import KanbanWrapper from '@/components/KanbanWrapper'
 import { getUserDataServer } from '@/utils/user-data-server'
 import { filterCardsByPermissionsImproved } from '@/utils/auth-validation'
 import type { Card } from '@/types'
+import { logger } from '@/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,7 @@ export default async function KanbanPage() {
   const supabase = await createClient()
   
   if (!supabase) {
-    console.error('Supabase client not available')
+    logger.error('Supabase client not available')
     return redirect('/')
   }
 
@@ -63,7 +64,7 @@ export default async function KanbanPage() {
   const { data: cardsData, error } = await query;
   
   if (error) {
-    console.error('Erro ao buscar os cards:', error)
+    logger.error('Erro ao buscar os cards:', error)
   }
   
   // Converter dados para formato Card
@@ -92,9 +93,9 @@ export default async function KanbanPage() {
   // Aplicar filtros baseados nas permissões da tabela pre_approved_users
   const filteredCards = filterCardsByPermissionsImproved(allCards, userData);
 
-  console.log('Debug - User Data:', userData);
-  console.log('Debug - Total cards before filter:', allCards.length);
-  console.log('Debug - Total cards after filter:', filteredCards.length);
+  logger.log('Debug - User Data:', userData);
+  logger.log('Debug - Total cards before filter:', allCards.length);
+  logger.log('Debug - Total cards after filter:', filteredCards.length);
 
   return (
     <KanbanWrapper 

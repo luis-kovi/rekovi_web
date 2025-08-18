@@ -8,7 +8,8 @@ import CardComponent from './Card'
 import CardModal from './CardModal'
 import LoadingIndicator from './LoadingIndicator'
 import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabledPhaseMessages, formatPersonName, formatDate } from '@/utils/helpers'
-import type { Card, CardWithSLA } from '@/types'
+import type { Card, CardWithSLA, RealtimePayload } from '@/types'
+import { logger } from '@/utils/logger'
 
 interface KanbanBoardProps {
   initialCards: Card[]
@@ -80,7 +81,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         const { data: cardsData, error } = await query;
         
         if (error) {
-          console.error('Erro ao buscar dados atualizados:', error);
+          logger.error('Erro ao buscar dados atualizados:', error);
           return;
         }
 
@@ -117,7 +118,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           });
 
           setCards(updatedCards);
-          console.log('Dados atualizados via real-time:', updatedCards.length, 'cards');
+          logger.log('Dados atualizados via real-time:', updatedCards.length, 'cards');
 
           // Restaurar posições de scroll após a atualização
           setTimeout(() => {
@@ -130,7 +131,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           }, 0);
         }
       } catch (error) {
-        console.error('Erro ao buscar dados atualizados:', error);
+        logger.error('Erro ao buscar dados atualizados:', error);
       } finally {
         setIsUpdating(false);
         onUpdateStatus?.(false);
@@ -147,8 +148,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           schema: 'public',
           table: 'v_pipefy_cards_detalhada'
         },
-        (payload) => {
-          console.log('Mudança detectada no Supabase:', payload);
+        (payload: RealtimePayload) => {
+          logger.log('Mudança detectada no Supabase:', payload);
           // Atualizar dados quando houver mudanças
           fetchUpdatedData();
         }
@@ -170,9 +171,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
   // Atualizar cards quando initialCards mudar (fallback)
   useEffect(() => {
-    console.log('Debug - Initial Cards:', initialCards);
-    console.log('Debug - Cards Count:', initialCards.length);
-    console.log('Debug - Permission Type:', permissionType);
+    logger.log('Debug - Initial Cards:', initialCards);
+    logger.log('Debug - Cards Count:', initialCards.length);
+    logger.log('Debug - Permission Type:', permissionType);
     setCards(initialCards);
   }, [initialCards, permissionType]);
 
@@ -181,8 +182,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     let permissionFilteredCards = [];
     const pType = permissionType?.toLowerCase();
     
-    console.log('Debug - Filtering cards. Total cards:', cards.length);
-    console.log('Debug - Permission type:', pType);
+    logger.log('Debug - Filtering cards. Total cards:', cards.length);
+    logger.log('Debug - Permission type:', pType);
     
     switch (pType) {
       case 'ativa':
@@ -202,8 +203,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         break;
     }
     
-    console.log('Debug - After permission filter:', permissionFilteredCards.length);
-    console.log('Debug - Sample card phases:', permissionFilteredCards.slice(0, 5).map(c => c.faseAtual));
+    logger.log('Debug - After permission filter:', permissionFilteredCards.length);
+    logger.log('Debug - Sample card phases:', permissionFilteredCards.slice(0, 5).map(c => c.faseAtual));
 
     // Aplicar SLA e calcular SLA para cada card
     const cardsWithSLA = permissionFilteredCards.map(card => {
@@ -243,8 +244,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     const phaseMap: { [key: string]: CardWithSLA[] } = {};
     let phaseOrderToRender = fixedPhaseOrder;
     
-    console.log('Debug - Fixed phase order:', fixedPhaseOrder);
-    console.log('Debug - Filtered cards count:', filteredCards.length);
+    logger.log('Debug - Fixed phase order:', fixedPhaseOrder);
+    logger.log('Debug - Filtered cards count:', filteredCards.length);
     
     // Filtrar fases para chofer
     if (permissionType === 'chofer') {
@@ -257,14 +258,14 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       if (phaseMap[card.faseAtual]) phaseMap[card.faseAtual].push(card) 
     });
     
-    console.log('Debug - Phases with cards:', Object.keys(phaseMap).filter(phase => phaseMap[phase].length > 0));
-    console.log('Debug - Cards per phase:', Object.entries(phaseMap).map(([phase, cards]) => `${phase}: ${cards.length}`));
+    logger.log('Debug - Phases with cards:', Object.keys(phaseMap).filter(phase => phaseMap[phase].length > 0));
+    logger.log('Debug - Cards per phase:', Object.entries(phaseMap).map(([phase, cards]) => `${phase}: ${cards.length}`));
     
     return phaseMap;
   }, [filteredCards, permissionType]);
 
   const handleUpdateChofer = async (cardId: string, newName: string, newEmail: string) => {
-    console.log('Atualizando chofer:', { cardId, newName, newEmail });
+    logger.log('Atualizando chofer:', { cardId, newName, newEmail });
     
     try {
       const supabase = createClient();
@@ -326,7 +327,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error(result.error);
       }
 
-      console.log('Chofer atualizado com sucesso no Pipefy:', result);
+      logger.log('Chofer atualizado com sucesso no Pipefy:', result);
       
       // Atualizar o estado local do card para refletir a mudança imediatamente
       setCards(prevCards => 
@@ -338,13 +339,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       );
       
     } catch (error) {
-      console.error('Erro ao atualizar chofer:', error);
+      logger.error('Erro ao atualizar chofer:', error);
       throw error; // Re-throw para que o CardModal possa exibir o erro
     }
   };
 
   const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
-    console.log('Alocando chofer:', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
+    logger.log('Alocando chofer:', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
     
     try {
       const supabase = createClient();
@@ -461,7 +462,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         })
       });
 
-      console.log('Chofer alocado com sucesso no Pipefy');
+      logger.log('Chofer alocado com sucesso no Pipefy');
       
       // Atualizar o estado local do card
       setCards(prevCards => 
@@ -473,13 +474,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       );
       
     } catch (error) {
-      console.error('Erro ao alocar chofer:', error);
+      logger.error('Erro ao alocar chofer:', error);
       throw error;
     }
   };
 
   const handleRejectCollection = async (cardId: string, reason: string, observations: string) => {
-    console.log('Rejeitando recolha:', { cardId, reason, observations });
+    logger.log('Rejeitando recolha:', { cardId, reason, observations });
     
     try {
       const supabase = createClient();
@@ -569,10 +570,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         })
       });
 
-      console.log('Recolha rejeitada com sucesso no Pipefy');
+      logger.log('Recolha rejeitada com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao rejeitar recolha:', error);
+      logger.error('Erro ao rejeitar recolha:', error);
       throw error;
     }
   };
@@ -606,7 +607,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         contentType: file.type
       };
 
-      console.log('Enviando query para presigned URL:', presignedQuery);
+      logger.log('Enviando query para presigned URL:', presignedQuery);
 
       const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
         method: 'POST',
@@ -622,23 +623,23 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       if (!presignedResponse.ok) {
         const errorText = await presignedResponse.text();
-        console.error('Erro na resposta presigned:', errorText);
+        logger.error('Erro na resposta presigned:', errorText);
         throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
       }
 
       const presignedData = await presignedResponse.json();
-      console.log('Resposta completa presigned URL:', presignedData);
+      logger.log('Resposta completa presigned URL:', presignedData);
 
       // Verificar se há erros na resposta
       if (presignedData.errors && presignedData.errors.length > 0) {
-        console.error('Erros da API Pipefy:', presignedData.errors);
+        logger.error('Erros da API Pipefy:', presignedData.errors);
         const errorMessages = presignedData.errors.map((error: any) => error.message).join(', ');
         throw new Error(`Erro na API Pipefy: ${errorMessages}`);
       }
 
       // Verificar se a resposta tem a estrutura esperada
       if (!presignedData?.data?.createPresignedUrl) {
-        console.error('Estrutura de resposta inválida:', presignedData);
+        logger.error('Estrutura de resposta inválida:', presignedData);
         throw new Error('Resposta inválida da API de presigned URL');
       }
 
@@ -648,7 +649,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('URLs de upload/download não fornecidas');
       }
 
-      console.log('URLs obtidas:', { uploadUrl, downloadUrl });
+      logger.log('URLs obtidas:', { uploadUrl, downloadUrl });
 
       // Passo 2: Upload da imagem
       const uploadResponse = await fetch(uploadUrl, {
@@ -661,11 +662,11 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       if (!uploadResponse.ok) {
         const errorText = await uploadResponse.text();
-        console.error('Erro no upload:', errorText);
+        logger.error('Erro no upload:', errorText);
         throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status}`);
       }
 
-      console.log('Upload realizado com sucesso');
+      logger.log('Upload realizado com sucesso');
 
       // Passo 3: Atualizar campo no card com o path do arquivo
       // Extrair o path do arquivo da downloadUrl
@@ -674,7 +675,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const organizationId = "870bddf7-6ce7-4b9d-81d8-9087f1c10ae2"; // ID da organização
       const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
       
-      console.log('Path do arquivo:', fullPath);
+      logger.log('Path do arquivo:', fullPath);
 
       const updateFieldQuery = `
         mutation {
@@ -691,7 +692,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         }
       `;
 
-      console.log('Atualizando campo com URL:', updateFieldQuery);
+      logger.log('Atualizando campo com URL:', updateFieldQuery);
 
       const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
         method: 'POST',
@@ -704,24 +705,24 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       if (!updateResponse.ok) {
         const errorText = await updateResponse.text();
-        console.error('Erro ao atualizar campo:', errorText);
+        logger.error('Erro ao atualizar campo:', errorText);
         throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status}`);
       }
 
       const updateData = await updateResponse.json();
-      console.log('Resposta updateCardField completa:', updateData);
+      logger.log('Resposta updateCardField completa:', updateData);
 
       // Verificar se há erros na atualização do campo
       if (updateData.errors && updateData.errors.length > 0) {
-        console.error('Erros ao atualizar campo:', updateData.errors);
+        logger.error('Erros ao atualizar campo:', updateData.errors);
         const errorMessages = updateData.errors.map((error: any) => error.message).join(', ');
         throw new Error(`Erro ao atualizar campo ${fieldId}: ${errorMessages}`);
       }
 
-      console.log('Campo atualizado com sucesso:', updateData);
+      logger.log('Campo atualizado com sucesso:', updateData);
       return downloadUrl;
     } catch (error) {
-      console.error('Erro no upload da imagem:', error);
+      logger.error('Erro no upload da imagem:', error);
       throw error;
     }
   };
@@ -806,7 +807,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   };
 
   const handleUnlockVehicle = async (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => {
-    console.log('Desbloqueando veículo:', { cardId, phase, photos, observations });
+    logger.log('Desbloqueando veículo:', { cardId, phase, photos, observations });
     
     try {
       const supabase = createClient();
@@ -893,16 +894,16 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         });
       }
 
-      console.log('Veículo desbloqueado com sucesso no Pipefy');
+      logger.log('Veículo desbloqueado com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao desbloquear veículo:', error);
+      logger.error('Erro ao desbloquear veículo:', error);
       throw error;
     }
   };
 
   const handleRequestTowing = async (cardId: string, phase: string, reason: string, photos: Record<string, File>) => {
-    console.log('Solicitando guincho:', { cardId, phase, reason, photos });
+    logger.log('Solicitando guincho:', { cardId, phase, reason, photos });
     
     try {
       const supabase = createClient();
@@ -962,16 +963,16 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         body: JSON.stringify({ query: updateQuery })
       });
 
-      console.log('Guincho solicitado com sucesso no Pipefy');
+      logger.log('Guincho solicitado com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao solicitar guincho:', error);
+      logger.error('Erro ao solicitar guincho:', error);
       throw error;
     }
   };
 
   const handleReportProblem = async (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => {
-    console.log('Reportando problema:', { cardId, phase, difficulty, evidences });
+    logger.log('Reportando problema:', { cardId, phase, difficulty, evidences });
     
     try {
       const supabase = createClient();
@@ -1027,10 +1028,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         body: JSON.stringify({ query: updateQuery })
       });
 
-      console.log('Problema reportado com sucesso no Pipefy');
+      logger.log('Problema reportado com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao reportar problema:', error);
+      logger.error('Erro ao reportar problema:', error);
       throw error;
     }
   };
@@ -1043,7 +1044,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     expenseValues: Record<string, string>,
     expenseReceipts: Record<string, File>
   ) => {
-    console.log('Confirmando entrega no pátio:', { cardId, photos, expenses, expenseValues, expenseReceipts });
+    logger.log('Confirmando entrega no pátio:', { cardId, photos, expenses, expenseValues, expenseReceipts });
     
     try {
       const supabase = createClient();
@@ -1150,10 +1151,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         body: JSON.stringify({ query: updateQuery })
       });
 
-      console.log('Entrega no pátio confirmada com sucesso no Pipefy');
+      logger.log('Entrega no pátio confirmada com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao confirmar entrega no pátio:', error);
+      logger.error('Erro ao confirmar entrega no pátio:', error);
       throw error;
     }
   };
@@ -1165,7 +1166,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     expenseValues: Record<string, string>,
     expenseReceipts: Record<string, File>
   ) => {
-    console.log('Confirmando carro guinchado:', { cardId, photo, expenses, expenseValues, expenseReceipts });
+    logger.log('Confirmando carro guinchado:', { cardId, photo, expenses, expenseValues, expenseReceipts });
     
     try {
       const supabase = createClient();
@@ -1256,16 +1257,16 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         body: JSON.stringify({ query: updateQuery })
       });
 
-      console.log('Carro guinchado confirmado com sucesso no Pipefy');
+      logger.log('Carro guinchado confirmado com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao confirmar carro guinchado:', error);
+      logger.error('Erro ao confirmar carro guinchado:', error);
       throw error;
     }
   };
 
   const handleRequestTowMechanical = async (cardId: string, reason: string) => {
-    console.log('Solicitando guincho mecânico:', { cardId, reason });
+    logger.log('Solicitando guincho mecânico:', { cardId, reason });
     
     try {
       const supabase = createClient();
@@ -1343,10 +1344,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         })
       ]);
 
-      console.log('Guincho mecânico solicitado com sucesso no Pipefy');
+      logger.log('Guincho mecânico solicitado com sucesso no Pipefy');
       
     } catch (error) {
-      console.error('Erro ao solicitar guincho mecânico:', error);
+      logger.error('Erro ao solicitar guincho mecânico:', error);
       throw error;
     }
   };

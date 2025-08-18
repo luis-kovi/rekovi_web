@@ -1,6 +1,7 @@
 // utils/supabase/server.ts
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { logger } from '@/utils/logger'
 
 export async function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -40,7 +41,7 @@ export async function createClient() {
       }
     )
   } catch (error) {
-    console.warn('Error creating Supabase client:', error)
+    logger.warn('Error creating Supabase client:', error)
     return null as any
   }
 }
