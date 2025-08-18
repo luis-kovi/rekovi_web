@@ -3,9 +3,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { getRedirectRoute } from '@/utils/helpers'
 
 export async function middleware(request: NextRequest) {
-  // Excluir explicitamente o callback de autenticação para evitar interferências
-  if (request.nextUrl.pathname === '/auth/callback') {
-    console.log('🔄 Middleware: Permitindo callback de autenticação')
+  // Excluir explicitamente os callbacks de autenticação para evitar interferências
+  if (request.nextUrl.pathname === '/auth/callback' || 
+      request.nextUrl.pathname === '/auth/callback-v2' ||
+      request.nextUrl.pathname === '/auth/force-refresh') {
+    console.log('🔄 Middleware: Permitindo callback/refresh de autenticação')
     return NextResponse.next()
   }
 
