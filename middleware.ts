@@ -1,5 +1,6 @@
 // middleware.ts
 import { NextResponse, type NextRequest } from 'next/server'
+import { checkRateLimit } from '@/utils/rate-limiter'
 
 // Função helper para detectar dispositivo móvel
 function isMobileDevice(userAgent: string): boolean {
@@ -35,6 +36,36 @@ function hasSupabaseSession(request: NextRequest): boolean {
   return !!(authToken || accessToken || hasSessionCookie)
 }
 
+// Função assíncrona para validar sessão com o servidor Supabase
+async function validateSupabaseSession(request: NextRequest): Promise<boolean> {
+  try {
+    // Importar createServerClient dinamicamente para evitar problemas no Edge Runtime
+    const { createServerClient } = await import('@supabase/ssr')
+    const { cookies } = await import('next/headers')
+    
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set() {},
+          remove() {}
+        }
+      }
+    )
+    
+    const { data: { session }, error } = await supabase.auth.getSession()
+    return !error && !!session
+  } catch {
+    // Em caso de erro, verificar apenas os cookies como fallback
+    return hasSupabaseSession(request)
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
@@ -44,8 +75,56 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  const hasSession = hasSupabaseSession(request)
+  // Aplicar rate limiting em rotas de autenticação
+  const authRoutesForRateLimit = ['/auth/signin', '/auth/signup']
+  const isAuthRouteForRateLimit = authRoutesForRateLimit.some(route => pathname.startsWith(route))
+  
+  if (isAuthRouteForRateLimit && request.method === 'POST') {
+    const rateLimitResult = checkRateLimit(request, pathname)
+    
+    if (!rateLimitResult.allowed) {
+      const response = new NextResponse(
+        JSON.stringify({
+          error: 'Too many requests',
+          message: 'Você excedeu o limite de tentativas. Por favor, tente novamente mais tarde.',
+          blockedUntil: rateLimitResult.blockedUntil,
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitResult.blockedUntil?.toString() || '',
+            'Retry-After': rateLimitResult.blockedUntil 
+              ? Math.ceil((rateLimitResult.blockedUntil - Date.now()) / 1000).toString()
+              : '1800',
+          },
+        }
+      )
+      return response
+    }
+  }
+
   const userAgent = request.headers.get('user-agent') || ''
+  
+  // Para rotas protegidas, fazer validação completa da sessão
+  const protectedRoutes = ['/kanban', '/mobile', '/settings', '/']
+  const isProtectedRoute = protectedRoutes.some(route => pathname === route || (route !== '/' && pathname.startsWith(route)))
+  
+  // Para rotas de autenticação, verificar apenas cookies para melhor performance
+  const authRoutes = ['/auth/signin', '/auth/signup']
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
+  
+  let hasSession = false
+  
+  // Para rotas protegidas, validar sessão com o servidor
+  if (isProtectedRoute || pathname === '/') {
+    hasSession = await validateSupabaseSession(request)
+  } else {
+    // Para outras rotas, verificar apenas cookies
+    hasSession = hasSupabaseSession(request)
+  }
 
   // Redirecionar rota raiz (/) baseado na autenticação
   if (pathname === '/') {
@@ -56,18 +135,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(redirectRoute, request.url))
   }
 
-  // Rotas que requerem autenticação
-  const protectedRoutes = ['/kanban', '/mobile', '/settings']
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-
+  // Proteger rotas que requerem autenticação
   if (isProtectedRoute && !hasSession) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
-  // Rotas de autenticação - redirecionar se já autenticado
-  const authRoutes = ['/auth/signin', '/auth/signup']
-  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
-
+  // Redirecionar de rotas de auth se já autenticado
   if (isAuthRoute && hasSession) {
     const redirectRoute = getRedirectRoute(userAgent)
     return NextResponse.redirect(new URL(redirectRoute, request.url))
