@@ -91,7 +91,7 @@ export default function ChangeDriverForm({ cardId, localOrigem, onClose, onUpdat
             value={selectedChofer}
             onChange={(e) => {
               setSelectedChofer(e.target.value)
-              const selected = availableChofers.find(c => c.nome === e.target.value)
+              const selected = availableChofers.find(c => c.name === e.target.value)
               setChoferEmail(selected?.email || '')
             }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -99,8 +99,8 @@ export default function ChangeDriverForm({ cardId, localOrigem, onClose, onUpdat
           >
             <option value="">Selecione um chofer</option>
             {availableChofers.map((chofer) => (
-              <option key={chofer.email} value={chofer.nome}>
-                {chofer.nome}
+              <option key={chofer.email} value={chofer.name}>
+                {chofer.name}
               </option>
             ))}
           </select>

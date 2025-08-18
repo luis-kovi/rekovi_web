@@ -38,7 +38,7 @@ export default function CardModalHeader({ card, onClose, copiedPlate, onCopyPlat
         </h2>
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium text-gray-600">
-            Fase: {phaseDisplayNames[card.phase]}
+            Fase: {card.phase ? phaseDisplayNames[card.phase] : 'Não definida'}
           </span>
           <span className={`text-sm ${slaInfo.className}`}>
             {slaInfo.message}

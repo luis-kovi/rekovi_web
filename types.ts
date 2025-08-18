@@ -27,7 +27,36 @@ export interface Card {
 
 export type CardWithSLA = Card & { 
   sla: number; 
-  slaText: 'No Prazo' | 'Em Alerta' | 'Atrasado'; 
+  slaText: 'No Prazo' | 'Em Alerta' | 'Atrasado';
+  // Campos adicionais do card_details
+  tipo?: string;
+  chassi?: string;
+  local_origem?: string;
+  destino?: string;
+  motorista?: string;
+  email_motorista?: string;
+  cpf_motorista?: string;
+  telefone_motorista?: string;
+  operador_recolha?: string;
+  email_operador_recolha?: string;
+  estado_cartao?: string;
+  numero_card?: string;
+  phase?: string;
+  sla_status?: 'on_time' | 'warning' | 'critical' | 'missed';
+  sla_end_time?: string;
+  created_at?: string;
+  updated_at?: string;
+  // Campos de status
+  recusa_recolha?: boolean;
+  motivo_recusa?: string;
+  observacoes_recusa?: string;
+  tentativa_recolha?: boolean;
+  status_tentativa?: string;
+  motivo_guincho?: string;
+  tipo_dificuldade?: string;
+  guincho_confirmado?: boolean;
+  veiculo_no_patio?: boolean;
+  despesas?: string[];
 }
 
 export interface User {
