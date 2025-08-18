@@ -9,7 +9,6 @@ import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
 import MobileFilterPanel from './MobileFilterPanel'
 import { logger } from '@/utils/logger'
-import { pipefyClient } from '@/utils/pipefy-client'
 
 interface MobileTaskManagerProps {
   initialCards: Card[]
