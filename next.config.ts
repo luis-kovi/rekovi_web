@@ -1,14 +1,11 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
   // Configuração para melhor performance
   experimental: {
-    // Manter configurações experimentais seguras
+    // Otimizar imports de pacotes específicos
     optimizePackageImports: ['@supabase/ssr']
   },
-  // Configuração de pacotes externos para server components (movido do experimental)
-  serverExternalPackages: ['@supabase/supabase-js'],
-  // Configuração de saída - remover standalone para Vercel
-  // output: 'standalone', // Comentado para compatibilidade com Vercel
   // Configuração de trailing slash
   trailingSlash: false,
   // Habilitar verificação de tipos durante o build (recomendado)
@@ -40,6 +37,21 @@ const nextConfig = {
         ]
       }
     ]
+  },
+  // Webpack configuration para resolver o problema do Edge Runtime
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Configuração para o cliente
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      }
+    }
+    
+    return config
   }
 }
 

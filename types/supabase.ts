@@ -1,5 +1,4 @@
 // types/supabase.ts
-import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { Database } from './database.types'
 
 // Type for the card view
@@ -8,8 +7,16 @@ export type CardView = Database['public']['Views']['v_pipefy_cards_detalhada']['
 // Type for pre-approved users
 export type PreApprovedUser = Database['public']['Tables']['pre_approved_users']['Row']
 
-// Realtime payload types
-export type CardRealtimePayload = RealtimePostgresChangesPayload<CardView>
+// Realtime payload types - definindo manualmente sem importar do supabase-js
+export interface CardRealtimePayload<T = CardView> {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE'
+  new: T
+  old: T
+  errors: string[] | null
+  schema: string
+  table: string
+  commit_timestamp: string
+}
 
 // Realtime events
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*'
