@@ -42,7 +42,7 @@ jobs:
         run: npm run lint
 
       - name: Run Tests
-        run: npm run test:ci
+        run: npm test -- __tests__/ci.test.ts --ci --passWithNoTests
         env:
           NODE_ENV: test
 

@@ -1,5 +1,5 @@
-// jest.setup.ts
-import '@testing-library/jest-dom'
+// jest.setup.js
+require('@testing-library/jest-dom')
 
 // Mock do Next.js router
 jest.mock('next/navigation', () => ({
@@ -24,7 +24,7 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Mock do Supabase client
-jest.mock('@/utils/supabase/client', () => ({
+jest.mock('./utils/supabase/client', () => ({
   createClient: jest.fn(() => ({
     auth: {
       getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
@@ -54,8 +54,8 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
@@ -65,7 +65,7 @@ Object.defineProperty(window, 'matchMedia', {
 // Suppress console errors durante os testes
 const originalError = console.error
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args) => {
     if (
       typeof args[0] === 'string' &&
       args[0].includes('Warning: ReactDOM.render')
