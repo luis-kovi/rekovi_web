@@ -1,25 +1,21 @@
 const nextJest = require('next/jest')
 
-const createJestConfig = nextJest({
-  // Provide the path to your Next.js app to load next.config.js and .env files in your test environment
-  dir: './',
-})
+// Providing the path to your Next.js app which will enable loading next.config.js and .env files
+const createJestConfig = nextJest({ dir: './' })
 
-// Add any custom config to be passed to Jest
+// Any custom config you want to pass to Jest
 const customJestConfig = {
-  // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
-  
-  // Test environment
-  testEnvironment: 'jest-environment-jsdom',
-  
-  // Module name mapper for path aliases
+  testEnvironment: 'jsdom',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
-  
-  // Coverage configuration
-  coverageDirectory: 'coverage',
+  testPathIgnorePatterns: ['/node_modules/', '/.next/'],
+  transformIgnorePatterns: [
+    '/node_modules/',
+    '^.+\\.module\\.(css|sass|scss)$',
+  ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     'components/**/*.{js,jsx,ts,tsx}',
@@ -30,18 +26,15 @@ const customJestConfig = {
     '!**/coverage/**',
     '!**/types/**',
   ],
-  
-  // Test match patterns
-  testMatch: [
-    '**/__tests__/**/*.(test|spec).(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)'
-  ],
-  
-  // Transform ignore patterns
-  transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$))'
-  ],
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
+  },
 }
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
+// createJestConfig is exported in this way to ensure that next/jest can load the Next.js configuration, which is async
 module.exports = createJestConfig(customJestConfig)
