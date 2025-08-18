@@ -5,8 +5,8 @@ const nextConfig = {
     // Manter configurações experimentais seguras
     optimizePackageImports: ['@supabase/ssr']
   },
-  // Configuração de saída
-  output: 'standalone',
+  // Configuração de saída - remover standalone para Vercel
+  // output: 'standalone', // Comentado para compatibilidade com Vercel
   // Configuração de trailing slash
   trailingSlash: false,
   // Habilitar verificação de tipos durante o build (recomendado)
