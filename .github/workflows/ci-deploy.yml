@@ -14,11 +14,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # CI job - runs linting and build
+  # CI job - runs linting, tests and build
   ci:
     name: CI Pipeline
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     outputs:
       should_deploy: ${{ steps.check.outputs.should_deploy }}
 
@@ -35,8 +35,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run type checking
+        run: npm run type-check
+
       - name: Run ESLint
         run: npm run lint
+
+      - name: Run Tests
+        run: npm run test:ci
+        env:
+          NODE_ENV: test
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
       - name: Build application
         run: npm run build
