@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Gestão de Recolhas - Kovi",
   description: "Aplicação para gestão de recolhas Kovi",
   icons: {
-    icon: "https://i.ibb.co/ksMQSMQ2/web-app-manifest-192x192.png",
+    icon: "/images/icons/favicon-192x192.png",
   },
 };
 

@@ -59,7 +59,7 @@ const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
           <img 
-            src="https://i.ibb.co/1fTXGSN6/rekovi-identity-updated-1-removebg-preview.png" 
+            src="/images/logos/kovi-logo-signup.png" 
             alt="Logo Kovi" 
             className="h-16 w-auto mb-6" 
           />
