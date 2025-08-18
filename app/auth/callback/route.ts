@@ -110,20 +110,9 @@ export async function GET(request: NextRequest) {
       console.log('✅ Usuário autorizado:', session.user.email)
     }
     
-    // Garantir que a sessão está configurada corretamente
-    const { data: { user: currentUser } } = await supabase.auth.getUser()
-    console.log('🔍 Verificação final - Usuário atual:', currentUser?.email)
-    
     // Se passou na validação, redirecionar para a página especificada
     console.log('🎯 Redirecionando para:', next)
-    
-    // Criar uma resposta com redirecionamento e incluir headers para garantir que os cookies sejam enviados
-    const response = NextResponse.redirect(`${origin}${next}`)
-    
-    // Adicionar um header personalizado para indicar sucesso
-    response.headers.set('X-Auth-Success', 'true')
-    
-    return response
+    return NextResponse.redirect(`${origin}${next}`)
   } catch (error) {
     console.error('❌ Erro inesperado no callback:', error)
     return NextResponse.redirect(`${origin}/auth/signin?error=session_error`)

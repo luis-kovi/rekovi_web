@@ -1,33 +1,77 @@
 // middleware.ts
 import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { getRedirectRoute } from '@/utils/helpers'
 
 export async function middleware(request: NextRequest) {
-  // Excluir explicitamente os callbacks de autenticação para evitar interferências
-  if (request.nextUrl.pathname === '/auth/callback' || 
-      request.nextUrl.pathname === '/auth/callback-v2' ||
-      request.nextUrl.pathname === '/auth/force-refresh') {
-    console.log('🔄 Middleware: Permitindo callback/refresh de autenticação')
+  // Excluir explicitamente o callback de autenticação para evitar interferências
+  if (request.nextUrl.pathname === '/auth/callback') {
     return NextResponse.next()
   }
 
-  // Simplificar o middleware para Edge Runtime - verificar cookies de autenticação
-  // Verificar ambos os cookies possíveis do Supabase
-  const authCookie = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token')
-  const authCookie0 = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token.0')
-  const authCookie1 = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token.1')
-  const hasAuth = !!(authCookie?.value || (authCookie0?.value && authCookie1?.value))
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  console.log(`🔑 Middleware: Path=${request.nextUrl.pathname}, HasAuth=${hasAuth}`)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: any) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
+
+  // Verificar se o usuário está autenticado
+  const { data: { user } } = await supabase.auth.getUser()
 
   // Redirecionar rota raiz (/) para /auth/signin se não autenticado
-  if (request.nextUrl.pathname === '/' && !hasAuth) {
+  if (request.nextUrl.pathname === '/' && !user) {
     const redirectUrl = new URL('/auth/signin', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
   // Se o usuário estiver autenticado e acessar a rota raiz, redirecionar baseado no dispositivo
-  if (request.nextUrl.pathname === '/' && hasAuth) {
+  if (request.nextUrl.pathname === '/' && user) {
     const userAgent = request.headers.get('user-agent') || ''
     const redirectRoute = getRedirectRoute(userAgent)
     const redirectUrl = new URL(redirectRoute, request.url)
@@ -41,7 +85,7 @@ export async function middleware(request: NextRequest) {
   )
 
   // Se for uma rota protegida e o usuário não estiver autenticado
-  if (isProtectedRoute && !hasAuth) {
+  if (isProtectedRoute && !user) {
     const redirectUrl = new URL('/auth/signin', request.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -52,14 +96,14 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isAuthRoute && hasAuth) {
+  if (isAuthRoute && user) {
     const userAgent = request.headers.get('user-agent') || ''
     const redirectRoute = getRedirectRoute(userAgent)
     const redirectUrl = new URL(redirectRoute, request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {

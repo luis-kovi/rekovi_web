@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { createAuthClient } from '@/utils/supabase/client-auth'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MOBILE_REGEX } from '@/utils/helpers'
 import { validateUserAccess } from '@/utils/auth-validation'
@@ -90,25 +89,19 @@ export default function SignIn() {
     setError('')
 
     try {
-      // Usar o cliente otimizado para autenticação
-      const supabase = createAuthClient()
+      const supabase = createClient()
+      if (!supabase) {
+        throw new Error('Supabase client not available')
+      }
 
       // Detectar se é dispositivo móvel para redirecionar corretamente
       const isMobile = MOBILE_REGEX.test(navigator.userAgent)
       const redirectRoute = isMobile ? '/mobile' : '/kanban'
 
-      // Usar callback-v2 para debug
-      const useV2 = true // Pode alternar entre callbacks
-      const callbackPath = useV2 ? '/auth/callback-v2' : '/auth/callback'
-
-      console.log('🚀 Iniciando login com Google...')
-      console.log('📍 Callback URL:', `${window.location.origin}${callbackPath}?next=${redirectRoute}`)
-      console.log('🌐 Navegador:', navigator.userAgent)
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}${callbackPath}?next=${redirectRoute}`,
+          redirectTo: `${window.location.origin}/auth/callback?next=${redirectRoute}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
@@ -118,15 +111,12 @@ export default function SignIn() {
       })
 
       if (error) {
-        console.error('❌ Erro OAuth Google:', error)
+        console.error('Erro OAuth Google:', error)
         setError(error.message)
         setGoogleLoading(false)
-      } else {
-        console.log('✅ Redirecionamento OAuth iniciado')
-        // O loading continua true pois o usuário será redirecionado
       }
     } catch (err) {
-      console.error('❌ Erro no handleSignInWithGoogle:', err)
+      console.error('Erro no handleSignInWithGoogle:', err)
       setError('Erro ao fazer login com Google. Tente novamente.')
       setGoogleLoading(false)
     }
