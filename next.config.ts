@@ -4,8 +4,8 @@ const nextConfig = {
   experimental: {
     // Manter configurações experimentais seguras
     optimizePackageImports: ['@supabase/ssr'],
-    // Habilitar suporte ao Node.js runtime no middleware
-    serverComponentsExternalPackages: ['@supabase/ssr']
+    // Habilitar middleware Node.js para compatibilidade com Supabase
+    serverComponentsExternalPackages: ['@supabase/ssr', '@supabase/supabase-js']
   },
   // Configuração de saída - remover standalone para Vercel
   // output: 'standalone', // Comentado para compatibilidade com Vercel

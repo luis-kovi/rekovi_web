@@ -19,10 +19,10 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    # Only deploy if CI passed or if it's a direct push
+    # Only deploy if CI passed or if it's a direct push (skip deploy for commits with [skip deploy])
     if: |
-      (github.event_name == 'push') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && !contains(github.event.head_commit.message, '[skip deploy]'))
+      (github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip deploy]')) ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     timeout-minutes: 15
 
     steps:
