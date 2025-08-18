@@ -1,5 +1,6 @@
 // utils/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
+import type { Database } from '@/types/database.types'
 import { logger } from '@/utils/logger'
 
 export function createClient() {
@@ -19,7 +20,7 @@ export function createClient() {
   }
 
   try {
-    const client = createBrowserClient(supabaseUrl, supabaseKey, {
+    const client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
       auth: {
         detectSessionInUrl: true,
         persistSession: true,
