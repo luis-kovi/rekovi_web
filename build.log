@@ -1,0 +1,75 @@
+
+> prod-recolhav2@0.1.0 build
+> next build
+
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+   ▲ Next.js 15.4.5
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (108kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ ⚠ Compiled with warnings in 1000ms
+
+./node_modules/@supabase/supabase-js/dist/module/index.js
+A Node.js API is used (process.version at line: 17) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createServerClient.js
+__barrel_optimize__?names=createServerClient!=!./node_modules/@supabase/ssr/dist/module/index.js
+
+./node_modules/@supabase/supabase-js/dist/module/index.js
+A Node.js API is used (process.version at line: 18) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createServerClient.js
+__barrel_optimize__?names=createServerClient!=!./node_modules/@supabase/ssr/dist/module/index.js
+
+./node_modules/@supabase/supabase-js/dist/module/index.js
+A Node.js API is used (process.version at line: 21) which is not supported in the Edge Runtime.
+Learn more: https://nextjs.org/docs/api-reference/edge-runtime
+
+Import trace for requested module:
+./node_modules/@supabase/supabase-js/dist/module/index.js
+./node_modules/@supabase/ssr/dist/module/createServerClient.js
+__barrel_optimize__?names=createServerClient!=!./node_modules/@supabase/ssr/dist/module/index.js
+
+ ✓ Compiled successfully in 5.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ✓ Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ƒ /                                      130 B        99.7 kB
+├ ƒ /_not-found                            992 B         101 kB
+├ ƒ /auth/callback                         130 B        99.7 kB
+├ ƒ /auth/signin                          3.6 kB         144 kB
+├ ƒ /auth/signout                          130 B        99.7 kB
+├ ƒ /auth/signup                         5.13 kB         146 kB
+├ ƒ /kanban                              25.6 kB         166 kB
+├ ƒ /mobile                              19.6 kB         160 kB
+└ ƒ /settings                            8.34 kB         149 kB
++ First Load JS shared by all            99.6 kB
+  ├ chunks/4bd1b696-cf72ae8a39fa05aa.js  54.1 kB
+  ├ chunks/964-02efbd2195ef91bd.js       43.5 kB
+  └ other shared chunks (total)          1.93 kB
+
+
+ƒ Middleware                             67.2 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
