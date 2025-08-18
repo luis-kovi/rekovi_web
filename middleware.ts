@@ -1,6 +1,5 @@
 // middleware.ts
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 import { getRedirectRoute } from '@/utils/helpers'
 
 export async function middleware(request: NextRequest) {
@@ -9,69 +8,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
-
-  // Verificar se o usuário está autenticado
-  const { data: { user } } = await supabase.auth.getUser()
+  // Simplificar o middleware para Edge Runtime - verificar apenas cookies de autenticação
+  const authCookie = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token')
+  const hasAuth = !!authCookie?.value
 
   // Redirecionar rota raiz (/) para /auth/signin se não autenticado
-  if (request.nextUrl.pathname === '/' && !user) {
+  if (request.nextUrl.pathname === '/' && !hasAuth) {
     const redirectUrl = new URL('/auth/signin', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
   // Se o usuário estiver autenticado e acessar a rota raiz, redirecionar baseado no dispositivo
-  if (request.nextUrl.pathname === '/' && user) {
+  if (request.nextUrl.pathname === '/' && hasAuth) {
     const userAgent = request.headers.get('user-agent') || ''
     const redirectRoute = getRedirectRoute(userAgent)
     const redirectUrl = new URL(redirectRoute, request.url)
@@ -85,7 +33,7 @@ export async function middleware(request: NextRequest) {
   )
 
   // Se for uma rota protegida e o usuário não estiver autenticado
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !hasAuth) {
     const redirectUrl = new URL('/auth/signin', request.url)
     return NextResponse.redirect(redirectUrl)
   }
@@ -96,14 +44,14 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && hasAuth) {
     const userAgent = request.headers.get('user-agent') || ''
     const redirectRoute = getRedirectRoute(userAgent)
     const redirectUrl = new URL(redirectRoute, request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
