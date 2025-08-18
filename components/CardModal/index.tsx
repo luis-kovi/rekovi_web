@@ -81,11 +81,9 @@ export default function CardModal({
   const [showCarTowed, setShowCarTowed] = useState(false);
   const [showRequestTowMechanical, setShowRequestTowMechanical] = useState(false);
 
-  if (!card) return null;
-
-  const isFila = card.faseAtual === 'Fila de Recolha';
-  const isTentativas = card.faseAtual === 'Tentativas de Recolha';
-  const isConfirmacaoRecolha = card.faseAtual === 'Confirmação de Recolha';
+  const isFila = card?.faseAtual === 'Fila de Recolha';
+  const isTentativas = card?.faseAtual === 'Tentativas de Recolha';
+  const isConfirmacaoRecolha = card?.faseAtual === 'Confirmação de Recolha';
   const allowChoferChange = !isFila && !isTentativas && !isConfirmacaoRecolha;
 
   // Função para buscar chofers disponíveis baseados na cidade de origem
@@ -97,7 +95,7 @@ export default function CardModal({
       
       try {
         const supabase = createClient();
-        const cidade = extractCityFromOrigin(card.origemLocacao);
+        const cidade = extractCityFromOrigin(card.origemLocacao || '');
         
         if (!cidade) {
           logger.warn('Não foi possível extrair a cidade da origem:', card.origemLocacao);
@@ -119,7 +117,7 @@ export default function CardModal({
         }
         
         // Filtrar o chofer atual se existir
-        const filteredChofers = (data || []).filter(chofer => 
+        const filteredChofers = (data || []).filter((chofer: PreApprovedUser) => 
           chofer.nome.toLowerCase() !== card.chofer?.toLowerCase()
         );
         
@@ -138,6 +136,7 @@ export default function CardModal({
   }, [card, isFila, showChoferChange]);
 
   const handleChoferChange = async () => {
+    if (!card) return;
     if (!selectedChofer || !choferEmail) {
       setFeedback('Por favor, selecione um chofer.');
       return;
@@ -170,8 +169,8 @@ export default function CardModal({
   };
 
   const handleCopyPlate = () => {
-    if (card.placaVeiculo) {
-      navigator.clipboard.writeText(card.placaVeiculo);
+    if (card?.placa) {
+      navigator.clipboard.writeText(card.placa);
       setCopiedPlate(true);
       setTimeout(() => setCopiedPlate(false), 2000);
     }
@@ -185,29 +184,32 @@ export default function CardModal({
     collectionValue: string,
     additionalKm: string
   ) => {
-    if (!onAllocateDriver) throw new Error('Função de alocação não disponível')
+    if (!card || !onAllocateDriver) throw new Error('Função de alocação não disponível')
     await onAllocateDriver(card.id, driverName, driverEmail, dateTime, collectionValue, additionalKm)
   }
 
   const handleRejectCollection = async (reason: string, observations: string) => {
-    if (!onRejectCollection) throw new Error('Função de rejeição não disponível')
+    if (!card || !onRejectCollection) throw new Error('Função de rejeição não disponível')
     await onRejectCollection(card.id, reason, observations)
   }
 
   const handleUnlockVehicle = async (photos: Record<string, File>, observations?: string) => {
-    if (!onUnlockVehicle) throw new Error('Função de desbloqueio não disponível')
+    if (!card || !onUnlockVehicle) throw new Error('Função de desbloqueio não disponível')
     await onUnlockVehicle(card.id, card.faseAtual, photos, observations)
   }
 
   const handleRequestTowing = async (reason: string, photos: Record<string, File>, observations?: string) => {
-    if (!onRequestTowing) throw new Error('Função de guincho não disponível')
+    if (!card || !onRequestTowing) throw new Error('Função de guincho não disponível')
     await onRequestTowing(card.id, card.faseAtual, reason, photos)
   }
 
   const handleReportProblem = async (difficulty: string, evidences: Record<string, File>) => {
-    if (!onReportProblem) throw new Error('Função de reporte não disponível')
+    if (!card || !onReportProblem) throw new Error('Função de reporte não disponível')
     await onReportProblem(card.id, card.faseAtual, difficulty, evidences)
   }
+  
+  // Retorna null se não houver card
+  if (!card) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300 ease-out animate-fadeIn">
@@ -242,7 +244,7 @@ export default function CardModal({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                {card.placaVeiculo}
+                {card.placa}
                 {copiedPlate && (
                   <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
                     Copiado!
