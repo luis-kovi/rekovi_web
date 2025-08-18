@@ -71,9 +71,27 @@ export default function SignIn() {
       })
 
       if (error) {
-        setError(error.message)
+        // Verificar se é erro de rate limit
+        if (error.message.includes('429') || error.message.toLowerCase().includes('too many')) {
+          setError('Muitas tentativas de login. Por favor, aguarde antes de tentar novamente.')
+        } else {
+          setError(error.message)
+        }
       } else {
         // Sucesso: usuário autenticado e autorizado
+        // Resetar rate limit após login bem-sucedido
+        try {
+          await fetch('/api/auth/reset-rate-limit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+        } catch (resetError) {
+          // Não bloquear o login se o reset falhar
+          logger.error('Failed to reset rate limit:', resetError)
+        }
+        
         const isMobile = MOBILE_REGEX.test(navigator.userAgent)
         const redirectRoute = isMobile ? '/mobile' : '/kanban'
         router.push(redirectRoute)
