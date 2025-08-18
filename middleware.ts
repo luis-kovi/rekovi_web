@@ -5,12 +5,18 @@ import { getRedirectRoute } from '@/utils/helpers'
 export async function middleware(request: NextRequest) {
   // Excluir explicitamente o callback de autenticação para evitar interferências
   if (request.nextUrl.pathname === '/auth/callback') {
+    console.log('🔄 Middleware: Permitindo callback de autenticação')
     return NextResponse.next()
   }
 
-  // Simplificar o middleware para Edge Runtime - verificar apenas cookies de autenticação
+  // Simplificar o middleware para Edge Runtime - verificar cookies de autenticação
+  // Verificar ambos os cookies possíveis do Supabase
   const authCookie = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token')
-  const hasAuth = !!authCookie?.value
+  const authCookie0 = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token.0')
+  const authCookie1 = request.cookies.get('sb-vfawknsthphhqfsvafzz-auth-token.1')
+  const hasAuth = !!(authCookie?.value || (authCookie0?.value && authCookie1?.value))
+
+  console.log(`🔑 Middleware: Path=${request.nextUrl.pathname}, HasAuth=${hasAuth}`)
 
   // Redirecionar rota raiz (/) para /auth/signin se não autenticado
   if (request.nextUrl.pathname === '/' && !hasAuth) {
