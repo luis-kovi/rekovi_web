@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react'
 import type { Card } from '@/types'
 import { createClient } from '@/utils/supabase/client'
 import { extractCityFromOrigin } from '@/utils/auth-validation'
+import { logger } from '@/utils/logger'
 
 interface MobileTaskModalProps {
   card: Card
@@ -174,7 +175,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
         .eq('status', 'active');
 
       if (error) {
-        console.error('Erro ao buscar chofers:', error);
+        logger.error('Erro ao buscar chofers:', error);
         setAvailableChofers([]);
         return;
       }
@@ -210,7 +211,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
       setAvailableChofers(choferOptions);
     } catch (error) {
-      console.error('Erro ao carregar chofers:', error);
+      logger.error('Erro ao carregar chofers:', error);
       setAvailableChofers([]);
     } finally {
       setLoadingChofers(false);

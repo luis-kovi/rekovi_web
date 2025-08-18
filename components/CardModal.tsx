@@ -6,6 +6,7 @@ import type { CardWithSLA } from '@/types'
 import { formatPersonName, keepOriginalFormat, formatDate, phaseDisplayNames } from '@/utils/helpers'
 import { createClient } from '@/utils/supabase/client'
 import { extractCityFromOrigin } from '@/utils/auth-validation'
+import { logger } from '@/utils/logger'
 
 interface CardModalProps {
   card: CardWithSLA | null;
@@ -166,7 +167,7 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
         .eq('status', 'active');
 
       if (error) {
-        console.error('Erro ao buscar chofers:', error);
+        logger.error('Erro ao buscar chofers:', error);
         setAvailableChofers([]);
         return;
       }
@@ -202,7 +203,7 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
 
       setAvailableChofers(choferOptions);
     } catch (error) {
-      console.error('Erro ao carregar chofers:', error);
+      logger.error('Erro ao carregar chofers:', error);
       setAvailableChofers([]);
     } finally {
       setLoadingChofers(false);
@@ -269,7 +270,7 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
       setCopiedPlate(true);
       setTimeout(() => setCopiedPlate(false), 2000);
     } catch (error) {
-      console.error('Erro ao copiar placa:', error);
+      logger.error('Erro ao copiar placa:', error);
     }
   };
 

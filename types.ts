@@ -43,3 +43,16 @@ export interface User {
 export interface PermissionType {
   type: 'admin' | 'kovi' | 'ativa' | 'onsystem' | 'rvs' | 'chofer';
 }
+
+export interface DatabaseUser {
+  email: string;
+  nome?: string;
+  empresa?: string;
+  permission_type?: string;
+}
+
+export interface RealtimePayload {
+  eventType: string;
+  new?: Card;
+  old?: Card;
+}
