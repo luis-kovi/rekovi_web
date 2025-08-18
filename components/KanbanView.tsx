@@ -1,0 +1,1 @@
+// components/KanbanView.tsx
