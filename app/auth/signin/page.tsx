@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MOBILE_REGEX } from '@/utils/helpers'
 import { validateUserAccess } from '@/utils/auth-validation'
+import { logger } from '@/utils/logger'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -111,12 +112,12 @@ export default function SignIn() {
       })
 
       if (error) {
-        console.error('Erro OAuth Google:', error)
+        logger.error('Erro OAuth Google:', error)
         setError(error.message)
         setGoogleLoading(false)
       }
     } catch (err) {
-      console.error('Erro no handleSignInWithGoogle:', err)
+      logger.error('Erro no handleSignInWithGoogle:', err)
       setError('Erro ao fazer login com Google. Tente novamente.')
       setGoogleLoading(false)
     }

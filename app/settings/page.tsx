@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
+import { logger } from '@/utils/logger'
+import type { DatabaseUser } from '@/types'
 
 // Forçar renderização dinâmica para evitar pré-renderizado
 export const dynamic = 'force-dynamic'
@@ -90,12 +92,12 @@ export default function SettingsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    console.log('Settings: Component mounted, checking auth')
+    logger.log('Settings: Component mounted, checking auth')
     checkAuthAndLoadUsers()
   }, [])
 
   useEffect(() => {
-    console.log('Settings: loadUsers effect triggered - currentPage:', pagination.currentPage, 'searchTerm:', searchTerm, 'loading:', loading)
+    logger.log('Settings: loadUsers effect triggered - currentPage:', pagination.currentPage, 'searchTerm:', searchTerm, 'loading:', loading)
     if (pagination.currentPage > 0 && !loading) {
       loadUsers()
     }
@@ -114,7 +116,7 @@ export default function SettingsPage() {
   const checkAuthAndLoadUsers = async () => {
     try {
       if (!supabase) {
-        console.error('Supabase client not available')
+        logger.error('Supabase client not available')
         router.push('/')
         return
       }
@@ -122,21 +124,21 @@ export default function SettingsPage() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session?.user) {
-        console.log('Settings: No session, redirecting to /')
+        logger.log('Settings: No session, redirecting to /')
         router.push('/')
         return
       }
 
-      console.log('Settings: User session found:', session.user.email)
+      logger.log('Settings: User session found:', session.user.email)
 
       const permissionType = session.user.app_metadata?.permissionType?.toLowerCase() || 'default'
-      console.log('Settings: Permission type from app_metadata:', permissionType)
+      logger.log('Settings: Permission type from app_metadata:', permissionType)
 
       const isAdmin = permissionType === 'admin'
-      console.log('Settings: Is admin:', isAdmin)
+      logger.log('Settings: Is admin:', isAdmin)
 
       if (!isAdmin) {
-        console.log('Settings: Not admin, redirecting to /kanban')
+        logger.log('Settings: Not admin, redirecting to /kanban')
         router.push('/kanban')
         return
       }
@@ -144,11 +146,11 @@ export default function SettingsPage() {
       setUser(session.user)
       setPermissionType(permissionType)
 
-      console.log('Settings: Admin verified, setting initial page and loading users')
+      logger.log('Settings: Admin verified, setting initial page and loading users')
       setPagination(prev => ({ ...prev, currentPage: 1 }))
       await loadUsers()
     } catch (error) {
-      console.error('Erro na autenticação:', error)
+      logger.error('Erro na autenticação:', error)
       router.push('/')
     }
   }
@@ -156,11 +158,11 @@ export default function SettingsPage() {
   const loadUsers = async () => {
     try {
       if (pagination.currentPage <= 0) {
-        console.log('Settings: Skipping loadUsers - invalid page:', pagination.currentPage)
+        logger.log('Settings: Skipping loadUsers - invalid page:', pagination.currentPage)
         return
       }
 
-      console.log('Settings: Loading users for page:', pagination.currentPage)
+      logger.log('Settings: Loading users for page:', pagination.currentPage)
       setLoading(true)
       
       // Buscar diretamente da tabela pre_approved_users
@@ -182,7 +184,7 @@ export default function SettingsPage() {
       if (error) throw error
 
       // Converter para formato esperado
-      const formattedUsers = (users || []).map(user => ({
+      const formattedUsers = (users || []).map((user: DatabaseUser) => ({
         id: user.email, // Usar email como ID único
         nome: user.nome || user.email.split('@')[0], // Usar nome da tabela ou extrair do email como fallback
         email: user.email,
@@ -200,7 +202,7 @@ export default function SettingsPage() {
         totalPages: Math.ceil((count || 0) / pagination.usersPerPage)
       }))
     } catch (error) {
-      console.error('Erro ao carregar usuários:', error)
+      logger.error('Erro ao carregar usuários:', error)
       alert('Erro ao carregar usuários: ' + (error as Error).message)
     } finally {
       setLoading(false)

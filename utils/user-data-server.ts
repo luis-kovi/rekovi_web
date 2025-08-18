@@ -1,6 +1,7 @@
 // utils/user-data-server.ts
 import { createClient } from '@/utils/supabase/server'
 import { PreApprovedUser } from '@/utils/auth-validation'
+import { logger } from '@/utils/logger'
 
 /**
  * Versão server-side para obter dados do usuário
@@ -15,7 +16,7 @@ export async function getUserDataServer(email: string): Promise<PreApprovedUser 
     .single()
 
   if (error || !data) {
-    console.error('Erro ao buscar dados do usuário (server):', error)
+    logger.error('Erro ao buscar dados do usuário (server):', error)
     return null
   }
 

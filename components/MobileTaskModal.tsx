@@ -5,6 +5,16 @@ import { useState, useEffect } from 'react'
 import type { Card } from '@/types'
 import { createClient } from '@/utils/supabase/client'
 import { extractCityFromOrigin } from '@/utils/auth-validation'
+import { logger } from '@/utils/logger'
+
+interface PreApprovedUser {
+  nome: string
+  email: string
+  empresa: string
+  permission_type: string
+  status: string
+  area_atuacao: string[]
+}
 
 interface MobileTaskModalProps {
   card: Card
@@ -174,7 +184,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
         .eq('status', 'active');
 
       if (error) {
-        console.error('Erro ao buscar chofers:', error);
+        logger.error('Erro ao buscar chofers:', error);
         setAvailableChofers([]);
         return;
       }
@@ -185,7 +195,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       }
 
       // Filtrar por área de atuação e excluir o chofer atual
-      const filteredChofers = users.filter(user => {
+      const filteredChofers = users.filter((user: PreApprovedUser) => {
         // Excluir chofer atual (comparar por email se disponível, senão por nome)
         const isCurrentChofer = user.email === card.emailChofer || 
                                user.nome?.toLowerCase() === card.chofer?.toLowerCase();
@@ -203,14 +213,14 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       });
 
       // Mapear para o formato esperado
-      const choferOptions = filteredChofers.map(user => ({
+      const choferOptions = filteredChofers.map((user: PreApprovedUser) => ({
         name: user.nome || user.email.split('@')[0],
         email: user.email
       }));
 
       setAvailableChofers(choferOptions);
     } catch (error) {
-      console.error('Erro ao carregar chofers:', error);
+      logger.error('Erro ao carregar chofers:', error);
       setAvailableChofers([]);
     } finally {
       setLoadingChofers(false);

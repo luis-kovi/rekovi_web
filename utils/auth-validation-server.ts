@@ -1,6 +1,7 @@
 // utils/auth-validation-server.ts
 import { createClient } from '@/utils/supabase/server'
 import { PreApprovedUser } from './auth-validation'
+import { logger } from '@/utils/logger'
 
 /**
  * Valida se o usuário pode acessar o sistema usando a função RPC segura (server-side)
@@ -21,7 +22,7 @@ export async function validateUserAccessServer(email: string): Promise<{
   });
 
   if (error) {
-    console.error('Erro na validação de acesso via RPC (server):', error)
+    logger.error('Erro na validação de acesso via RPC (server):', error)
     return { canAccess: false, message: 'Erro ao verificar permissão. Tente novamente.' }
   }
 

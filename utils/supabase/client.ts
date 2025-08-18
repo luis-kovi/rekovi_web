@@ -1,5 +1,6 @@
 // utils/supabase/client.ts
 import { createBrowserClient } from '@supabase/ssr'
+import { logger } from '@/utils/logger'
 
 export function createClient() {
   // Durante o build, retornar null sem verificar variáveis
@@ -28,7 +29,7 @@ export function createClient() {
     })
     return client
   } catch (error) {
-    console.error('Error creating Supabase client:', error)
+    logger.error('Error creating Supabase client:', error)
     throw new Error('Failed to create Supabase client. Please check your configuration.')
   }
 }

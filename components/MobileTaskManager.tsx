@@ -3,10 +3,11 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import type { Card } from '@/types'
+import type { Card, RealtimePayload } from '@/types'
 import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
 import MobileFilterPanel from './MobileFilterPanel'
+import { logger } from '@/utils/logger'
 
 interface MobileTaskManagerProps {
   initialCards: Card[]
@@ -81,7 +82,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         const { data: cardsData, error } = await query;
         
         if (error) {
-          console.error('Erro ao buscar dados atualizados:', error);
+          logger.error('Erro ao buscar dados atualizados:', error);
           return;
         }
 
@@ -114,7 +115,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }
 
           setCards(updatedCards);
-          console.log('Dados atualizados via real-time (mobile):', updatedCards.length, 'cards');
+          logger.log('Dados atualizados via real-time (mobile):', updatedCards.length, 'cards');
 
           // Restaurar posição de scroll após a atualização
           setTimeout(() => {
@@ -124,7 +125,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }, 0);
         }
       } catch (error) {
-        console.error('Erro ao buscar dados atualizados:', error);
+        logger.error('Erro ao buscar dados atualizados:', error);
       } finally {
         setIsUpdating(false);
         onUpdateStatus?.(false);
@@ -141,8 +142,8 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           schema: 'public',
           table: 'v_pipefy_cards_detalhada'
         },
-        (payload) => {
-          console.log('Mudança detectada no Supabase (mobile):', payload);
+        (payload: RealtimePayload) => {
+          logger.log('Mudança detectada no Supabase (mobile):', payload);
           // Atualizar dados quando houver mudanças
           fetchUpdatedData();
         }
@@ -291,7 +292,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
             const { data: cardsData, error } = await query;
             
             if (error) {
-              console.error('Erro ao buscar dados atualizados:', error);
+              logger.error('Erro ao buscar dados atualizados:', error);
               return;
             }
 
@@ -319,10 +320,10 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
               })).filter((card: Card) => card.id && card.placa);
 
               setCards(updatedCards);
-              console.log('Dados atualizados via pull-to-refresh:', updatedCards.length, 'cards');
+              logger.log('Dados atualizados via pull-to-refresh:', updatedCards.length, 'cards');
             }
           } catch (error) {
-            console.error('Erro ao buscar dados atualizados:', error);
+            logger.error('Erro ao buscar dados atualizados:', error);
           }
         };
 
@@ -354,7 +355,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
   // Funções do Pipefy para mobile
   const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
-    console.log('Alocando chofer (mobile):', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
+    logger.log('Alocando chofer (mobile):', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
     
     try {
       const supabase = createClient();
@@ -471,7 +472,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         })
       });
 
-      console.log('Chofer alocado com sucesso no Pipefy (mobile)');
+      logger.log('Chofer alocado com sucesso no Pipefy (mobile)');
       
       // Atualizar o estado local do card
       setCards(prevCards => 
@@ -483,13 +484,13 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       );
       
     } catch (error) {
-      console.error('Erro ao alocar chofer (mobile):', error);
+      logger.error('Erro ao alocar chofer (mobile):', error);
       throw error;
     }
   };
 
   const handleRejectCollection = async (cardId: string, reason: string, observations: string) => {
-    console.log('Rejeitando recolha (mobile):', { cardId, reason, observations });
+    logger.log('Rejeitando recolha (mobile):', { cardId, reason, observations });
     
     try {
       const supabase = createClient();
@@ -579,10 +580,10 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         })
       });
 
-      console.log('Recolha rejeitada com sucesso no Pipefy (mobile)');
+      logger.log('Recolha rejeitada com sucesso no Pipefy (mobile)');
       
     } catch (error) {
-      console.error('Erro ao rejeitar recolha (mobile):', error);
+      logger.error('Erro ao rejeitar recolha (mobile):', error);
       throw error;
     }
   };
@@ -616,7 +617,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         contentType: file.type
       };
 
-      console.log('Enviando query para presigned URL (mobile):', presignedQuery);
+      logger.log('Enviando query para presigned URL (mobile):', presignedQuery);
 
       const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
         method: 'POST',
@@ -632,23 +633,23 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
       if (!presignedResponse.ok) {
         const errorText = await presignedResponse.text();
-        console.error('Erro na resposta presigned (mobile):', errorText);
+        logger.error('Erro na resposta presigned (mobile):', errorText);
         throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
       }
 
       const presignedData = await presignedResponse.json();
-      console.log('Resposta completa presigned URL (mobile):', presignedData);
+      logger.log('Resposta completa presigned URL (mobile):', presignedData);
 
       // Verificar se há erros na resposta
       if (presignedData.errors && presignedData.errors.length > 0) {
-        console.error('Erros da API Pipefy (mobile):', presignedData.errors);
+        logger.error('Erros da API Pipefy (mobile):', presignedData.errors);
         const errorMessages = presignedData.errors.map((error: any) => error.message).join(', ');
         throw new Error(`Erro na API Pipefy: ${errorMessages}`);
       }
 
       // Verificar se a resposta tem a estrutura esperada
       if (!presignedData?.data?.createPresignedUrl) {
-        console.error('Estrutura de resposta inválida (mobile):', presignedData);
+        logger.error('Estrutura de resposta inválida (mobile):', presignedData);
         throw new Error('Resposta inválida da API de presigned URL');
       }
 
@@ -658,7 +659,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         throw new Error('URLs de upload/download não fornecidas');
       }
 
-      console.log('URLs obtidas (mobile):', { uploadUrl, downloadUrl });
+      logger.log('URLs obtidas (mobile):', { uploadUrl, downloadUrl });
 
       // Passo 2: Upload da imagem
       const uploadResponse = await fetch(uploadUrl, {
@@ -671,11 +672,11 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
       if (!uploadResponse.ok) {
         const errorText = await uploadResponse.text();
-        console.error('Erro no upload (mobile):', errorText);
+        logger.error('Erro no upload (mobile):', errorText);
         throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status}`);
       }
 
-      console.log('Upload realizado com sucesso (mobile)');
+      logger.log('Upload realizado com sucesso (mobile)');
 
       // Passo 3: Atualizar campo no card com o path do arquivo
       // Extrair o path do arquivo da downloadUrl
@@ -684,7 +685,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       const organizationId = "870bddf7-6ce7-4b9d-81d8-9087f1c10ae2"; // ID da organização
       const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
       
-      console.log('Path do arquivo (mobile):', fullPath);
+      logger.log('Path do arquivo (mobile):', fullPath);
 
       const updateFieldQuery = `
         mutation {
@@ -701,7 +702,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      console.log('Atualizando campo com URL (mobile):', updateFieldQuery);
+      logger.log('Atualizando campo com URL (mobile):', updateFieldQuery);
 
       const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
         method: 'POST',
@@ -714,24 +715,24 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
       if (!updateResponse.ok) {
         const errorText = await updateResponse.text();
-        console.error('Erro ao atualizar campo (mobile):', errorText);
+        logger.error('Erro ao atualizar campo (mobile):', errorText);
         throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status}`);
       }
 
       const updateData = await updateResponse.json();
-      console.log('Resposta updateCardField completa (mobile):', updateData);
+      logger.log('Resposta updateCardField completa (mobile):', updateData);
 
       // Verificar se há erros na atualização do campo
       if (updateData.errors && updateData.errors.length > 0) {
-        console.error('Erros ao atualizar campo (mobile):', updateData.errors);
+        logger.error('Erros ao atualizar campo (mobile):', updateData.errors);
         const errorMessages = updateData.errors.map((error: any) => error.message).join(', ');
         throw new Error(`Erro ao atualizar campo ${fieldId}: ${errorMessages}`);
       }
 
-      console.log('Campo atualizado com sucesso (mobile):', updateData);
+      logger.log('Campo atualizado com sucesso (mobile):', updateData);
       return downloadUrl;
     } catch (error) {
-      console.error('Erro no upload da imagem (mobile):', error);
+      logger.error('Erro no upload da imagem (mobile):', error);
       throw error;
     }
   };
@@ -816,7 +817,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
   };
 
   const handleUnlockVehicle = async (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => {
-    console.log('Desbloqueando veículo (mobile):', { cardId, phase, photos, observations });
+    logger.log('Desbloqueando veículo (mobile):', { cardId, phase, photos, observations });
     
     try {
       const supabase = createClient();
@@ -903,16 +904,16 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         });
       }
 
-      console.log('Veículo desbloqueado com sucesso no Pipefy (mobile)');
+      logger.log('Veículo desbloqueado com sucesso no Pipefy (mobile)');
       
     } catch (error) {
-      console.error('Erro ao desbloquear veículo (mobile):', error);
+      logger.error('Erro ao desbloquear veículo (mobile):', error);
       throw error;
     }
   };
 
   const handleRequestTowing = async (cardId: string, phase: string, reason: string, photos: Record<string, File>) => {
-    console.log('Solicitando guincho (mobile):', { cardId, phase, reason, photos });
+    logger.log('Solicitando guincho (mobile):', { cardId, phase, reason, photos });
     
     try {
       const supabase = createClient();
@@ -972,16 +973,16 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         body: JSON.stringify({ query: updateQuery })
       });
 
-      console.log('Guincho solicitado com sucesso no Pipefy (mobile)');
+      logger.log('Guincho solicitado com sucesso no Pipefy (mobile)');
       
     } catch (error) {
-      console.error('Erro ao solicitar guincho (mobile):', error);
+      logger.error('Erro ao solicitar guincho (mobile):', error);
       throw error;
     }
   };
 
   const handleReportProblem = async (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => {
-    console.log('Reportando problema (mobile):', { cardId, phase, difficulty, evidences });
+    logger.log('Reportando problema (mobile):', { cardId, phase, difficulty, evidences });
     
     try {
       const supabase = createClient();
@@ -1037,10 +1038,10 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         body: JSON.stringify({ query: updateQuery })
       });
 
-      console.log('Problema reportado com sucesso no Pipefy (mobile)');
+      logger.log('Problema reportado com sucesso no Pipefy (mobile)');
       
     } catch (error) {
-      console.error('Erro ao reportar problema (mobile):', error);
+      logger.error('Erro ao reportar problema (mobile):', error);
       throw error;
     }
   };
@@ -1053,7 +1054,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
     expenseValues: Record<string, string>,
     expenseReceipts: Record<string, File>
   ) => {
-    console.log('Confirmando entrega no pátio (mobile):', { cardId, photos, expenses, expenseValues, expenseReceipts });
+    logger.log('Confirmando entrega no pátio (mobile):', { cardId, photos, expenses, expenseValues, expenseReceipts });
     
     try {
       const supabase = createClient();
@@ -1169,7 +1170,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       }
 
     } catch (error) {
-      console.error('Erro ao confirmar entrega no pátio:', error);
+      logger.error('Erro ao confirmar entrega no pátio:', error);
       throw error;
     }
   };
@@ -1181,7 +1182,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
     expenseValues: Record<string, string>,
     expenseReceipts: Record<string, File>
   ) => {
-    console.log('Confirmando carro guinchado (mobile):', { cardId, photo, expenses, expenseValues, expenseReceipts });
+    logger.log('Confirmando carro guinchado (mobile):', { cardId, photo, expenses, expenseValues, expenseReceipts });
     
     try {
       const supabase = createClient();
@@ -1281,13 +1282,13 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       }
 
     } catch (error) {
-      console.error('Erro ao confirmar carro guinchado:', error);
+      logger.error('Erro ao confirmar carro guinchado:', error);
       throw error;
     }
   };
 
   const handleRequestTowMechanical = async (cardId: string, reason: string) => {
-    console.log('Solicitando guincho mecânico (mobile):', { cardId, reason });
+    logger.log('Solicitando guincho mecânico (mobile):', { cardId, reason });
     
     try {
       const supabase = createClient();
@@ -1376,7 +1377,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       }
 
     } catch (error) {
-      console.error('Erro ao solicitar guincho mecânico:', error);
+      logger.error('Erro ao solicitar guincho mecânico:', error);
       throw error;
     }
   };

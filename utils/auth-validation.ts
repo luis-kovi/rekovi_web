@@ -1,5 +1,6 @@
 // utils/auth-validation.ts
 import { createClient } from '@/utils/supabase/client'
+import { logger } from '@/utils/logger'
 
 export interface PreApprovedUser {
   email: string
@@ -27,7 +28,7 @@ export async function validateUserAccess(email: string): Promise<{
   });
 
   if (error) {
-    console.error('Erro na validação de acesso via RPC:', error)
+    logger.error('Erro na validação de acesso via RPC:', error)
     return { canAccess: false, message: 'Erro ao verificar permissão. Tente novamente.' }
   }
 

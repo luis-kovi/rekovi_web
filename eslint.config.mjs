@@ -13,10 +13,15 @@ const eslintConfig = [
   ...compat.extends("next/core-web-vitals"),
   {
     rules: {
-      // Desabilitar todos os warnings para permitir o build
-      "@next/next/no-img-element": "off",
-      "@next/next/no-page-custom-font": "off",
-      "react-hooks/exhaustive-deps": "off"
+      // Regras de qualidade de código
+      "@next/next/no-img-element": "warn",
+      "@next/next/no-page-custom-font": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+      
+      // Prevenir console.logs em produção
+      "no-console": ["error", { 
+        allow: ["warn", "error"] 
+      }]
     }
   }
 ];

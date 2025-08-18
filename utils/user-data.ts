@@ -1,6 +1,7 @@
 // utils/user-data.ts
 import { createClient } from '@/utils/supabase/client'
 import { PreApprovedUser } from '@/utils/auth-validation'
+import { logger } from '@/utils/logger'
 
 /**
  * Obtém os dados completos do usuário da tabela pre_approved_users
@@ -16,7 +17,7 @@ export async function getUserData(email: string): Promise<PreApprovedUser | null
     .single()
 
   if (error || !data) {
-    console.error('Erro ao buscar dados do usuário:', error)
+    logger.error('Erro ao buscar dados do usuário:', error)
     return null
   }
 
