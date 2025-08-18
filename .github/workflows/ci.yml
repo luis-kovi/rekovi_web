@@ -35,7 +35,7 @@ jobs:
     if: needs.check-skip.outputs.skip != 'true'
     timeout-minutes: 15
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         node-version: [18.x, 20.x]
 
@@ -59,6 +59,7 @@ jobs:
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production
 
       - name: Cache build output
         if: matrix.node-version == '18.x'
