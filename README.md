@@ -82,23 +82,7 @@ A aplicação agora possui um sistema de autenticação completo:
 - Os erros são tratados de forma mais robusta
 - A configuração de build foi otimizada para segurança
 
-## 🧪 Testes
 
-A aplicação possui testes automatizados configurados com Jest e React Testing Library.
-
-### Executar Testes
-```bash
-# Todos os testes
-npm test
-
-# Modo watch
-npm test:watch
-
-# Com cobertura
-npm test:coverage
-```
-
-Para mais detalhes sobre os testes, consulte [TESTING.md](./TESTING.md).
 
 ## 🚨 Antes do Deploy
 
@@ -106,4 +90,3 @@ Para mais detalhes sobre os testes, consulte [TESTING.md](./TESTING.md).
 2. Verifique se o Supabase está configurado corretamente
 3. Teste o fluxo de autenticação localmente
 4. Execute `npm run build` para verificar se não há erros
-5. Execute `npm test` para garantir que os testes estão passando
