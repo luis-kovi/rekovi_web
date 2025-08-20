@@ -86,12 +86,20 @@ export class PipefyService {
    * Atualiza campos de um card no Pipefy
    */
   public async updateCardFields(cardId: string, fields: Array<{ fieldId: string; value: any }>): Promise<boolean> {
+    // Usar a mesma abordagem do código original - sem variáveis tipadas
+    const fieldsString = fields.map(field => `{
+      fieldId: "${field.fieldId}"
+      value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+    }`).join(',');
+
     const query = `
-      mutation UpdateCardFields($cardId: ID!, $fields: [FieldValueInput!]!) {
+      mutation {
         updateFieldsValues(
           input: {
-            nodeId: $cardId
-            values: $fields
+            nodeId: "${cardId}"
+            values: [
+              ${fieldsString}
+            ]
           }
         ) {
           clientMutationId
@@ -100,15 +108,7 @@ export class PipefyService {
       }
     `;
     
-    const variables = {
-      cardId,
-      fields: fields.map(field => ({
-        fieldId: field.fieldId,
-        value: field.value
-      }))
-    };
-    
-    const result = await this.executeGraphQL({ query, variables });
+    const result = await this.executeGraphQL({ query });
     
     if (result.errors && result.errors.length > 0) {
       throw new Error(`Erro ao atualizar card: ${result.errors[0].message}`);
