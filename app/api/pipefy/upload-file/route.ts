@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { logger } from '@/utils/logger'
 
@@ -31,7 +31,29 @@ export async function POST(request: NextRequest) {
   
   try {
     // Create Supabase client
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {
+              // O método `setAll` foi chamado de um componente do servidor.
+              // Isso pode ser ignorado se você tiver middleware atualizando
+              // as sessões dos usuários.
+            }
+          },
+        },
+      }
+    )
     logger.warn('✅ [API] Supabase client criado')
 
     // Check session
