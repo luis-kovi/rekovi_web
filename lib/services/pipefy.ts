@@ -192,14 +192,18 @@ export class PipefyService {
    * Atualiza campo de arquivo após upload
    */
   public async updateFileField(cardId: string, fieldId: string, filePath: string): Promise<boolean> {
-    // Usar string interpolation como nos outros métodos
+    // Usar updateFieldsValues em vez de updateCardField para campos de arquivo
     const query = `
       mutation {
-        updateCardField(
+        updateFieldsValues(
           input: {
-            card_id: "${cardId}"
-            field_id: "${fieldId}"
-            new_value: ["${filePath}"]
+            nodeId: "${cardId}"
+            values: [
+              {
+                fieldId: "${fieldId}"
+                value: ["${filePath}"]
+              }
+            ]
           }
         ) {
           success
@@ -222,7 +226,7 @@ export class PipefyService {
         throw new Error(`Erro ao atualizar campo de arquivo: ${result.errors[0].message}`);
       }
       
-      const success = result.data?.updateCardField?.success || false;
+      const success = result.data?.updateFieldsValues?.success || false;
       console.warn('🔍 [SERVICE] Success:', success);
       return success;
     } catch (error) {
