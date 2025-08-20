@@ -208,13 +208,27 @@ export class PipefyService {
       }
     `;
     
-    const result = await this.executeGraphQL({ query });
+    console.warn('🔍 [SERVICE] Query GraphQL:', query);
     
-    if (result.errors && result.errors.length > 0) {
-      throw new Error(`Erro ao atualizar campo de arquivo: ${result.errors[0].message}`);
+    try {
+      const result = await this.executeGraphQL({ query });
+      console.warn('🔍 [SERVICE] Resultado GraphQL:', { 
+        hasData: !!result.data, 
+        hasErrors: !!result.errors,
+        errors: result.errors?.map(e => e.message)
+      });
+      
+      if (result.errors && result.errors.length > 0) {
+        throw new Error(`Erro ao atualizar campo de arquivo: ${result.errors[0].message}`);
+      }
+      
+      const success = result.data?.updateCardField?.success || false;
+      console.warn('🔍 [SERVICE] Success:', success);
+      return success;
+    } catch (error) {
+      console.warn('❌ [SERVICE] Erro no executeGraphQL:', error);
+      throw error;
     }
-    
-    return result.data?.updateCardField?.success || false;
   }
   
   /**

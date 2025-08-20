@@ -66,8 +66,14 @@ export async function POST(request: NextRequest) {
 
     // 6. Atualizar campo de arquivo no card
     console.warn('📝 [API] Iniciando updateFileField:', { cardId, fieldId, fullPath });
-    const updateSuccess = await pipefyService.updateFileField(cardId, fieldId, fullPath);
-    console.warn('📋 [API] Resultado updateFileField:', updateSuccess);
+    let updateSuccess: boolean;
+    try {
+      updateSuccess = await pipefyService.updateFileField(cardId, fieldId, fullPath);
+      console.warn('📋 [API] Resultado updateFileField:', updateSuccess);
+    } catch (error) {
+      console.warn('❌ [API] Erro no updateFileField:', error);
+      throw error;
+    }
 
     if (!updateSuccess) {
       return NextResponse.json(
