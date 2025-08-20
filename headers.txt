@@ -1,0 +1,15 @@
+HTTP/2 307 
+cache-control: public, max-age=0, must-revalidate
+content-security-policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.pipefy.com https://*.s3.amazonaws.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';
+content-type: text/plain
+date: Wed, 20 Aug 2025 04:19:33 GMT
+location: /auth/signin
+permissions-policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), accelerometer=(), gyroscope=()
+referrer-policy: origin-when-cross-origin
+server: Vercel
+strict-transport-security: max-age=63072000; includeSubDomains; preload
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-vercel-id: pdx1::nvkvx-1755663573644-6c56fed41f71
+x-xss-protection: 1; mode=block
+
