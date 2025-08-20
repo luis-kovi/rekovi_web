@@ -6,11 +6,17 @@ import { logger } from '@/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    console.warn('🚀 [API] upload-file iniciado');
+    
     // 1. Verificar autenticação
     const supabase = await createClient();
+    console.warn('✅ [API] Supabase client criado');
+    
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.warn('🔐 [API] Session check:', { hasSession: !!session, error: sessionError?.message });
     
     if (sessionError || !session) {
+      console.warn('❌ [API] Usuário não autenticado');
       return NextResponse.json(
         { error: 'Usuário não autenticado' },
         { status: 401 }
@@ -19,6 +25,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Obter dados do body JSON
     const { cardId, fieldId, fileName, contentType } = await request.json();
+    console.warn('📥 [API] Body recebido:', { cardId, fieldId, fileName, contentType });
 
     // 3. Validar dados obrigatórios
     if (!cardId || !fieldId || !fileName || !contentType) {
@@ -29,7 +36,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Gerar presigned URL via Pipefy service
+    console.warn('🔄 [API] Criando presigned URL:', { fileName, contentType });
     const { url, downloadUrl } = await pipefyService.createPresignedUrl(fileName, contentType);
+    console.warn('📝 [API] Presigned URL criado:', { hasUrl: !!url, hasDownloadUrl: !!downloadUrl });
 
     // 5. Extrair path e atualizar campo
     const urlParts = downloadUrl.split('/uploads/');

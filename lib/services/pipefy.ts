@@ -121,12 +121,13 @@ export class PipefyService {
    * Adiciona um comentário a um card
    */
   public async addComment(cardId: string, text: string): Promise<boolean> {
+    // Usar string interpolation como no updateCardFields  
     const query = `
-      mutation AddComment($cardId: ID!, $text: String!) {
+      mutation {
         createComment(
           input: {
-            card_id: $cardId
-            text: $text
+            card_id: "${cardId}"
+            text: "${text.replace(/"/g, '\\"')}"
           }
         ) {
           comment {
@@ -142,9 +143,7 @@ export class PipefyService {
       }
     `;
     
-    const variables = { cardId, text };
-    
-    const result = await this.executeGraphQL({ query, variables });
+    const result = await this.executeGraphQL({ query });
     
     if (result.errors && result.errors.length > 0) {
       throw new Error(`Erro ao adicionar comentário: ${result.errors[0].message}`);
@@ -157,13 +156,14 @@ export class PipefyService {
    * Gera URL pré-assinada para upload de arquivo
    */
   public async createPresignedUrl(fileName: string, contentType: string): Promise<{ url: string; downloadUrl: string }> {
+    // Usar string interpolation como no updateCardFields
     const query = `
-      mutation CreatePresignedUrl($organizationId: ID!, $fileName: String!, $contentType: String!) {
+      mutation {
         createPresignedUrl(
           input: {
-            organizationId: $organizationId
-            fileName: $fileName
-            contentType: $contentType
+            organizationId: "${PIPEFY_CONFIG.ORGANIZATION_ID}"
+            fileName: "${fileName}"
+            contentType: "${contentType}"
           }
         ) {
           url
@@ -173,13 +173,7 @@ export class PipefyService {
       }
     `;
     
-    const variables = {
-      organizationId: PIPEFY_CONFIG.ORGANIZATION_ID,
-      fileName,
-      contentType
-    };
-    
-    const result = await this.executeGraphQL({ query, variables });
+    const result = await this.executeGraphQL({ query });
     
     if (result.errors && result.errors.length > 0) {
       throw new Error(`Erro ao gerar URL de upload: ${result.errors[0].message}`);

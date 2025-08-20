@@ -96,7 +96,23 @@ const intervalId = setInterval(fetchUpdatedData, 10000) // A cada 10s!
 
 ### 🔐 SEGURANÇA ALTA
 
-#### 7. **Validação de Input Insuficiente** 🔒 ALTO
+#### 7. **Upgrade Node.js para v20+** 🔧 ALTO
+**Problema**: Node.js 18 está deprecado pelo Supabase
+**Localização**: `package.json:24`, ambiente de deploy
+```json
+// ATUAL
+"engines": {
+  "node": ">=18.0.0"
+}
+```
+**Solução**:
+- Atualizar para Node.js 20+ (LTS atual)
+- Verificar compatibilidade Vercel
+- Atualizar workflows GitHub Actions se houver
+- **Impacto**: Zero breaking changes esperados
+- **Urgência**: Supabase descontinuará suporte para Node 18
+
+#### 8. **Validação de Input Insuficiente** 🔒 ALTO
 **Problema**: Falta sanitização em GraphQL queries
 **Localização**: `components/KanbanBoard.tsx:283-304`
 ```typescript
