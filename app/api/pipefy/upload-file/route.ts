@@ -56,11 +56,20 @@ export async function POST(request: NextRequest) {
     const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
     const organizationUuid = pipefyService.getConfig().ORG_UUID;
     const fullPath = `orgs/${organizationUuid}/uploads/${filePath}`;
+    
+    console.warn('🔧 [API] Preparando update campo:', { 
+      urlParts: urlParts.length, 
+      filePath, 
+      organizationUuid, 
+      fullPath 
+    });
 
     // 6. Atualizar campo no card
+    console.warn('📝 [API] Iniciando updateCardFields:', { cardId, fieldId, fullPath });
     const updateSuccess = await pipefyService.updateCardFields(cardId, [
       { fieldId: fieldId, value: [fullPath] }
     ]);
+    console.warn('📋 [API] Resultado updateCardFields:', updateSuccess);
 
     if (!updateSuccess) {
       return NextResponse.json(
