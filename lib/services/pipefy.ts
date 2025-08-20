@@ -9,10 +9,20 @@ import { logger } from '@/utils/logger';
  */
 export class PipefyService {
   private static instance: PipefyService;
+  private isConfigValidated = false;
   
   private constructor() {
-    // Validar configuração no momento da criação
-    validatePipefyConfig();
+    // Não validar na criação - fazer lazy validation
+  }
+  
+  /**
+   * Valida configuração apenas quando necessário
+   */
+  private ensureConfigValid(): void {
+    if (!this.isConfigValidated) {
+      validatePipefyConfig();
+      this.isConfigValidated = true;
+    }
   }
   
   /**
@@ -29,6 +39,7 @@ export class PipefyService {
    * Getter para acessar a configuração
    */
   public getConfig() {
+    this.ensureConfigValid(); // Validar apenas quando acessar
     return PIPEFY_CONFIG;
   }
   
@@ -36,6 +47,7 @@ export class PipefyService {
    * Executa uma mutation/query GraphQL no Pipefy de forma segura
    */
   public async executeGraphQL(options: PipefyRequestOptions): Promise<PipefyMutationResponse> {
+    this.ensureConfigValid(); // Validar apenas quando usar
     const { query, variables, timeout = PIPEFY_CONFIG.REQUEST_TIMEOUT } = options;
     
     try {
