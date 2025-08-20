@@ -23,21 +23,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Obter dados do body JSON
-    const { cardId, fieldId, fileName, contentType } = await request.json();
-    console.warn('📥 [API] Body recebido:', { cardId, fieldId, fileName, contentType });
+    // 2. Obter dados do FormData
+    const formData = await request.formData();
+    const file = formData.get('file') as File;
+    const fieldId = formData.get('fieldId') as string;
+    const cardId = formData.get('cardId') as string;
+    
+    console.warn('📥 [API] FormData recebido:', { 
+      cardId, 
+      fieldId, 
+      fileName: file?.name, 
+      fileSize: file?.size,
+      contentType: file?.type 
+    });
 
     // 3. Validar dados obrigatórios
-    if (!cardId || !fieldId || !fileName || !contentType) {
+    if (!cardId || !fieldId || !file) {
       return NextResponse.json(
-        { error: 'Card ID, Field ID, fileName e contentType são obrigatórios' },
+        { error: 'Card ID, Field ID e arquivo são obrigatórios' },
         { status: 400 }
       );
     }
 
     // 4. Gerar presigned URL via Pipefy service
-    console.warn('🔄 [API] Criando presigned URL:', { fileName, contentType });
-    const { url, downloadUrl } = await pipefyService.createPresignedUrl(fileName, contentType);
+    const fileName = `${cardId}_${fieldId}_${Date.now()}.${file.type.split('/')[1] || 'jpg'}`;
+    console.warn('🔄 [API] Criando presigned URL:', { fileName, contentType: file.type });
+    const { url, downloadUrl } = await pipefyService.createPresignedUrl(fileName, file.type);
     console.warn('📝 [API] Presigned URL criado:', { hasUrl: !!url, hasDownloadUrl: !!downloadUrl });
 
     // 5. Extrair path e atualizar campo
@@ -58,11 +69,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 7. Retornar URLs para upload
+    // 7. Fazer upload do arquivo e retornar sucesso
+    console.warn('📤 [API] Fazendo upload do arquivo');
+    const uploadResponse = await fetch(url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      }
+    });
+
+    if (!uploadResponse.ok) {
+      console.warn('❌ [API] Falha no upload:', uploadResponse.status);
+      throw new Error(`Erro no upload do arquivo: ${uploadResponse.status}`);
+    }
+
+    console.warn('✅ [API] Upload concluído com sucesso');
     return NextResponse.json({
       success: true,
-      uploadUrl: url,
-      downloadUrl
+      downloadUrl,
+      message: 'Arquivo enviado e campo atualizado com sucesso'
     });
 
   } catch (error) {
