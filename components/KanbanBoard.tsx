@@ -11,6 +11,7 @@ import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabl
 import type { Card, CardWithSLA } from '@/types'
 import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import { logger } from '@/utils/logger'
+import { usePipefyOperations } from '@/hooks/usePipefyOperations'
 
 interface KanbanBoardProps {
   initialCards: Card[]
@@ -32,6 +33,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   const [isUpdating, setIsUpdating] = useState(false);
   const calculatorRef = useRef<HTMLDivElement>(null);
   const scrollPositionsRef = useRef<{ [key: string]: number }>({});
+
+  // Hook para operações seguras do Pipefy
+  const { updateCard, uploadFile, addComment, isLoading: pipefyLoading, error: pipefyError } = usePipefyOperations();
 
   // Real-time subscription para atualização automática
   useEffect(() => {
@@ -269,66 +273,23 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     logger.log('Atualizando chofer:', { cardId, newName, newEmail });
     
     try {
-      const supabase = createClient();
-      
-      // Obter o token de autenticação do usuário atual
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // O cardId já é o card_id do Pipefy (vem da view v_pipefy_cards_detalhada)
-      // Query GraphQL para atualizar o chofer no Pipefy
-      const pipefyQuery = `
-        mutation {
-          updateFieldsValues(
-            input: {
-              nodeId: "${cardId}"
-              values: [
+      // Usar API segura para atualizar campos
+      const result = await updateCard(cardId, [
                 {
                   fieldId: "nome_do_chofer_que_far_a_recolha",
-                  value: "${newName}"
+          value: newName
                 },
                 {
                   fieldId: "e_mail_do_chofer",
-                  value: "${newEmail}"
-                }
-              ]
-            }
-          ) {
-            clientMutationId
-            success
-          }
+          value: newEmail
         }
-      `;
+      ]);
 
-      // Chamar a Function Edge do Supabase
-      // Usar a mesma URL que está nas variáveis de ambiente do cliente
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          query: pipefyQuery
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      if (!result.success) {
+        throw new Error(result.error || 'Falha ao atualizar chofer');
       }
 
-      const result = await response.json();
-      
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      logger.log('Chofer atualizado com sucesso no Pipefy:', result);
+      logger.log('Chofer atualizado com sucesso no Pipefy');
       
       // Atualizar o estado local do card para refletir a mudança imediatamente
       setCards(prevCards => 
@@ -349,20 +310,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     logger.log('Alocando chofer:', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
     
     try {
-      const supabase = createClient();
-      
-      // Obter o token de autenticação e dados do usuário atual
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Obter dados do usuário para o comentário
-      const { data: { user } } = await supabase.auth.getUser();
-      const userEmail = user?.email || 'Usuário desconhecido';
-
-      // Preparar os valores para atualização
+      // Preparar os campos para atualização
       const fieldsToUpdate = [
         {
           fieldId: "nome_do_chofer_que_far_a_recolha",
@@ -394,74 +342,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         });
       }
 
-      // Query GraphQL para atualizar os campos no Pipefy
-      const pipefyQuery = `
-        mutation {
-          updateFieldsValues(
-            input: {
-              nodeId: "${cardId}"
-              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
-            }
-          ) {
-            clientMutationId
-            success
-          }
-        }
-      `;
+      // Usar API segura para atualizar campos com comentário
+      const result = await updateCard(cardId, fieldsToUpdate, "alocou o chofer para recolha.");
 
-      // Adicionar comentário
-      const commentQuery = `
-        mutation {
-          createComment(
-            input: {
-              card_id: "${cardId}"
-              text: "O ${userEmail} alocou o chofer para recolha."
-            }
-          ) {
-            comment {
-              id
-              text
-              created_at
-              author {
-                id
-                name
-              }
-            }
-          }
-        }
-      `;
-
-      // Usar a mesma URL que está nas variáveis de ambiente do cliente
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      
-      // Executar a mutation para atualizar campos
-      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          query: pipefyQuery
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erro na API: ${response.status}`);
+      if (!result.success) {
+        throw new Error(result.error || 'Falha ao alocar chofer');
       }
-
-      // Executar a mutation para adicionar comentário
-      const commentResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          query: commentQuery
-        })
-      });
 
       logger.log('Chofer alocado com sucesso no Pipefy');
       
@@ -484,92 +370,14 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     logger.log('Rejeitando recolha:', { cardId, reason, observations });
     
     try {
-      const supabase = createClient();
-      
-      // Obter o token de autenticação e dados do usuário atual
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
+      // Usar API segura para atualizar campo com comentário
+      const result = await updateCard(cardId, [
+        { fieldId: "ve_culo_ser_recolhido", value: "Não" }
+      ], `rejeitou a recolha.\nMotivo: ${reason}\nComentário: ${observations}`);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Falha ao rejeitar recolha');
       }
-
-      // Obter dados do usuário para o comentário
-      const { data: { user } } = await supabase.auth.getUser();
-      const userEmail = user?.email || 'Usuário desconhecido';
-
-      // Query GraphQL para atualizar o campo no Pipefy
-      const pipefyQuery = `
-        mutation {
-          updateFieldsValues(
-            input: {
-              nodeId: "${cardId}"
-              values: [
-                {
-                  fieldId: "ve_culo_ser_recolhido",
-                  value: "Não"
-                }
-              ]
-            }
-          ) {
-            clientMutationId
-            success
-          }
-        }
-      `;
-
-      // Adicionar comentário
-      const commentQuery = `
-        mutation {
-          createComment(
-            input: {
-              card_id: "${cardId}"
-              text: "O ${userEmail} rejeitou a recolha.\\nMotivo: ${reason}\\nComentário: ${observations}"
-            }
-          ) {
-            comment {
-              id
-              text
-              created_at
-              author {
-                id
-                name
-              }
-            }
-          }
-        }
-      `;
-
-      // Usar a mesma URL que está nas variáveis de ambiente do cliente
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      
-      // Executar a mutation para atualizar campo
-      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          query: pipefyQuery
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Erro na API: ${response.status}`);
-      }
-
-      // Executar a mutation para adicionar comentário
-      const commentResponse = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          query: commentQuery
-        })
-      });
 
       logger.log('Recolha rejeitada com sucesso no Pipefy');
       
@@ -579,154 +387,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     }
   };
 
-  // Função utilitária para upload de imagens via Pipefy
-  const uploadImageToPipefy = async (file: File, fieldId: string, cardId: string, session: any) => {
-    try {
-      const supabaseUrl = (createClient() as any).supabaseUrl;
-      
-      // Passo 1: Gerar URL pré-assinada
-      const fileName = `${cardId}_${fieldId}_${Date.now()}.${file.type.split('/')[1] || 'jpg'}`;
-      const presignedQuery = `
-        mutation CreatePresignedUrl($organizationId: ID!, $fileName: String!, $contentType: String!) {
-          createPresignedUrl(
-            input: {
-              organizationId: $organizationId
-              fileName: $fileName
-              contentType: $contentType
-            }
-          ) {
-            url
-            downloadUrl
-            clientMutationId
-          }
-        }
-      `;
-
-      const variables = {
-        organizationId: "281428",
-        fileName: fileName,
-        contentType: file.type
-      };
-
-      logger.log('Enviando query para presigned URL:', presignedQuery);
-
-      const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ 
-          query: presignedQuery,
-          variables: variables
-        })
-      });
-
-      if (!presignedResponse.ok) {
-        const errorText = await presignedResponse.text();
-        logger.error('Erro na resposta presigned:', errorText);
-        throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
-      }
-
-      const presignedData = await presignedResponse.json();
-      logger.log('Resposta completa presigned URL:', presignedData);
-
-      // Verificar se há erros na resposta
-      if (presignedData.errors && presignedData.errors.length > 0) {
-        logger.error('Erros da API Pipefy:', presignedData.errors);
-        const errorMessages = presignedData.errors.map((error: any) => error.message).join(', ');
-        throw new Error(`Erro na API Pipefy: ${errorMessages}`);
-      }
-
-      // Verificar se a resposta tem a estrutura esperada
-      if (!presignedData?.data?.createPresignedUrl) {
-        logger.error('Estrutura de resposta inválida:', presignedData);
-        throw new Error('Resposta inválida da API de presigned URL');
-      }
-
-      const { url: uploadUrl, downloadUrl } = presignedData.data.createPresignedUrl;
-
-      if (!uploadUrl || !downloadUrl) {
-        throw new Error('URLs de upload/download não fornecidas');
-      }
-
-      logger.log('URLs obtidas:', { uploadUrl, downloadUrl });
-
-      // Passo 2: Upload da imagem
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        }
-      });
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text();
-        logger.error('Erro no upload:', errorText);
-        throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status}`);
-      }
-
-      logger.log('Upload realizado com sucesso');
-
-      // Passo 3: Atualizar campo no card com o path do arquivo
-      // Extrair o path do arquivo da downloadUrl
-      const urlParts = downloadUrl.split('/uploads/');
-      const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
-      const organizationId = "870bddf7-6ce7-4b9d-81d8-9087f1c10ae2"; // ID da organização
-      const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
-      
-      logger.log('Path do arquivo:', fullPath);
-
-      const updateFieldQuery = `
-        mutation {
-          updateCardField(
-            input: {
-              card_id: "${cardId}"
-              field_id: "${fieldId}"
-              new_value: ["${fullPath}"]
-            }
-          ) {
-            success
-            clientMutationId
-          }
-        }
-      `;
-
-      logger.log('Atualizando campo com URL:', updateFieldQuery);
-
-      const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ query: updateFieldQuery })
-      });
-
-      if (!updateResponse.ok) {
-        const errorText = await updateResponse.text();
-        logger.error('Erro ao atualizar campo:', errorText);
-        throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status}`);
-      }
-
-      const updateData = await updateResponse.json();
-      logger.log('Resposta updateCardField completa:', updateData);
-
-      // Verificar se há erros na atualização do campo
-      if (updateData.errors && updateData.errors.length > 0) {
-        logger.error('Erros ao atualizar campo:', updateData.errors);
-        const errorMessages = updateData.errors.map((error: any) => error.message).join(', ');
-        throw new Error(`Erro ao atualizar campo ${fieldId}: ${errorMessages}`);
-      }
-
-      logger.log('Campo atualizado com sucesso:', updateData);
-      return downloadUrl;
-    } catch (error) {
-      logger.error('Erro no upload da imagem:', error);
-      throw error;
-    }
-  };
+  // REMOVIDO: uploadImageToPipefy - substituído por API segura uploadFile
 
   // Função para mapear fase para os IDs corretos dos campos
   const getPhaseFieldIds = (phase: string) => {
@@ -811,88 +472,31 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     logger.log('Desbloqueando veículo:', { cardId, phase, photos, observations });
     
     try {
-      const supabase = createClient();
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      const userEmail = user?.email || 'Usuário desconhecido';
       const fieldIds = getPhaseFieldIds(phase);
 
-      // Upload das imagens
+      // Upload das imagens usando API segura
       const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
         const fieldId = fieldIds.photos[key];
         if (fieldId) {
-          return uploadImageToPipefy(file, fieldId, cardId, session);
+          return uploadFile(file, fieldId, cardId);
         }
       });
 
-      await Promise.all(uploadPromises);
+      const uploadResults = await Promise.all(uploadPromises);
+      
+      // Verificar se algum upload falhou
+      const failedUploads = uploadResults.filter(result => result && !result.success);
+      if (failedUploads.length > 0) {
+        throw new Error(`Falha no upload de ${failedUploads.length} imagem(ns)`);
+      }
 
-      // Atualizar campo de ação necessária
-      const actionQuery = `
-        mutation {
-          updateFieldsValues(
-            input: {
-              nodeId: "${cardId}"
-              values: [
-                {
-                  fieldId: "${fieldIds.action}"
-                  value: "Desbloquear Veículo"
-                }
-              ]
-            }
-          ) {
-            clientMutationId
-            success
-          }
-        }
-      `;
+      // Atualizar campo de ação necessária usando API segura
+      const result = await updateCard(cardId, [
+        { fieldId: fieldIds.action, value: "Desbloquear Veículo" }
+      ], observations ? `inseriu a observação "${observations}" na solicitação de desbloqueio.` : undefined);
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ query: actionQuery })
-      });
-
-      // Adicionar comentário se houver observações
-      if (observations) {
-        const commentQuery = `
-          mutation {
-            createComment(
-              input: {
-                card_id: "${cardId}"
-                text: "Usuário ${userEmail} inseriu a observação ${observations} na solicitação de desbloqueio."
-              }
-            ) {
-              comment {
-                id
-                text
-                created_at
-                author {
-                  id
-                  name
-                }
-              }
-            }
-          }
-        `;
-
-        await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ query: commentQuery })
-        });
+      if (!result.success) {
+        throw new Error(result.error || 'Falha ao desbloquear veículo');
       }
 
       logger.log('Veículo desbloqueado com sucesso no Pipefy');
@@ -907,13 +511,6 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     logger.log('Solicitando guincho:', { cardId, phase, reason, photos });
     
     try {
-      const supabase = createClient();
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
-      }
-
       const fieldIds = getPhaseFieldIds(phase);
 
       // Upload das imagens (excluir estepe e painel se for "sem recuperação da chave")
@@ -921,48 +518,31 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         ? Object.fromEntries(Object.entries(photos).filter(([key]) => !['estepe', 'painel'].includes(key)))
         : photos;
 
+      // Upload usando API segura
       const uploadPromises = Object.entries(photosToUpload).map(async ([key, file]) => {
         const fieldId = fieldIds.photos[key];
         if (fieldId) {
-          return uploadImageToPipefy(file, fieldId, cardId, session);
+          return uploadFile(file, fieldId, cardId);
         }
       });
 
-      await Promise.all(uploadPromises);
+      const uploadResults = await Promise.all(uploadPromises);
+      
+      // Verificar se algum upload falhou
+      const failedUploads = uploadResults.filter(result => result && !result.success);
+      if (failedUploads.length > 0) {
+        throw new Error(`Falha no upload de ${failedUploads.length} imagem(ns)`);
+      }
 
-      // Atualizar campos
-      const updateQuery = `
-        mutation {
-          updateFieldsValues(
-            input: {
-              nodeId: "${cardId}"
-              values: [
-                {
-                  fieldId: "${fieldIds.reason}"
-                  value: "${reason}"
-                },
-                {
-                  fieldId: "${fieldIds.action}"
-                  value: "Solicitar Guincho"
-                }
-              ]
-            }
-          ) {
-            clientMutationId
-            success
-          }
-        }
-      `;
+      // Atualizar campos usando API segura
+      const result = await updateCard(cardId, [
+        { fieldId: fieldIds.reason, value: reason },
+        { fieldId: fieldIds.action, value: "Solicitar Guincho" }
+      ]);
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ query: updateQuery })
-      });
+      if (!result.success) {
+        throw new Error(result.error || 'Falha ao solicitar guincho');
+      }
 
       logger.log('Guincho solicitado com sucesso no Pipefy');
       
@@ -976,58 +556,33 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     logger.log('Reportando problema:', { cardId, phase, difficulty, evidences });
     
     try {
-      const supabase = createClient();
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        throw new Error('Usuário não autenticado');
-      }
-
       const fieldIds = getPhaseFieldIds(phase);
 
-      // Upload das evidências
+      // Upload das evidências usando API segura
       const uploadPromises = Object.entries(evidences).map(async ([key, file]) => {
         const fieldId = fieldIds.evidences[key];
         if (fieldId) {
-          return uploadImageToPipefy(file, fieldId, cardId, session);
+          return uploadFile(file, fieldId, cardId);
         }
       });
 
-      await Promise.all(uploadPromises);
+      const uploadResults = await Promise.all(uploadPromises);
+      
+      // Verificar se algum upload falhou
+      const failedUploads = uploadResults.filter(result => result && !result.success);
+      if (failedUploads.length > 0) {
+        throw new Error(`Falha no upload de ${failedUploads.length} evidência(s)`);
+      }
 
-      // Atualizar campos
-      const updateQuery = `
-        mutation {
-          updateFieldsValues(
-            input: {
-              nodeId: "${cardId}"
-              values: [
-                {
-                  fieldId: "${fieldIds.difficulty}"
-                  value: "${difficulty}"
-                },
-                {
-                  fieldId: "${fieldIds.action}"
-                  value: "Reportar Problema"
-                }
-              ]
-            }
-          ) {
-            clientMutationId
-            success
-          }
-        }
-      `;
+      // Atualizar campos usando API segura
+      const result = await updateCard(cardId, [
+        { fieldId: fieldIds.difficulty, value: difficulty },
+        { fieldId: fieldIds.action, value: "Reportar Problema" }
+      ]);
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ query: updateQuery })
-      });
+      if (!result.success) {
+        throw new Error(result.error || 'Falha ao reportar problema');
+      }
 
       logger.log('Problema reportado com sucesso no Pipefy');
       

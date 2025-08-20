@@ -11,14 +11,24 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
 Estas variáveis são **obrigatórias** para o funcionamento da aplicação. Você pode obtê-las no dashboard do Supabase em:
 - Settings > API
 
-## Variáveis Opcionais
+## Variáveis Obrigatórias (Pipefy)
 
-### Pipefy
+### Pipefy - SEGURANÇA CRÍTICA
 ```env
-NEXT_PUBLIC_PIPEFY_TOKEN=seu_token_pipefy
+# Token de autorização (NUNCA usar NEXT_PUBLIC_)
+PIPEFY_TOKEN=seu_token_pipefy
+
+# IDs da organização (obrigatórios)
+PIPEFY_ORGANIZATION_ID=281428
+PIPEFY_ORG_UUID=870bddf7-6ce7-4b9d-81d8-9087f1c10ae2
+
+# URL da API (opcional - usa padrão se não definida)
+PIPEFY_API_URL=https://api.pipefy.com/graphql
 ```
 
-Esta variável é opcional. Se não fornecida, algumas funcionalidades relacionadas ao Pipefy podem não funcionar completamente.
+**⚠️ IMPORTANTE**: Estas variáveis são **OBRIGATÓRIAS** e devem estar **SEM** o prefixo `NEXT_PUBLIC_` para manter a segurança.
+
+## Variáveis Opcionais
 
 ## Configuração na Vercel
 
