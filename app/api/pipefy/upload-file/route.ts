@@ -13,8 +13,11 @@ interface UploadResponse {
 
 interface GraphQLResponse {
   data?: {
-    updateFieldsValues?: {
-      success: boolean
+    updateCardField?: {
+      card: {
+        id: string
+        title: string
+      }
       clientMutationId?: string
     }
   }
@@ -110,26 +113,14 @@ export async function POST(request: NextRequest) {
       throw new Error(`Erro ao fazer upload do arquivo: ${uploadResponse.statusText}`)
     }
 
-    // Extract file path from download URL
-    const urlParts = uploadData.downloadUrl?.split('/') || []
-    const filePath = urlParts.slice(-2).join('/')
-    
-    // Get organization UUID from session metadata or environment
-    const organizationUuid = session.user?.user_metadata?.organization_uuid || process.env.PIPEFY_ORGANIZATION_UUID
-    
-    // IMPORTANTE: O Pipefy espera apenas o nome do arquivo, não o caminho completo
-    // Vamos enviar apenas o nome do arquivo
-    const fileNameOnly = fileName
-    
     logger.warn('🔧 [API] Preparando update campo:', {
-      urlParts: urlParts.length,
-      filePath,
-      organizationUuid,
-      fileNameOnly
+      downloadUrl: uploadData.downloadUrl,
+      cardId,
+      fieldId
     })
 
-    // Update card field with file reference
-    const updateResult = await updateFileField(cardId, fieldId, fileNameOnly)
+    // Update card field with file reference using downloadUrl
+    const updateResult = await updateFileField(cardId, fieldId, uploadData.downloadUrl || '')
     
     if (!updateResult.success) {
       throw new Error(updateResult.error || 'Erro ao atualizar campo')
@@ -138,7 +129,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       downloadUrl: uploadData.downloadUrl,
-      filePath: fileNameOnly,
     })
 
   } catch (error) {
@@ -150,28 +140,27 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function updateFileField(cardId: string, fieldId: string, fileName: string) {
+async function updateFileField(cardId: string, fieldId: string, downloadUrl: string) {
   logger.warn('📝 [API] Iniciando updateFileField:', {
     cardId,
     fieldId,
-    fileName
+    downloadUrl
   })
 
   try {
     const mutation = `
       mutation {
-        updateFieldsValues(
+        updateCardField(
           input: {
-            nodeId: "${cardId}"
-            values: [
-              {
-                fieldId: "${fieldId}"
-                value: ["${fileName}"]
-              }
-            ]
+            card_id: "${cardId}"
+            field_id: "${fieldId}"
+            value: "${downloadUrl}"
           }
         ) {
-          success
+          card {
+            id
+            title
+          }
           clientMutationId
         }
       }
@@ -202,7 +191,7 @@ async function updateFileField(cardId: string, fieldId: string, fileName: string
 
     return {
       success: true,
-      data: result.data?.updateFieldsValues,
+      data: result.data?.updateCardField,
     }
 
   } catch (error) {
