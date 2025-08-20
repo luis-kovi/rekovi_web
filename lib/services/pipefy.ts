@@ -24,6 +24,13 @@ export class PipefyService {
     }
     return PipefyService.instance;
   }
+
+  /**
+   * Getter para acessar a configuração
+   */
+  public getConfig() {
+    return PIPEFY_CONFIG;
+  }
   
   /**
    * Executa uma mutation/query GraphQL no Pipefy de forma segura

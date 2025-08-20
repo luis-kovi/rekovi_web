@@ -1,5 +1,5 @@
 // app/api/pipefy/upload-file/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server';
 import { pipefyService } from '@/lib/services/pipefy';
 import { logger } from '@/utils/logger';
@@ -17,60 +17,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Obter dados do FormData
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const fieldId = formData.get('fieldId') as string;
-    const cardId = formData.get('cardId') as string;
+    // 2. Obter dados do body JSON
+    const { cardId, fieldId, fileName, contentType } = await request.json();
 
     // 3. Validar dados obrigatórios
-    if (!file) {
+    if (!cardId || !fieldId || !fileName || !contentType) {
       return NextResponse.json(
-        { error: 'Arquivo é obrigatório' },
+        { error: 'Card ID, Field ID, fileName e contentType são obrigatórios' },
         { status: 400 }
       );
     }
 
-    if (!fieldId || !cardId) {
+    // 4. Gerar presigned URL via Pipefy service
+    const { url, downloadUrl } = await pipefyService.createPresignedUrl(fileName, contentType);
+
+    // 5. Extrair path e atualizar campo
+    const urlParts = downloadUrl.split('/uploads/');
+    const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
+    const organizationUuid = pipefyService.getConfig().ORG_UUID;
+    const fullPath = `orgs/${organizationUuid}/uploads/${filePath}`;
+
+    // 6. Atualizar campo no card
+    const updateSuccess = await pipefyService.updateCardFields(cardId, [
+      { fieldId: fieldId, value: [fullPath] }
+    ]);
+
+    if (!updateSuccess) {
       return NextResponse.json(
-        { error: 'Field ID e Card ID são obrigatórios' },
-        { status: 400 }
+        { error: 'Falha ao atualizar campo do card' },
+        { status: 500 }
       );
     }
 
-    // 4. Validar tipo e tamanho do arquivo
-    const allowedTypes = [
-      'image/jpeg',
-      'image/jpg', 
-      'image/png',
-      'image/webp',
-      'application/pdf'
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Tipo de arquivo não permitido. Use: JPEG, PNG, WebP ou PDF' },
-        { status: 400 }
-      );
-    }
-
-    // Limite de 10MB
-    const maxSize = 10 * 1024 * 1024; // 10MB em bytes
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: 'Arquivo muito grande. Máximo permitido: 10MB' },
-        { status: 400 }
-      );
-    }
-
-    // 5. Upload do arquivo via Pipefy service
-    const downloadUrl = await pipefyService.uploadFile(file, fieldId, cardId);
-
-    // 6. Retornar sucesso
+    // 7. Retornar URLs para upload
     return NextResponse.json({
       success: true,
-      downloadUrl,
-      message: 'Arquivo enviado com sucesso'
+      uploadUrl: url,
+      downloadUrl
     });
 
   } catch (error) {
