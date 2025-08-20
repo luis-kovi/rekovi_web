@@ -623,7 +623,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
         const fieldId = photoFieldMapping[key];
         if (fieldId) {
-          return uploadImageToPipefy(file, fieldId, cardId, session);
+          return uploadFile(file, fieldId, cardId);
         }
       });
 
@@ -640,7 +640,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
         const fieldId = expenseFieldMapping[key];
         if (fieldId) {
-          return uploadImageToPipefy(file, fieldId, cardId, session);
+          return uploadFile(file, fieldId, cardId);
         }
       });
 
@@ -733,7 +733,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       }
 
       // Upload da foto do veículo no guincho
-      await uploadImageToPipefy(photo, 'anexe_imagem_do_carro_no_guincho', cardId, session);
+      await uploadFile(photo, 'anexe_imagem_do_carro_no_guincho', cardId);
 
       // Upload dos comprovantes de despesas (mesmo mapeamento da entrega no pátio)
       const expenseFieldMapping: Record<string, string> = {
@@ -746,7 +746,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
         const fieldId = expenseFieldMapping[key];
         if (fieldId) {
-          return uploadImageToPipefy(file, fieldId, cardId, session);
+          return uploadFile(file, fieldId, cardId);
         }
       });
 
