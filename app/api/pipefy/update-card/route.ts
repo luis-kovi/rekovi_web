@@ -6,11 +6,17 @@ import { logger } from '@/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🚀 [API] update-card iniciado');
+    
     // 1. Verificar autenticação
     const supabase = await createClient();
+    console.log('✅ [API] Supabase client criado');
+    
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log('🔐 [API] Session check:', { hasSession: !!session, error: sessionError?.message });
     
     if (sessionError || !session) {
+      console.log('❌ [API] Usuário não autenticado');
       return NextResponse.json(
         { error: 'Usuário não autenticado' },
         { status: 401 }
@@ -19,6 +25,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Obter dados do request
     const body = await request.json();
+    console.log('📥 [API] Body recebido:', { cardId: body.cardId, fieldsCount: body.fields?.length, hasComment: !!body.comment });
     const { cardId, fields, comment } = body;
 
     // 3. Validar dados obrigatórios
@@ -52,7 +59,9 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. Atualizar campos no Pipefy
+    console.log('🔄 [API] Iniciando updateCardFields:', { cardId, fieldsCount: fields.length });
     const updateSuccess = await pipefyService.updateCardFields(cardId, fields);
+    console.log('📝 [API] UpdateCardFields resultado:', updateSuccess);
 
     if (!updateSuccess) {
       return NextResponse.json(
@@ -85,10 +94,11 @@ export async function POST(request: NextRequest) {
       message: 'Card atualizado com sucesso'
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    console.error('❌ [API] Erro na update-card:', error);
     logger.error('Erro na API update-card:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: error.message || 'Erro interno do servidor' },
       { status: 500 }
     );
   }
