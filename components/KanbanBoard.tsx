@@ -680,15 +680,19 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
 
       const updateFieldQuery = `
         mutation {
-          updateCardField(
+          updateFieldsValues(
             input: {
-              card_id: "${cardId}"
-              field_id: "${fieldId}"
-              new_value: ["${fullPath}"]
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldId}"
+                  value: ["${fullPath}"]
+                }
+              ]
             }
           ) {
-            success
             clientMutationId
+            success
           }
         }
       `;
@@ -711,7 +715,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       }
 
       const updateData = await updateResponse.json();
-      logger.log('Resposta updateCardField completa:', updateData);
+      logger.log('Resposta updateFieldsValues completa:', updateData);
 
       // Verificar se há erros na atualização do campo
       if (updateData.errors && updateData.errors.length > 0) {
@@ -1109,18 +1113,26 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       // Montar lista de campos para atualizar usando updateCardField para cada campo
       const supabaseUrl = (supabase as any).supabaseUrl;
       
-      // Atualizar campo de seleção
-      const updateSelectionQuery = `
+      // Atualizar campo de seleção e despesas extras usando updateFieldsValues
+      const updateFieldsQuery = `
         mutation {
-          updateCardField(
+          updateFieldsValues(
             input: {
-              card_id: "${cardId}"
-              field_id: "selecione_uma_op_o"
-              new_value: "Carro entregue no pátio"
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "selecione_uma_op_o"
+                  value: "Carro entregue no pátio"
+                },
+                {
+                  fieldId: "houveram_despesas_extras_no_processo_de_recolha"
+                  value: ${JSON.stringify(expenses)}
+                }
+              ]
             }
           ) {
-            success
             clientMutationId
+            success
           }
         }
       `;
@@ -1131,32 +1143,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateSelectionQuery })
-      });
-
-      // Atualizar campo de despesas extras
-      const updateExpensesQuery = `
-        mutation {
-          updateCardField(
-            input: {
-              card_id: "${cardId}"
-              field_id: "houveram_despesas_extras_no_processo_de_recolha"
-              new_value: ${JSON.stringify(expenses)}
-            }
-          ) {
-            success
-            clientMutationId
-          }
-        }
-      `;
-
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ query: updateExpensesQuery })
+        body: JSON.stringify({ query: updateFieldsQuery })
       });
 
       // Atualizar valores de despesas individualmente
@@ -1165,15 +1152,19 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         if (fieldId && value) {
           const updateValueQuery = `
             mutation {
-              updateCardField(
+              updateFieldsValues(
                 input: {
-                  card_id: "${cardId}"
-                  field_id: "${fieldId}"
-                  new_value: "${value}"
+                  nodeId: "${cardId}"
+                  values: [
+                    {
+                      fieldId: "${fieldId}"
+                      value: "${value}"
+                    }
+                  ]
                 }
               ) {
-                success
                 clientMutationId
+                success
               }
             }
           `;
@@ -1285,18 +1276,26 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       // Atualizar campos individualmente usando updateCardField
       const supabaseUrl = (supabase as any).supabaseUrl;
       
-      // Atualizar campo de seleção
-      const updateSelectionQuery = `
+      // Atualizar campo de seleção e despesas extras usando updateFieldsValues
+      const updateFieldsQuery = `
         mutation {
-          updateCardField(
+          updateFieldsValues(
             input: {
-              card_id: "${cardId}"
-              field_id: "selecione_uma_op_o"
-              new_value: "Carro guinchado"
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "selecione_uma_op_o"
+                  value: "Carro guinchado"
+                },
+                {
+                  fieldId: "houveram_despesas_extras_no_processo_de_recolha"
+                  value: ${JSON.stringify(expenses)}
+                }
+              ]
             }
           ) {
-            success
             clientMutationId
+            success
           }
         }
       `;
@@ -1307,32 +1306,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateSelectionQuery })
-      });
-
-      // Atualizar campo de despesas extras
-      const updateExpensesQuery = `
-        mutation {
-          updateCardField(
-            input: {
-              card_id: "${cardId}"
-              field_id: "houveram_despesas_extras_no_processo_de_recolha"
-              new_value: ${JSON.stringify(expenses)}
-            }
-          ) {
-            success
-            clientMutationId
-          }
-        }
-      `;
-
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ query: updateExpensesQuery })
+        body: JSON.stringify({ query: updateFieldsQuery })
       });
 
       // Atualizar valores de despesas individualmente
@@ -1341,15 +1315,19 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         if (fieldId && value) {
           const updateValueQuery = `
             mutation {
-              updateCardField(
+              updateFieldsValues(
                 input: {
-                  card_id: "${cardId}"
-                  field_id: "${fieldId}"
-                  new_value: "${value}"
+                  nodeId: "${cardId}"
+                  values: [
+                    {
+                      fieldId: "${fieldId}"
+                      value: "${value}"
+                    }
+                  ]
                 }
               ) {
-                success
                 clientMutationId
+                success
               }
             }
           `;
@@ -1421,20 +1399,24 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const { data: userData } = await supabase.auth.getUser();
       const userEmail = userData.user?.email || 'usuário';
 
-      // Atualizar campo selecione_uma_op_o usando updateCardField
+      // Atualizar campo selecione_uma_op_o usando updateFieldsValues
       const supabaseUrl = (supabase as any).supabaseUrl;
       
       const updateSelectionQuery = `
         mutation {
-          updateCardField(
+          updateFieldsValues(
             input: {
-              card_id: "${cardId}"
-              field_id: "selecione_uma_op_o"
-              new_value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "selecione_uma_op_o"
+                  value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
+                }
+              ]
             }
           ) {
-            success
             clientMutationId
+            success
           }
         }
       `;
