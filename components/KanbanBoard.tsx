@@ -1055,7 +1055,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('Usuário não autenticado');
       }
 
-      // Upload das fotos do veículo no pátio
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+
+      // Upload das fotos do veículo no pátio - seguindo mesmo padrão da função de desbloqueio
       const photoFieldMapping: Record<string, string> = {
         frente: 'anexe_imagem_do_carro_no_p_tio',
         traseira: 'foto_da_traseira_do_ve_culo',
@@ -1068,11 +1071,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const uploadPromises = Object.entries(photos).map(async ([key, file]) => {
         const fieldId = photoFieldMapping[key];
         if (fieldId) {
+          logger.log(`Fazendo upload da foto ${key} para o campo ${fieldId}`);
           return uploadImageToPipefy(file, fieldId, cardId, session);
         }
       });
 
       await Promise.all(uploadPromises);
+      logger.log('Upload das fotos do veículo concluído');
 
       // Upload dos comprovantes de despesas
       const expenseFieldMapping: Record<string, string> = {
@@ -1085,11 +1090,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
         const fieldId = expenseFieldMapping[key];
         if (fieldId) {
+          logger.log(`Fazendo upload do comprovante ${key} para o campo ${fieldId}`);
           return uploadImageToPipefy(file, fieldId, cardId, session);
         }
       });
 
       await Promise.all(receiptPromises);
+      logger.log('Upload dos comprovantes concluído');
 
       // Preparar valores das despesas
       const expenseValueFields: Record<string, string> = {
@@ -1099,57 +1106,120 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         motoboy: 'valor_do_motoboy'
       };
 
-      // Montar lista de campos para atualizar
-      const fieldsToUpdate = [
-        {
-          fieldId: 'selecione_uma_op_o',
-          value: 'Carro entregue no pátio'
-        },
-        {
-          fieldId: 'houveram_despesas_extras_no_processo_de_recolha',
-          value: expenses
-        }
-      ];
-
-      // Adicionar valores de despesas
-      Object.entries(expenseValues).forEach(([key, value]) => {
-        const fieldId = expenseValueFields[key];
-        if (fieldId && value) {
-          fieldsToUpdate.push({
-            fieldId: fieldId,
-            value: value
-          });
-        }
-      });
-
-      // Atualizar campos no Pipefy
-      const updateQuery = `
+      // Montar lista de campos para atualizar usando updateCardField para cada campo
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Atualizar campo de seleção
+      const updateSelectionQuery = `
         mutation {
-          updateFieldsValues(
+          updateCardField(
             input: {
-              nodeId: "${cardId}"
-              values: [
-                ${fieldsToUpdate.map(field => `{
-                  fieldId: "${field.fieldId}"
-                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
-                }`).join(',')}
-              ]
+              card_id: "${cardId}"
+              field_id: "selecione_uma_op_o"
+              new_value: "Carro entregue no pátio"
             }
           ) {
-            clientMutationId
             success
+            clientMutationId
           }
         }
       `;
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
       await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateQuery })
+        body: JSON.stringify({ query: updateSelectionQuery })
+      });
+
+      // Atualizar campo de despesas extras
+      const updateExpensesQuery = `
+        mutation {
+          updateCardField(
+            input: {
+              card_id: "${cardId}"
+              field_id: "houveram_despesas_extras_no_processo_de_recolha"
+              new_value: ${JSON.stringify(expenses)}
+            }
+          ) {
+            success
+            clientMutationId
+          }
+        }
+      `;
+
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateExpensesQuery })
+      });
+
+      // Atualizar valores de despesas individualmente
+      const valueUpdatePromises = Object.entries(expenseValues).map(async ([key, value]) => {
+        const fieldId = expenseValueFields[key];
+        if (fieldId && value) {
+          const updateValueQuery = `
+            mutation {
+              updateCardField(
+                input: {
+                  card_id: "${cardId}"
+                  field_id: "${fieldId}"
+                  new_value: "${value}"
+                }
+              ) {
+                success
+                clientMutationId
+              }
+            }
+          `;
+
+          return fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ query: updateValueQuery })
+          });
+        }
+      });
+
+      await Promise.all(valueUpdatePromises.filter(Boolean));
+
+      // Adicionar comentário de confirmação
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "Usuário ${userEmail} confirmou a entrega do veículo no pátio."
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: commentQuery })
       });
 
       logger.log('Entrega no pátio confirmada com sucesso no Pipefy');
@@ -1177,8 +1247,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         throw new Error('Usuário não autenticado');
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      const userEmail = user?.email || 'Usuário desconhecido';
+
       // Upload da foto do veículo no guincho
+      logger.log('Fazendo upload da foto do veículo no guincho');
       await uploadImageToPipefy(photo, 'anexe_imagem_do_carro_no_guincho', cardId, session);
+      logger.log('Upload da foto do guincho concluído');
 
       // Upload dos comprovantes de despesas (mesmo mapeamento da entrega no pátio)
       const expenseFieldMapping: Record<string, string> = {
@@ -1191,11 +1266,13 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const receiptPromises = Object.entries(expenseReceipts).map(async ([key, file]) => {
         const fieldId = expenseFieldMapping[key];
         if (fieldId) {
+          logger.log(`Fazendo upload do comprovante ${key} para o campo ${fieldId}`);
           return uploadImageToPipefy(file, fieldId, cardId, session);
         }
       });
 
       await Promise.all(receiptPromises);
+      logger.log('Upload dos comprovantes concluído');
 
       // Preparar valores das despesas
       const expenseValueFields: Record<string, string> = {
@@ -1205,57 +1282,120 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         motoboy: 'valor_do_motoboy'
       };
 
-      // Montar lista de campos para atualizar
-      const fieldsToUpdate = [
-        {
-          fieldId: 'selecione_uma_op_o',
-          value: 'Carro guinchado'
-        },
-        {
-          fieldId: 'houveram_despesas_extras_no_processo_de_recolha',
-          value: expenses
-        }
-      ];
-
-      // Adicionar valores de despesas
-      Object.entries(expenseValues).forEach(([key, value]) => {
-        const fieldId = expenseValueFields[key];
-        if (fieldId && value) {
-          fieldsToUpdate.push({
-            fieldId: fieldId,
-            value: value
-          });
-        }
-      });
-
-      // Atualizar campos no Pipefy
-      const updateQuery = `
+      // Atualizar campos individualmente usando updateCardField
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      // Atualizar campo de seleção
+      const updateSelectionQuery = `
         mutation {
-          updateFieldsValues(
+          updateCardField(
             input: {
-              nodeId: "${cardId}"
-              values: [
-                ${fieldsToUpdate.map(field => `{
-                  fieldId: "${field.fieldId}"
-                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
-                }`).join(',')}
-              ]
+              card_id: "${cardId}"
+              field_id: "selecione_uma_op_o"
+              new_value: "Carro guinchado"
             }
           ) {
-            clientMutationId
             success
+            clientMutationId
           }
         }
       `;
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
       await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateQuery })
+        body: JSON.stringify({ query: updateSelectionQuery })
+      });
+
+      // Atualizar campo de despesas extras
+      const updateExpensesQuery = `
+        mutation {
+          updateCardField(
+            input: {
+              card_id: "${cardId}"
+              field_id: "houveram_despesas_extras_no_processo_de_recolha"
+              new_value: ${JSON.stringify(expenses)}
+            }
+          ) {
+            success
+            clientMutationId
+          }
+        }
+      `;
+
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateExpensesQuery })
+      });
+
+      // Atualizar valores de despesas individualmente
+      const valueUpdatePromises = Object.entries(expenseValues).map(async ([key, value]) => {
+        const fieldId = expenseValueFields[key];
+        if (fieldId && value) {
+          const updateValueQuery = `
+            mutation {
+              updateCardField(
+                input: {
+                  card_id: "${cardId}"
+                  field_id: "${fieldId}"
+                  new_value: "${value}"
+                }
+              ) {
+                success
+                clientMutationId
+              }
+            }
+          `;
+
+          return fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ query: updateValueQuery })
+          });
+        }
+      });
+
+      await Promise.all(valueUpdatePromises.filter(Boolean));
+
+      // Adicionar comentário de confirmação
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "Usuário ${userEmail} confirmou que o veículo foi guinchado."
+            }
+          ) {
+            comment {
+              id
+              text
+              created_at
+              author {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: commentQuery })
       });
 
       logger.log('Carro guinchado confirmado com sucesso no Pipefy');
@@ -1281,33 +1421,42 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const { data: userData } = await supabase.auth.getUser();
       const userEmail = userData.user?.email || 'usuário';
 
-      // Atualizar campo selecione_uma_op_o
-      const updateQuery = `
+      // Atualizar campo selecione_uma_op_o usando updateCardField
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      
+      const updateSelectionQuery = `
         mutation {
-          updateFieldsValues(
+          updateCardField(
             input: {
-              nodeId: "${cardId}"
-              values: [
-                {
-                  fieldId: "selecione_uma_op_o"
-                  value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
-                }
-              ]
+              card_id: "${cardId}"
+              field_id: "selecione_uma_op_o"
+              new_value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
             }
           ) {
-            clientMutationId
             success
+            clientMutationId
           }
         }
       `;
 
-      // Criar comentário
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: updateSelectionQuery })
+      });
+
+      logger.log('Campo de seleção atualizado');
+
+      // Criar comentário com o motivo detalhado
       const commentQuery = `
         mutation {
           createComment(
             input: {
               card_id: "${cardId}"
-              text: "O ${userEmail} inseriu a seguinte observação no pedido do guincho: ${reason}"
+              text: "Usuário ${userEmail} solicitou um novo guincho com o seguinte motivo: ${reason}"
             }
           ) {
             comment {
@@ -1323,28 +1472,16 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         }
       `;
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      
-      // Executar ambas as mutations
-      await Promise.all([
-        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ query: updateQuery })
-        }),
-        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ query: commentQuery })
-        })
-      ]);
+      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ query: commentQuery })
+      });
 
+      logger.log('Comentário adicionado com o motivo do guincho');
       logger.log('Guincho mecânico solicitado com sucesso no Pipefy');
       
     } catch (error) {
