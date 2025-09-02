@@ -1143,7 +1143,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       `;
 
       const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1151,6 +1151,18 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         },
         body: JSON.stringify({ query: updateQuery })
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('Erro na requisição ao Pipefy (desktop):', errorText);
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const result = await response.json();
+      if (result.errors) {
+        logger.error('Erro do Pipefy (desktop):', result.errors);
+        throw new Error(`Erro do Pipefy: ${result.errors?.[0]?.message || 'Erro desconhecido'}`);
+      }
 
       logger.log('Entrega no pátio confirmada com sucesso no Pipefy');
       
@@ -1249,7 +1261,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       `;
 
       const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1257,6 +1269,18 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         },
         body: JSON.stringify({ query: updateQuery })
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('Erro na requisição ao Pipefy (desktop):', errorText);
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const result = await response.json();
+      if (result.errors) {
+        logger.error('Erro do Pipefy (desktop):', result.errors);
+        throw new Error(`Erro do Pipefy: ${result.errors?.[0]?.message || 'Erro desconhecido'}`);
+      }
 
       logger.log('Carro guinchado confirmado com sucesso no Pipefy');
       

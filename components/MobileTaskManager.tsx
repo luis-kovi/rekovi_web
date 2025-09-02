@@ -1138,12 +1138,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           updateFieldsValues(
             input: {
               nodeId: "${cardId}"
-              values: [
-                ${fieldsToUpdate.map(field => `{
-                  fieldId: "${field.fieldId}"
-                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
-                }`).join(',')}
-              ]
+              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
             }
           ) {
             clientMutationId
@@ -1151,6 +1146,10 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }
         }
       `;
+
+      // Log da query para debug
+      logger.log('Query GraphQL handleConfirmPatioDelivery (mobile):', updateQuery);
+      logger.log('Campos para atualizar handleConfirmPatioDelivery (mobile):', fieldsToUpdate);
 
       // Usar função Edge do Supabase (igual ao desktop)
       const supabaseUrl = (supabase as any).supabaseUrl;
@@ -1175,7 +1174,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         throw new Error(`Erro do Pipefy: ${result.errors?.[0]?.message || 'Erro desconhecido'}`);
       }
 
-      logger.log('Entrega no pátio confirmada com sucesso no Pipefy');
+      logger.log('Entrega no pátio confirmada com sucesso no Pipefy (mobile)');
       
     } catch (error) {
       logger.error('Erro ao confirmar entrega no pátio:', error);
@@ -1257,12 +1256,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           updateFieldsValues(
             input: {
               nodeId: "${cardId}"
-              values: [
-                ${fieldsToUpdate.map(field => `{
-                  fieldId: "${field.fieldId}"
-                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
-                }`).join(',')}
-              ]
+              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
             }
           ) {
             clientMutationId
@@ -1270,6 +1264,10 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }
         }
       `;
+
+      // Log da query para debug
+      logger.log('Query GraphQL handleConfirmCarTowed (mobile):', updateQuery);
+      logger.log('Campos para atualizar handleConfirmCarTowed (mobile):', fieldsToUpdate);
 
       // Usar função Edge do Supabase (igual ao desktop)
       const supabaseUrl = (supabase as any).supabaseUrl;
@@ -1284,16 +1282,17 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error('Erro na requisição (mobile):', errorText);
+        logger.error('Erro na requisição handleConfirmCarTowed (mobile):', errorText);
         throw new Error('Erro na requisição ao Pipefy');
       }
 
       const result = await response.json();
       if (result.errors) {
+        logger.error('Erro do Pipefy handleConfirmCarTowed (mobile):', result.errors);
         throw new Error(`Erro do Pipefy: ${result.errors?.[0]?.message || 'Erro desconhecido'}`);
       }
 
-      logger.log('Carro guinchado confirmado com sucesso no Pipefy');
+      logger.log('Carro guinchado confirmado com sucesso no Pipefy (mobile)');
       
     } catch (error) {
       logger.error('Erro ao confirmar carro guinchado:', error);
