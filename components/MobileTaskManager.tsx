@@ -690,15 +690,19 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
 
       const updateFieldQuery = `
         mutation {
-          updateCardField(
+          updateFieldsValues(
             input: {
-              card_id: "${cardId}"
-              field_id: "${fieldId}"
-              new_value: ["${fullPath}"]
+              nodeId: "${cardId}"
+              values: [
+                {
+                  fieldId: "${fieldId}"
+                  value: ["${fullPath}"]
+                }
+              ]
             }
           ) {
-            success
             clientMutationId
+            success
           }
         }
       `;
@@ -721,7 +725,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       }
 
       const updateData = await updateResponse.json();
-      logger.log('Resposta updateCardField completa (mobile):', updateData);
+      logger.log('Resposta updateFieldsValues completa (mobile):', updateData);
 
       // Verificar se há erros na atualização do campo
       if (updateData.errors && updateData.errors.length > 0) {
