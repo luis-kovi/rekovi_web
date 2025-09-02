@@ -1132,6 +1132,11 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       });
 
+      // Debug: Log dos dados antes de enviar
+      logger.log('Debug - fieldsToUpdate (mobile):', fieldsToUpdate);
+      logger.log('Debug - expenses recebido (mobile):', expenses);
+      logger.log('Debug - expenseValues recebido (mobile):', expenseValues);
+
       // Atualizar campos no Pipefy
       const updateQuery = `
         mutation {
@@ -1152,15 +1157,31 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      logger.log('Debug - updateQuery (mobile):', updateQuery);
+
+      // Tentar chamada direta ao Pipefy (igual ao desktop)
+      const response = await fetch('https://api.pipefy.com/graphql', {
         method: 'POST',
         headers: {
+          ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateQuery })
+        body: JSON.stringify({ query: updateQuery }),
       });
+
+      logger.log('Debug - response status (mobile):', response.status);
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('Debug - response error (mobile):', errorText);
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const result = await response.json();
+      logger.log('Debug - response result (mobile):', result);
+      if (result.errors) {
+        logger.error('Debug - Pipefy errors (mobile):', result.errors);
+        throw new Error(`Erro do Pipefy: ${result.errors[0].message}`);
+      }
 
       logger.log('Entrega no pátio confirmada com sucesso no Pipefy');
       
@@ -1258,15 +1279,24 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      // Usar chamada direta ao Pipefy (igual ao desktop)
+      const response = await fetch('https://api.pipefy.com/graphql', {
         method: 'POST',
         headers: {
+          ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateQuery })
+        body: JSON.stringify({ query: updateQuery }),
       });
+
+      if (!response.ok) {
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const result = await response.json();
+      if (result.errors) {
+        throw new Error(`Erro do Pipefy: ${result.errors[0].message}`);
+      }
 
       logger.log('Carro guinchado confirmado com sucesso no Pipefy');
       
@@ -1333,27 +1363,38 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      const supabaseUrl = (supabase as any).supabaseUrl;
-      
-      // Executar ambas as mutations
-      await Promise.all([
-        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+      // Executar ambas as mutations usando chamada direta ao Pipefy
+      const [updateResponse, commentResponse] = await Promise.all([
+        fetch('https://api.pipefy.com/graphql', {
           method: 'POST',
           headers: {
+            ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ query: updateQuery })
+          body: JSON.stringify({ query: updateQuery }),
         }),
-        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+        fetch('https://api.pipefy.com/graphql', {
           method: 'POST',
           headers: {
+            ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ query: commentQuery })
+          body: JSON.stringify({ query: commentQuery }),
         })
       ]);
+
+      if (!updateResponse.ok || !commentResponse.ok) {
+        throw new Error('Erro na requisição ao Pipefy');
+      }
+
+      const [updateResult, commentResult] = await Promise.all([
+        updateResponse.json(),
+        commentResponse.json()
+      ]);
+
+      if (updateResult.errors || commentResult.errors) {
+        throw new Error(`Erro do Pipefy: ${updateResult.errors?.[0]?.message || commentResult.errors?.[0]?.message}`);
+      }
 
       logger.log('Guincho mecânico solicitado com sucesso no Pipefy');
 
