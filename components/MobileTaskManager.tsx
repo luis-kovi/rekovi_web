@@ -1132,11 +1132,6 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       });
 
-      // Debug: Log dos dados antes de enviar
-      logger.log('Debug - fieldsToUpdate (mobile):', fieldsToUpdate);
-      logger.log('Debug - expenses recebido (mobile):', expenses);
-      logger.log('Debug - expenseValues recebido (mobile):', expenseValues);
-
       // Atualizar campos no Pipefy
       const updateQuery = `
         mutation {
@@ -1157,30 +1152,27 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      logger.log('Debug - updateQuery (mobile):', updateQuery);
-
-      // Tentar chamada direta ao Pipefy (igual ao desktop)
-      const response = await fetch('https://api.pipefy.com/graphql', {
+      // Usar função Edge do Supabase (igual ao desktop)
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
-          ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateQuery }),
+        body: JSON.stringify({ query: updateQuery })
       });
 
-      logger.log('Debug - response status (mobile):', response.status);
       if (!response.ok) {
         const errorText = await response.text();
-        logger.error('Debug - response error (mobile):', errorText);
+        logger.error('Erro na requisição ao Pipefy (mobile):', errorText);
         throw new Error('Erro na requisição ao Pipefy');
       }
 
       const result = await response.json();
-      logger.log('Debug - response result (mobile):', result);
       if (result.errors) {
-        logger.error('Debug - Pipefy errors (mobile):', result.errors);
-        throw new Error(`Erro do Pipefy: ${result.errors[0].message}`);
+        logger.error('Erro do Pipefy (mobile):', result.errors);
+        throw new Error(`Erro do Pipefy: ${result.errors?.[0]?.message || 'Erro desconhecido'}`);
       }
 
       logger.log('Entrega no pátio confirmada com sucesso no Pipefy');
@@ -1279,23 +1271,26 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      // Usar chamada direta ao Pipefy (igual ao desktop)
-      const response = await fetch('https://api.pipefy.com/graphql', {
+      // Usar função Edge do Supabase (igual ao desktop)
+      const supabaseUrl = (supabase as any).supabaseUrl;
+      const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
         method: 'POST',
         headers: {
-          ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ query: updateQuery }),
+        body: JSON.stringify({ query: updateQuery })
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('Erro na requisição (mobile):', errorText);
         throw new Error('Erro na requisição ao Pipefy');
       }
 
       const result = await response.json();
       if (result.errors) {
-        throw new Error(`Erro do Pipefy: ${result.errors[0].message}`);
+        throw new Error(`Erro do Pipefy: ${result.errors?.[0]?.message || 'Erro desconhecido'}`);
       }
 
       logger.log('Carro guinchado confirmado com sucesso no Pipefy');
@@ -1363,27 +1358,30 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
         }
       `;
 
-      // Executar ambas as mutations usando chamada direta ao Pipefy
+      // Executar ambas as mutations usando função Edge do Supabase
+      const supabaseUrl = (supabase as any).supabaseUrl;
       const [updateResponse, commentResponse] = await Promise.all([
-        fetch('https://api.pipefy.com/graphql', {
+        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
           method: 'POST',
           headers: {
-            ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ query: updateQuery }),
         }),
-        fetch('https://api.pipefy.com/graphql', {
+        fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
           method: 'POST',
           headers: {
-            ...(process.env.NEXT_PUBLIC_PIPEFY_TOKEN && { 'Authorization': `Bearer ${process.env.NEXT_PUBLIC_PIPEFY_TOKEN}` }),
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ query: commentQuery }),
         })
       ]);
 
       if (!updateResponse.ok || !commentResponse.ok) {
+        const errorText = await updateResponse.text();
+        logger.error('Erro na requisição (mobile):', errorText);
         throw new Error('Erro na requisição ao Pipefy');
       }
 
@@ -1393,7 +1391,7 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
       ]);
 
       if (updateResult.errors || commentResult.errors) {
-        throw new Error(`Erro do Pipefy: ${updateResult.errors?.[0]?.message || commentResult.errors?.[0]?.message}`);
+        throw new Error(`Erro do Pipefy: ${updateResult.errors?.[0]?.message || commentResult.errors?.[0]?.message || 'Erro desconhecido'}`);
       }
 
       logger.log('Guincho mecânico solicitado com sucesso no Pipefy');
