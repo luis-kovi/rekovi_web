@@ -410,7 +410,12 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           updateFieldsValues(
             input: {
               nodeId: "${cardId}"
-              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
             }
           ) {
             clientMutationId
@@ -1138,7 +1143,12 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           updateFieldsValues(
             input: {
               nodeId: "${cardId}"
-              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
             }
           ) {
             clientMutationId
@@ -1256,7 +1266,12 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           updateFieldsValues(
             input: {
               nodeId: "${cardId}"
-              values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+              values: [
+                ${fieldsToUpdate.map(field => `{
+                  fieldId: "${field.fieldId}"
+                  value: ${Array.isArray(field.value) ? JSON.stringify(field.value) : `"${field.value}"`}
+                }`).join(',')}
+              ]
             }
           ) {
             clientMutationId
