@@ -620,13 +620,26 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
         // Filtrar despesas selecionadas (exceto "naoHouve")
         const selectedExpensesList = Object.entries(patioExtraExpenses)
-          .filter(([key, value]) => key !== 'naoHouve' && value)
-          .map(([key]) => key);
+          .filter(([key, value]) => value)
+          .map(([key]) => {
+            const expenseNames: Record<string, string> = {
+              naoHouve: 'Não houve',
+              gasolina: 'Gasolina',
+              pedagio: 'Pedágio',
+              estacionamento: 'Estacionamento',
+              motoboy: 'Motoboy (busca de chave)'
+            };
+            return expenseNames[key] || key;
+          });
 
         // Filtrar comprovantes apenas das despesas selecionadas
+        const selectedExpenseKeys = Object.entries(patioExtraExpenses)
+          .filter(([key, value]) => value)
+          .map(([key]) => key);
+        
         const selectedExpenseReceipts = Object.fromEntries(
           Object.entries(patioExpenseReceipts).filter(([key, file]) => 
-            selectedExpensesList.includes(key) && file !== null
+            selectedExpenseKeys.includes(key) && file !== null
           )
         ) as Record<string, File>;
 
@@ -678,13 +691,26 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
       if (onConfirmCarTowed && towedCarPhoto) {
         // Filtrar despesas selecionadas (exceto "naoHouve")
         const selectedExpensesList = Object.entries(towedExtraExpenses)
-          .filter(([key, value]) => key !== 'naoHouve' && value)
-          .map(([key]) => key);
+          .filter(([key, value]) => value)
+          .map(([key]) => {
+            const expenseNames: Record<string, string> = {
+              naoHouve: 'Não houve',
+              gasolina: 'Gasolina',
+              pedagio: 'Pedágio',
+              estacionamento: 'Estacionamento',
+              motoboy: 'Motoboy (busca de chave)'
+            };
+            return expenseNames[key] || key;
+          });
 
-        // Filtrar comprovantes apenas das despesas selecionadas
+        // Filtrar comprovantes apenas das despesas selecionadas  
+        const selectedExpenseKeys = Object.entries(towedExtraExpenses)
+          .filter(([key, value]) => value)
+          .map(([key]) => key);
+        
         const selectedExpenseReceipts = Object.fromEntries(
           Object.entries(towedExpenseReceipts).filter(([key, file]) => 
-            selectedExpensesList.includes(key) && file !== null
+            selectedExpenseKeys.includes(key) && file !== null
           )
         ) as Record<string, File>;
 
