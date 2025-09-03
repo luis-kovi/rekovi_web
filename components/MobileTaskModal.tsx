@@ -3,18 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Card } from '@/types'
-import { createClient } from '@/utils/supabase/client'
-import { extractCityFromOrigin } from '@/utils/auth-validation'
 import { logger } from '@/utils/logger'
-
-interface PreApprovedUser {
-  nome: string
-  email: string
-  empresa: string
-  permission_type: string
-  status: string
-  area_atuacao: string[]
-}
 
 interface MobileTaskModalProps {
   card: Card
@@ -170,55 +159,31 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
     setLoadingChofers(true);
     try {
-      const supabase = createClient();
+      // Usar a API para buscar choferes, respeitando as permissões
+      const response = await fetch(`/api/chofers?empresa=${encodeURIComponent(card.empresaResponsavel)}&origem=${encodeURIComponent(card.origemLocacao)}`);
       
-      // Extrair cidade de origem do card
-      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase();
-      
-      // Buscar usuários com as condições especificadas
-      const { data: users, error } = await supabase
-        .from('pre_approved_users')
-        .select('nome, email, empresa, permission_type, status, area_atuacao')
-        .eq('empresa', card.empresaResponsavel)
-        .eq('permission_type', 'chofer')
-        .eq('status', 'active');
-
-      if (error) {
-        logger.error('Erro ao buscar chofers:', error);
+      if (!response.ok) {
+        const errorData = await response.json();
+        logger.error('Erro ao buscar chofers:', errorData);
         setAvailableChofers([]);
         return;
       }
 
-      if (!users || users.length === 0) {
+      const data = await response.json();
+      
+      if (!data.chofers || data.chofers.length === 0) {
         setAvailableChofers([]);
         return;
       }
 
-      // Filtrar por área de atuação e excluir o chofer atual
-      const filteredChofers = users.filter((user: PreApprovedUser) => {
-        // Excluir chofer atual (comparar por email se disponível, senão por nome)
-        const isCurrentChofer = user.email === card.emailChofer || 
-                               user.nome?.toLowerCase() === card.chofer?.toLowerCase();
-        if (isCurrentChofer) return false;
-
-        // Verificar se atua na região
-        if (!user.area_atuacao || !Array.isArray(user.area_atuacao)) return false;
-        
-        return user.area_atuacao.some((area: string) => {
-          const areaCity = area.toLowerCase();
-          return cardCity.includes(areaCity) || 
-                 areaCity.includes(cardCity) ||
-                 cardCity === areaCity;
-        });
+      // Filtrar para excluir o chofer atual
+      const filteredChofers = data.chofers.filter((chofer: {name: string, email: string}) => {
+        const isCurrentChofer = chofer.email === card.emailChofer || 
+                               chofer.name?.toLowerCase() === card.chofer?.toLowerCase();
+        return !isCurrentChofer;
       });
 
-      // Mapear para o formato esperado
-      const choferOptions = filteredChofers.map((user: PreApprovedUser) => ({
-        name: user.nome || user.email.split('@')[0],
-        email: user.email
-      }));
-
-      setAvailableChofers(choferOptions);
+      setAvailableChofers(filteredChofers);
     } catch (error) {
       logger.error('Erro ao carregar chofers:', error);
       setAvailableChofers([]);
