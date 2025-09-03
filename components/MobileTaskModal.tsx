@@ -1159,15 +1159,33 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
                     {!showAllocateDriver && !showRejectCollection && (
                       <div className="space-y-3">
-                        <button
-                          onClick={() => setShowAllocateDriver(true)}
-                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Alocar Chofer
-                        </button>
+                        {/* Verificar permissão para mostrar botão Alocar Chofer */}
+                        {(() => {
+                          const pType = permissionType?.toLowerCase();
+                          const empresaCard = card?.empresaResponsavel?.toLowerCase();
+                          
+                          // Verificar se tem permissão para alocar chofer
+                          const canAllocate = 
+                            pType === 'admin' || // Admin pode sempre
+                            (pType === 'onsystem' && empresaCard === 'onsystem') || // OnSystem só se empresa for OnSystem
+                            (pType === 'rvs' && empresaCard === 'rvs') || // RVS só se empresa for RVS
+                            (pType === 'ativa' && empresaCard === 'ativa'); // Ativa só se empresa for Ativa
+                          
+                          if (canAllocate) {
+                            return (
+                              <button
+                                onClick={() => setShowAllocateDriver(true)}
+                                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-4 text-sm font-bold rounded-xl transition-all duration-200 shadow-lg flex items-center justify-center gap-3"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Alocar Chofer
+                              </button>
+                            );
+                          }
+                          return null;
+                        })()}
                         
                         <button
                           onClick={() => setShowRejectCollection(true)}

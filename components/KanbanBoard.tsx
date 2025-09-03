@@ -1886,6 +1886,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       <CardModal 
         card={selectedCard} 
         onClose={() => setSelectedCard(null)}
+        permissionType={permissionType}
         onUpdateChofer={handleUpdateChofer}
         onAllocateDriver={handleAllocateDriver}
         onRejectCollection={handleRejectCollection}
