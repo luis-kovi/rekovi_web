@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     }
     console.warn(`[API /api/chofers] Encontrados ${users?.length || 0} chofers no DB antes do filtro de área.`);
     if (users && users.length > 0) {
-      console.warn('[API /api/chofers] Detalhes dos chofers encontrados:', users.map(u => ({ nome: u.nome, area: u.area_atuacao })));
+      console.warn('[API /api/chofers] Detalhes dos chofers encontrados:', users.map((u: PreApprovedUser) => ({ nome: u.nome, area: u.area_atuacao })));
     }
 
 
