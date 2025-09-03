@@ -20,6 +20,7 @@ interface PreApprovedUser {
 interface CardModalProps {
   card: CardWithSLA | null;
   onClose: () => void;
+  permissionType?: string;
   onUpdateChofer?: (cardId: string, newName: string, newEmail: string) => Promise<void>;
   onAllocateDriver?: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>;
   onRejectCollection?: (cardId: string, reason: string, observations: string) => Promise<void>;
@@ -31,7 +32,7 @@ interface CardModalProps {
   onRequestTowMechanical?: (cardId: string, reason: string) => Promise<void>;
 }
 
-export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem, onConfirmPatioDelivery, onConfirmCarTowed, onRequestTowMechanical }: CardModalProps) {
+export default function CardModal({ card, onClose, permissionType, onUpdateChofer, onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem, onConfirmPatioDelivery, onConfirmCarTowed, onRequestTowMechanical }: CardModalProps) {
   const [showChoferChange, setShowChoferChange] = useState(false);
   const [selectedChofer, setSelectedChofer] = useState('');
   const [choferEmail, setChoferEmail] = useState('');
@@ -1272,20 +1273,38 @@ export default function CardModal({ card, onClose, onUpdateChofer, onAllocateDri
                 {/* Botões principais */}
                 {!showAllocateDriver && !showRejectCollection && (
                   <div className="space-y-4">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-green-200/50 relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                      <div className="relative z-10">
-                        <button
-                          onClick={() => setShowAllocateDriver(true)}
-                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Alocar Chofer
-                        </button>
-                      </div>
-                    </div>
+                    {/* Verificar permissão para mostrar botão Alocar Chofer */}
+                    {(() => {
+                      const pType = permissionType?.toLowerCase();
+                      const empresaCard = card?.empresaResponsavel?.toLowerCase();
+                      
+                      // Verificar se tem permissão para alocar chofer
+                      const canAllocate = 
+                        pType === 'admin' || // Admin pode sempre
+                        (pType === 'onsystem' && empresaCard === 'onsystem') || // OnSystem só se empresa for OnSystem
+                        (pType === 'rvs' && empresaCard === 'rvs') || // RVS só se empresa for RVS
+                        (pType === 'ativa' && empresaCard === 'ativa'); // Ativa só se empresa for Ativa
+                      
+                      if (canAllocate) {
+                        return (
+                          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-green-200/50 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                            <div className="relative z-10">
+                              <button
+                                onClick={() => setShowAllocateDriver(true)}
+                                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-4 text-sm font-bold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Alocar Chofer
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                     
                     <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-red-200/50 relative overflow-hidden group">
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
