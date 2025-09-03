@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 import { getUserDataServer } from '@/utils/user-data-server'
 import { extractCityFromOrigin } from '@/utils/helpers'
+import { PreApprovedUser } from '@/utils/auth-validation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Erro ao buscar chofers' }, { status: 500 })
     }
 
-    const filteredUsers = users.filter(user => {
+    const filteredUsers = users.filter((user: PreApprovedUser) => {
       if (!user.area_atuacao || !Array.isArray(user.area_atuacao)) return false;
       return user.area_atuacao.some((area: string) => {
         const areaCity = area.toLowerCase();
@@ -60,4 +61,4 @@ export async function GET(request: NextRequest) {
     console.error('Erro na API de chofers:', error)
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
-} 
+}
