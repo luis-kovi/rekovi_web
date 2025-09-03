@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Usuário não autorizado' }, { status: 403 })
     }
 
-    const { permissionType, empresa } = userData
+    const { permission_type: permissionType, empresa } = userData
     const { searchParams } = new URL(request.url)
     const empresaResponsavel = searchParams.get('empresaResponsavel')
     const origemLocacao = searchParams.get('origemLocacao')
