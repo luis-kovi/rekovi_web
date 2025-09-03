@@ -4,6 +4,7 @@ import { logger } from '@/utils/logger'
 import { extractCityFromOrigin } from './helpers'
 
 export interface PreApprovedUser {
+  nome?: string;
   email: string
   permission_type: string
   status: 'active' | 'inactive'
