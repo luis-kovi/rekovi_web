@@ -1,53 +1,45 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
+import { createServiceRoleClient } from '@/utils/supabase/service-role'
 import { getUserDataServer } from '@/utils/user-data-server'
 import { extractCityFromOrigin } from '@/utils/helpers'
 import { PreApprovedUser } from '@/utils/auth-validation'
 
+import { logger } from '@/utils/logger'
+
 export async function GET(request: NextRequest) {
-  console.warn("--- [API /api/chofers] Iniciando requisição ---");
   try {
+    // Authenticate user
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-
     if (!user || !user.email) {
-      console.warn("[API /api/chofers] Erro: Usuário não autenticado.");
       return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 })
     }
-    console.warn(`[API /api/chofers] Usuário autenticado: ${user.email}`);
 
+    // Get user's own data/permissions
     const userData = await getUserDataServer(user.email)
-
     if (!userData) {
-      console.warn(`[API /api/chofers] Erro: Usuário ${user.email} não encontrado na tabela de pré-aprovados.`);
       return NextResponse.json({ error: 'Usuário não autorizado' }, { status: 403 })
     }
-    console.warn(`[API /api/chofers] Dados do usuário: permission_type=${userData.permission_type}, empresa=${userData.empresa}`);
 
+    // Get query params
     const { permission_type: permissionType, empresa } = userData
     const { searchParams } = new URL(request.url)
     const empresaResponsavel = searchParams.get('empresaResponsavel')
     const origemLocacao = searchParams.get('origemLocacao')
-    console.warn(`[API /api/chofers] Parâmetros recebidos: empresaResponsavel=${empresaResponsavel}, origemLocacao=${origemLocacao}`);
 
     if (!empresaResponsavel || !origemLocacao) {
-      console.warn("[API /api/chofers] Erro: Parâmetros obrigatórios ausentes.");
       return NextResponse.json({ error: 'Os parâmetros empresaResponsavel e origemLocacao são obrigatórios' }, { status: 400 })
     }
 
-    // Admins podem ver todos os chofers da empresa do card
-    // Outros usuários só podem ver chofers da sua própria empresa
+    // Enforce security rule: non-admins can only query for their own company
     if (permissionType !== 'admin' && empresa.toLowerCase() !== empresaResponsavel.toLowerCase()) {
-      console.warn(`[API /api/chofers] Bloqueio de permissão: Usuário da empresa '${empresa}' tentando acessar chofers da empresa '${empresaResponsavel}'.`);
       return NextResponse.json({ error: 'Você não tem permissão para ver chofers desta empresa' }, { status: 403 })
     }
-    console.warn("[API /api/chofers] Verificação de permissão bem-sucedida.");
 
-    const cardCity = extractCityFromOrigin(origemLocacao).toLowerCase();
-    console.warn(`[API /api/chofers] Cidade extraída da origem: ${cardCity}`);
-
-    console.warn(`[API /api/chofers] Buscando chofers no DB para empresa: ${empresaResponsavel}`);
-    const { data: users, error } = await supabase
+    // Use the service role client to bypass RLS for the driver query
+    const serviceSupabase = createServiceRoleClient();
+    const { data: users, error } = await serviceSupabase
       .from('pre_approved_users')
       .select('nome, email, empresa, permission_type, status, area_atuacao')
       .eq('empresa', empresaResponsavel)
@@ -55,29 +47,27 @@ export async function GET(request: NextRequest) {
       .eq('status', 'active')
 
     if (error) {
-      console.error('[API /api/chofers] Erro na consulta ao Supabase:', error)
+      logger.error('Erro na consulta de chofers (service role):', { error: error.message })
       return NextResponse.json({ error: 'Erro ao buscar chofers' }, { status: 500 })
     }
-    console.warn(`[API /api/chofers] Encontrados ${users?.length || 0} chofers no DB antes do filtro de área.`);
-    if (users && users.length > 0) {
-      console.warn('[API /api/chofers] Detalhes dos chofers encontrados:', users.map((u: PreApprovedUser) => ({ nome: u.nome, area: u.area_atuacao })));
+
+    if (!users) {
+      return NextResponse.json([])
     }
 
-
+    // Filter by area of operation
+    const cardCity = extractCityFromOrigin(origemLocacao).toLowerCase();
     const filteredUsers = users.filter((user: PreApprovedUser) => {
       if (!user.area_atuacao || !Array.isArray(user.area_atuacao)) return false;
-      const hasMatchingArea = user.area_atuacao.some((area: string) => {
+      return user.area_atuacao.some((area: string) => {
         const areaCity = area.toLowerCase();
         return cardCity.includes(areaCity) || areaCity.includes(cardCity) || cardCity === areaCity;
       });
-      return hasMatchingArea;
     });
-    console.warn(`[API /api/chofers] Após filtro de área, restaram ${filteredUsers.length} chofers.`);
 
-    console.warn("--- [API /api/chofers] Requisição finalizada ---");
     return NextResponse.json(filteredUsers)
   } catch (error) {
-    console.error('[API /api/chofers] Erro inesperado no bloco catch:', error)
+    logger.error('Erro inesperado na API de chofers:', { error: (error as Error).message })
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 })
   }
 }
