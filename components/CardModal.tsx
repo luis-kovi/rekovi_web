@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import type { CardWithSLA } from '@/types'
 import { formatPersonName, keepOriginalFormat, formatDate, phaseDisplayNames } from '@/utils/helpers'
 import { createClient } from '@/utils/supabase/client'
-import { extractCityFromOrigin } from '@/utils/auth-validation'
+import { extractCityFromOrigin } from '@/utils/helpers'
 import { logger } from '@/utils/logger'
 
 interface PreApprovedUser {
