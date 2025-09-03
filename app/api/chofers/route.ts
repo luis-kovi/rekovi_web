@@ -5,7 +5,7 @@ import { extractCityFromOrigin } from '@/utils/helpers'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user || !user.email) {
