@@ -1,15 +1,21 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
-import { getUserData } from '@/utils/user-data-server'
+import { getUserDataServer } from '@/utils/user-data-server'
 import { extractCityFromOrigin } from '@/utils/helpers'
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient()
-    const userData = await getUserData(supabase)
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user || !user.email) {
+      return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 })
+    }
+
+    const userData = await getUserDataServer(user.email)
 
     if (!userData) {
-      return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 })
+      return NextResponse.json({ error: 'Usuário não autorizado' }, { status: 403 })
     }
 
     const { permissionType, empresa } = userData
