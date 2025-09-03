@@ -163,49 +163,26 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
 
     setLoadingChofers(true);
     try {
-      const supabase = createClient();
+      const response = await fetch(`/api/chofers?empresaResponsavel=${encodeURIComponent(card.empresaResponsavel)}&origemLocacao=${encodeURIComponent(card.origemLocacao)}`);
       
-      // Extrair cidade de origem do card
-      const cardCity = extractCityFromOrigin(card.origemLocacao).toLowerCase();
-      
-      // Buscar usuários com as condições especificadas
-      const { data: users, error } = await supabase
-        .from('pre_approved_users')
-        .select('nome, email, empresa, permission_type, status, area_atuacao')
-        .eq('empresa', card.empresaResponsavel)
-        .eq('permission_type', 'chofer')
-        .eq('status', 'active');
-
-      if (error) {
-        logger.error('Erro ao buscar chofers:', error);
-        setAvailableChofers([]);
-        return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao buscar chofers');
       }
+
+      const users: PreApprovedUser[] = await response.json();
 
       if (!users || users.length === 0) {
         setAvailableChofers([]);
         return;
       }
 
-      // Filtrar por área de atuação e excluir o chofer atual
+      // Excluir o chofer atual
       const filteredChofers = users.filter((user: PreApprovedUser) => {
-        // Excluir chofer atual (comparar por email se disponível, senão por nome)
-        const isCurrentChofer = user.email === card.emailChofer || 
-                               user.nome?.toLowerCase() === card.chofer?.toLowerCase();
-        if (isCurrentChofer) return false;
-
-        // Verificar se atua na região
-        if (!user.area_atuacao || !Array.isArray(user.area_atuacao)) return false;
-        
-        return user.area_atuacao.some((area: string) => {
-          const areaCity = area.toLowerCase();
-          return cardCity.includes(areaCity) || 
-                 areaCity.includes(cardCity) ||
-                 cardCity === areaCity;
-        });
+        return user.email !== card.emailChofer &&
+               (!user.nome || !card.chofer || user.nome.toLowerCase() !== card.chofer.toLowerCase());
       });
 
-      // Mapear para o formato esperado
       const choferOptions = filteredChofers.map((user: PreApprovedUser) => ({
         name: user.nome || user.email.split('@')[0],
         email: user.email

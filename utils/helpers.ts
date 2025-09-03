@@ -124,3 +124,26 @@ export function getRedirectRoute(userAgent: string): string {
 
 // Regex para detecção móvel no client-side (mais comum)
 export const MOBILE_REGEX = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
+/**
+ * Extrai a cidade do endereço de origem
+ */
+export function extractCityFromOrigin(origem: string): string {
+  if (!origem) return ''
+
+  const patterns = [
+    /^([^-]+)\s*-\s*[A-Z]{2}$/i,
+    /^([^/]+)\s*\/\s*[A-Z]{2}$/i,
+    /^([^,]+)\s*,\s*[A-Z]{2}$/i,
+    /^([^-,/]+)/i
+  ]
+
+  for (const pattern of patterns) {
+    const match = origem.match(pattern)
+    if (match) {
+      return match[1].trim()
+    }
+  }
+
+  return origem.trim()
+}
