@@ -151,70 +151,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         },
         (payload: RealtimePayload) => {
           logger.log('Mudança detectada no Supabase:', payload);
-
-          const { eventType, new: newRecord, old: oldRecord } = payload;
-
-          setCards(currentCards => {
-            if (eventType === 'INSERT') {
-              // Adicionar o novo card se ele não existir
-              if (!currentCards.some(c => c.id === String(newRecord.id))) {
-                const newCard: Card = {
-                  id: String(newRecord.id),
-                  placa: newRecord.placa_veiculo,
-                  nomeDriver: newRecord.nome_driver,
-                  chofer: newRecord.nome_chofer_recolha,
-                  faseAtual: newRecord.phase_name,
-                  dataCriacao: newRecord.created_at,
-                  emailChofer: newRecord.email_chofer,
-                  empresaResponsavel: newRecord.empresa_recolha,
-                  modeloVeiculo: newRecord.modelo_veiculo,
-                  telefoneContato: newRecord.telefone_contato,
-                  telefoneOpcional: newRecord.telefone_opcional,
-                  emailCliente: newRecord.email_cliente,
-                  enderecoCadastro: newRecord.endereco_cadastro,
-                  enderecoRecolha: newRecord.endereco_recolha,
-                  linkMapa: newRecord.link_mapa,
-                  origemLocacao: newRecord.origem_locacao,
-                  valorRecolha: newRecord.valor_recolha,
-                  custoKmAdicional: newRecord.custo_km_adicional,
-                  urlPublica: newRecord.public_url,
-                };
-                return [newCard, ...currentCards];
-              }
-            } else if (eventType === 'UPDATE') {
-              // Atualizar o card existente
-              return currentCards.map(card => {
-                if (card.id === String(newRecord.id)) {
-                  return {
-                    ...card,
-                    placa: newRecord.placa_veiculo,
-                    nomeDriver: newRecord.nome_driver,
-                    chofer: newRecord.nome_chofer_recolha,
-                    faseAtual: newRecord.phase_name,
-                    dataCriacao: newRecord.created_at,
-                    emailChofer: newRecord.email_chofer,
-                    empresaResponsavel: newRecord.empresa_recolha,
-                    modeloVeiculo: newRecord.modelo_veiculo,
-                    telefoneContato: newRecord.telefone_contato,
-                    telefoneOpcional: newRecord.telefone_opcional,
-                    emailCliente: newRecord.email_cliente,
-                    enderecoCadastro: newRecord.endereco_cadastro,
-                    enderecoRecolha: newRecord.endereco_recolha,
-                    linkMapa: newRecord.link_mapa,
-                    origemLocacao: newRecord.origem_locacao,
-                    valorRecolha: newRecord.valor_recolha,
-                    custoKmAdicional: newRecord.custo_km_adicional,
-                    urlPublica: newRecord.public_url,
-                  };
-                }
-                return card;
-              });
-            } else if (eventType === 'DELETE') {
-              // Remover o card
-              return currentCards.filter(c => c.id !== String(oldRecord.id));
-            }
-            return currentCards;
-          });
+          fetchUpdatedData();
         }
       )
       .subscribe();
