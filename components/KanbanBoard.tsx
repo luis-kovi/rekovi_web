@@ -157,9 +157,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           setCards(currentCards => {
             if (eventType === 'INSERT') {
               // Adicionar o novo card se ele não existir
-              if (!currentCards.some(c => c.id === newRecord.id)) {
+              if (!currentCards.some(c => c.id === String(newRecord.id))) {
                 const newCard: Card = {
-                  id: newRecord.id,
+                  id: String(newRecord.id),
                   placa: newRecord.placa_veiculo,
                   nomeDriver: newRecord.nome_driver,
                   chofer: newRecord.nome_chofer_recolha,
@@ -184,7 +184,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
             } else if (eventType === 'UPDATE') {
               // Atualizar o card existente
               return currentCards.map(card => {
-                if (card.id === newRecord.id) {
+                if (card.id === String(newRecord.id)) {
                   return {
                     ...card,
                     placa: newRecord.placa_veiculo,
@@ -211,7 +211,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               });
             } else if (eventType === 'DELETE') {
               // Remover o card
-              return currentCards.filter(c => c.id !== oldRecord.id);
+              return currentCards.filter(c => c.id !== String(oldRecord.id));
             }
             return currentCards;
           });
