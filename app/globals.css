@@ -38,14 +38,19 @@ body {
   box-sizing: border-box;
 }
 
-/* Melhorias nos cards */
+/* Melhorias nos cards com performance otimizada */
 .kanban-card {
-  transition: all 0.2s ease-in-out;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  will-change: transform;
+  contain: paint;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  transform: translateZ(0);
 }
 
 .kanban-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateZ(0);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -129,7 +134,97 @@ select {
 .scroll-container:hover::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); }
 .scroll-container::-webkit-scrollbar-thumb:hover { background-color: #a0a0a0; }
 
-.kanban-board { scrollbar-gutter: stable; }
+/* Kanban board horizontal scrolling improvements */
+.kanban-board { 
+  scrollbar-gutter: stable;
+  will-change: scroll-position;
+}
+
+.kanban-scroll-container {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.kanban-scroll-container::-webkit-scrollbar {
+  height: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  margin: 0 10px;
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #FF355A, #E02E4D);
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.kanban-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #E02E4D, #D12846);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Performance optimizations */
+.kanban-column {
+  contain: layout style;
+  will-change: transform;
+}
+
+/* Adiciona indicadores visuais de scroll */
+.kanban-scroll-container {
+  position: relative;
+}
+
+.kanban-scroll-container::before,
+.kanban-scroll-container::after {
+  content: '';
+  position: sticky;
+  top: 0;
+  height: 100%;
+  width: 50px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.kanban-scroll-container::before {
+  left: 0;
+  background: linear-gradient(to right, rgba(247, 249, 250, 1), transparent);
+}
+
+.kanban-scroll-container::after {
+  right: 0;
+  background: linear-gradient(to left, rgba(247, 249, 250, 1), transparent);
+}
+
+/* Otimizações de animação */
+@media (prefers-reduced-motion: reduce) {
+  .kanban-card,
+  .kanban-column,
+  .kanban-scroll-container {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* GPU acceleration para elementos pesados */
+.phase-container {
+  transform: translateZ(0);
+  will-change: scroll-position;
+}
+
+/* Melhora a renderização de texto */
+.card-placa,
+.card-driver,
+.card-chofer {
+  text-rendering: optimizeSpeed;
+  font-variant-ligatures: none;
+}
 .modal-overlay { transition: opacity 0.2s ease-in-out; }
 .modal-panel { transition: transform 0.2s ease-in-out; }
 .phase-title { 

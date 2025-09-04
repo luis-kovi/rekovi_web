@@ -1,16 +1,25 @@
 // components/KanbanBoard.tsx
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import dynamic from 'next/dynamic'
 import ControlPanel from './ControlPanel'
-import CardComponent from './Card'
-import CardModal from './CardModal'
 import LoadingIndicator from './LoadingIndicator'
 import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabledPhaseMessages, formatPersonName, formatDate } from '@/utils/helpers'
 import type { Card, CardWithSLA } from '@/types'
 import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import { logger } from '@/utils/logger'
+
+// Lazy loading dos componentes pesados
+const CardComponent = dynamic(() => import('./Card'), {
+  loading: () => <div className="h-56 bg-gray-100 animate-pulse rounded-xl" />,
+  ssr: false
+})
+
+const CardModal = dynamic(() => import('./CardModal'), {
+  ssr: false
+})
 
 interface KanbanBoardProps {
   initialCards: Card[]
@@ -18,7 +27,144 @@ interface KanbanBoardProps {
   onUpdateStatus?: (isUpdating: boolean) => void
 }
 
-export default function KanbanBoard({ initialCards, permissionType, onUpdateStatus }: KanbanBoardProps) {
+// Memoização do componente de coluna do Kanban
+const KanbanColumn = memo(({ 
+  phaseName, 
+  displayPhaseName, 
+  cardsInPhase, 
+  isDisabledPhase, 
+  lateOrAlertCount, 
+  colorScheme, 
+  onCardClick 
+}: {
+  phaseName: string;
+  displayPhaseName: string;
+  cardsInPhase: CardWithSLA[];
+  isDisabledPhase: boolean;
+  lateOrAlertCount: number;
+  colorScheme: any;
+  onCardClick: (card: CardWithSLA) => void;
+}) => {
+  return (
+    <div className={`kanban-column w-56 ${colorScheme.bg} rounded-xl flex flex-col flex-shrink-0 shadow-lg border ${colorScheme.border} hover:shadow-xl transition-all duration-300 backdrop-blur-sm relative overflow-hidden group animate-in`}>
+      {/* Borda animada no hover */}
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+      <div className={`${colorScheme.header} text-white p-2.5 rounded-t-xl relative overflow-hidden`}>
+        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        {/* Partículas decorativas */}
+        <div className="absolute top-1.5 right-2 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
+        <div className="absolute top-2 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
+        <div className="relative z-10">
+          {/* Header principal compacto */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
+              <div className="w-3 h-3 flex items-center justify-center flex-shrink-0">
+                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
+                </svg>
+              </div>
+              <h2 className="phase-title text-[10px] font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
+                {displayPhaseName}
+              </h2>
+            </div>
+            
+            {/* Indicadores lado a lado - menores */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {/* Indicador de alertas */}
+              {!isDisabledPhase && lateOrAlertCount > 0 && (
+                <div className="relative">
+                  <div className="flex items-center gap-0.5 text-amber-200 font-bold text-[9px] bg-amber-900/90 backdrop-blur-sm rounded-full px-1 py-0.5 shadow-lg border border-amber-700/50">
+                    <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>{lateOrAlertCount}</span>
+                  </div>
+                  {/* Pulse animation */}
+                  <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
+                </div>
+              )}
+              
+              {/* Contador total */}
+              <div className="flex items-center gap-0.5 bg-white/25 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-sm">
+                <div className="w-1 h-1 bg-white rounded-full opacity-80"></div>
+                <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
+        {cardsInPhase.length > 0 ? (
+          cardsInPhase.map(card => (
+            <div 
+              key={card.id} 
+              onClick={isDisabledPhase ? undefined : () => onCardClick(card)} 
+              className={`transition-all duration-300 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:translate-y-[-4px] hover:scale-[1.02]'}`}
+            >
+              <CardComponent card={card} />
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center h-32 text-center p-4">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
+              <svg className={`w-6 h-6 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
+              </svg>
+            </div>
+            
+            {/* Mensagens personalizadas por fase */}
+            {(() => {
+              if (isDisabledPhase) {
+                switch (phaseName) {
+                  case 'Aprovar Custo de Recolha':
+                    return (
+                      <p className="text-sm font-medium text-gray-400">
+                        Não há custos de recolhas pendentes de aprovação
+                      </p>
+                    );
+                  case 'Desbloquear Veículo':
+                    return (
+                      <p className="text-sm font-medium text-gray-400">
+                        Não há pendências de desbloqueio
+                      </p>
+                    );
+                  case 'Solicitar Guincho':
+                    return (
+                      <p className="text-sm font-medium text-gray-400">
+                        Não há solicitações de guincho pendentes
+                      </p>
+                    );
+                  default:
+                    return (
+                      <>
+                        <p className="text-sm font-medium text-gray-400">
+                          Fase em processamento
+                        </p>
+                        <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                          <span>Aguardando...</span>
+                        </div>
+                      </>
+                    );
+                }
+              } else {
+                return (
+                  <p className="text-sm font-medium text-gray-600">
+                    Nenhuma recolha nesta fase
+                  </p>
+                );
+              }
+            })()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
+KanbanColumn.displayName = 'KanbanColumn';
+
+function KanbanBoard({ initialCards, permissionType, onUpdateStatus }: KanbanBoardProps) {
   const [cards, setCards] = useState<Card[]>(initialCards);
   const [searchTerm, setSearchTerm] = useState('');
   const [slaFilter, setSlaFilter] = useState('all');
@@ -30,8 +176,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showScrollButtons, setShowScrollButtons] = useState(false);
   const calculatorRef = useRef<HTMLDivElement>(null);
   const scrollPositionsRef = useRef<{ [key: string]: number }>({});
+  const kanbanScrollRef = useRef<HTMLDivElement>(null);
 
   // Real-time subscription para atualização automática
   useEffect(() => {
@@ -265,7 +413,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     return phaseMap;
   }, [filteredCards, permissionType]);
 
-  const handleUpdateChofer = async (cardId: string, newName: string, newEmail: string) => {
+  const handleUpdateChofer = useCallback(async (cardId: string, newName: string, newEmail: string) => {
     logger.log('Atualizando chofer:', { cardId, newName, newEmail });
     
     try {
@@ -343,9 +491,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       logger.error('Erro ao atualizar chofer:', error);
       throw error; // Re-throw para que o CardModal possa exibir o erro
     }
-  };
+  }, []);
 
-  const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
+  const handleAllocateDriver = useCallback(async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
     logger.log('Alocando chofer:', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
     
     try {
@@ -478,9 +626,9 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       logger.error('Erro ao alocar chofer:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const handleRejectCollection = async (cardId: string, reason: string, observations: string) => {
+  const handleRejectCollection = useCallback(async (cardId: string, reason: string, observations: string) => {
     logger.log('Rejeitando recolha:', { cardId, reason, observations });
     
     try {
@@ -577,7 +725,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       logger.error('Erro ao rejeitar recolha:', error);
       throw error;
     }
-  };
+  }, []);
 
   // Função utilitária para upload de imagens via Pipefy
   const uploadImageToPipefy = async (file: File, fieldId: string, cardId: string, session: any) => {
@@ -1377,15 +1525,43 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     }
   };
 
-  const handleOpenCalculator = () => {
+  const handleOpenCalculator = useCallback(() => {
     setShowCalculator(true);
     // Centralizar a calculadora na tela
     setCalculatorPosition({ x: window.innerWidth / 2 - 200, y: window.innerHeight / 2 - 300 });
-  };
+  }, []);
 
-  const handleCloseCalculator = () => {
+  const handleCloseCalculator = useCallback(() => {
     setShowCalculator(false);
-  };
+  }, []);
+
+  // Funções para scroll horizontal
+  const handleScrollLeft = useCallback(() => {
+    if (kanbanScrollRef.current) {
+      kanbanScrollRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  }, []);
+
+  const handleScrollRight = useCallback(() => {
+    if (kanbanScrollRef.current) {
+      kanbanScrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Detectar se precisa mostrar botões de scroll
+  useEffect(() => {
+    const checkScrollButtons = () => {
+      if (kanbanScrollRef.current && activeView === 'kanban') {
+        const { scrollWidth, clientWidth } = kanbanScrollRef.current;
+        setShowScrollButtons(scrollWidth > clientWidth);
+      }
+    };
+
+    checkScrollButtons();
+    window.addEventListener('resize', checkScrollButtons);
+    
+    return () => window.removeEventListener('resize', checkScrollButtons);
+  }, [activeView, filteredCards]);
 
   // Função para drag and drop da calculadora
   const handleMouseDown = (e: any) => {
@@ -1455,10 +1631,37 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           <LoadingIndicator message="A carregar dados..." />
         ) : (
           activeView === 'kanban' ? (
-            <div id="kanban-view" className="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-6 scroll-container bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 relative">
+            <div id="kanban-view" className="flex-1 flex flex-col overflow-hidden kanban-board bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 relative">
               {/* Background decorativo */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
-              <div id="kanban-container" className="flex gap-4 relative z-10">
+              
+              {/* Botões de navegação horizontal */}
+              {showScrollButtons && (
+                <>
+                  <button
+                    onClick={handleScrollLeft}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-lg rounded-full p-3 hover:bg-white hover:scale-110 transition-all duration-200 group"
+                    aria-label="Scroll para esquerda"
+                  >
+                    <svg className="w-5 h-5 text-gray-700 group-hover:text-[#FF355A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleScrollRight}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-lg rounded-full p-3 hover:bg-white hover:scale-110 transition-all duration-200 group"
+                    aria-label="Scroll para direita"
+                  >
+                    <svg className="w-5 h-5 text-gray-700 group-hover:text-[#FF355A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </>
+              )}
+              
+              {/* Container com scroll horizontal melhorado */}
+              <div ref={kanbanScrollRef} className="flex-1 overflow-x-auto overflow-y-hidden p-6 scroll-smooth kanban-scroll-container">
+                <div id="kanban-container" className="flex gap-4 relative z-10 min-w-max pb-4">
                 {fixedPhaseOrder.map((phaseName, index) => {
                   const cardsInPhase = phases[phaseName] || [];
                   if (hideEmptyPhases && cardsInPhase.length === 0) return null;
@@ -1467,7 +1670,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                   const isDisabledPhase = disabledPhases.includes(phaseName);
                   const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
                   
-                                                  // Esquema de cores moderno e elegante baseado na cor primária #FF355A
+                  // Esquema de cores moderno e elegante baseado na cor primária #FF355A
              const columnColors = [
                     { bg: 'bg-gradient-to-b from-red-50/80 to-red-100/60', border: 'border-red-200/50', header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]', text: 'text-red-600', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
                     { bg: 'bg-gradient-to-b from-orange-50/80 to-orange-100/60', border: 'border-orange-200/50', header: 'bg-gradient-to-br from-orange-500 via-orange-600 to-red-500', text: 'text-orange-600', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
@@ -1511,121 +1714,19 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                        };
                     
                    return (
-                     <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-xl flex flex-col flex-shrink-0 shadow-lg border ${colorScheme.border} hover:shadow-xl transition-all duration-300 backdrop-blur-sm relative overflow-hidden group animate-in`}>
-                       {/* Borda animada no hover */}
-                       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                       <div className={`${colorScheme.header} text-white p-2.5 rounded-t-xl relative overflow-hidden`}>
-                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                         {/* Partículas decorativas */}
-                         <div className="absolute top-1.5 right-2 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
-                         <div className="absolute top-2 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
-                         <div className="relative z-10">
-                           {/* Header principal compacto */}
-                         <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
-                               <div className="w-3 h-3 flex items-center justify-center flex-shrink-0">
-                                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                                   <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
-                                 </svg>
-                               </div>
-                               <h2 className="phase-title text-[10px] font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
-                             {displayPhaseName}
-                           </h2>
-                             </div>
-                             
-                             {/* Indicadores lado a lado - menores */}
-                             <div className="flex items-center gap-1 flex-shrink-0">
-                               {/* Indicador de alertas */}
-                              {!isDisabledPhase && lateOrAlertCount > 0 && (
-                                 <div className="relative">
-                                   <div className="flex items-center gap-0.5 text-amber-200 font-bold text-[9px] bg-amber-900/90 backdrop-blur-sm rounded-full px-1 py-0.5 shadow-lg border border-amber-700/50">
-                                     <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                  </svg>
-                                     <span>{lateOrAlertCount}</span>
-                                   </div>
-                                   {/* Pulse animation */}
-                                   <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
-                                 </div>
-                               )}
-                               
-                               {/* Contador total */}
-                               <div className="flex items-center gap-0.5 bg-white/25 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-sm">
-                                 <div className="w-1 h-1 bg-white rounded-full opacity-80"></div>
-                                 <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>
-                               </div>
-                             </div>
-                            </div>
-                         </div>
-                       </div>
-                       <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
-                         {cardsInPhase.length > 0 ? (
-                           cardsInPhase.map(card => (
-                             <div 
-                               key={card.id} 
-                               onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
-                               className={`transition-all duration-300 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:translate-y-[-4px] hover:scale-[1.02]'}`}
-                             >
-                               <CardComponent card={card} />
-                             </div>
-                           ))
-                         ) : (
-                           <div className="flex flex-col items-center justify-center h-32 text-center p-4">
-                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
-                               <svg className={`w-6 h-6 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                                 <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
-                                </svg>
-                              </div>
-                             
-                             {/* Mensagens personalizadas por fase */}
-                             {(() => {
-                               if (isDisabledPhase) {
-                                 switch (phaseName) {
-                                   case 'Aprovar Custo de Recolha':
-                                     return (
-                                       <p className="text-sm font-medium text-gray-400">
-                                         Não há custos de recolhas pendentes de aprovação
-                                       </p>
-                                     );
-                                   case 'Desbloquear Veículo':
-                                     return (
-                                       <p className="text-sm font-medium text-gray-400">
-                                         Não há pendências de desbloqueio
-                                       </p>
-                                     );
-                                   case 'Solicitar Guincho':
-                                     return (
-                                       <p className="text-sm font-medium text-gray-400">
-                                         Não há solicitações de guincho pendentes
-                                       </p>
-                                     );
-                                   default:
-                                     return (
-                                       <>
-                                         <p className="text-sm font-medium text-gray-400">
-                                           Fase em processamento
-                                         </p>
-                                         <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
-                                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
-                                           <span>Aguardando...</span>
-                                         </div>
-                                       </>
-                                     );
-                                 }
-                               } else {
-                                 return (
-                                   <p className="text-sm font-medium text-gray-600">
-                                     Nenhuma recolha nesta fase
-                                   </p>
-                                 );
-                               }
-                             })()}
-                            </div>
-                         )}
-                       </div>
-                     </div>
+                     <KanbanColumn
+                       key={phaseName}
+                       phaseName={phaseName}
+                       displayPhaseName={displayPhaseName}
+                       cardsInPhase={cardsInPhase}
+                       isDisabledPhase={isDisabledPhase}
+                       lateOrAlertCount={lateOrAlertCount}
+                       colorScheme={colorScheme}
+                       onCardClick={setSelectedCard}
+                     />
                    );
                 })}
+                </div>
               </div>
             </div>
           ) : (
@@ -1941,3 +2042,4 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   );
 }
 
+export default memo(KanbanBoard);

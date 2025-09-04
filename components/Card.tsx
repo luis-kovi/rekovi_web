@@ -1,4 +1,5 @@
 // components/Card.tsx
+import { memo } from 'react';
 import type { CardWithSLA } from '@/types';
 import { formatPersonName, keepOriginalFormat, disabledPhases, disabledPhaseMessages } from '@/utils/helpers';
 
@@ -6,7 +7,7 @@ interface CardProps {
   card: CardWithSLA 
 }
 
-export default function Card({ card }: CardProps) {
+function Card({ card }: CardProps) {
   const isDisabledPhase = disabledPhases.includes(card.faseAtual);
   
   if (isDisabledPhase) {
@@ -135,4 +136,15 @@ export default function Card({ card }: CardProps) {
       </div>
     </div>
   );
-}     
+}
+
+export default memo(Card, (prevProps, nextProps) => {
+  // Otimização: só re-renderiza se os dados do card mudaram
+  return (
+    prevProps.card.id === nextProps.card.id &&
+    prevProps.card.sla === nextProps.card.sla &&
+    prevProps.card.slaText === nextProps.card.slaText &&
+    prevProps.card.faseAtual === nextProps.card.faseAtual &&
+    prevProps.card.chofer === nextProps.card.chofer
+  );
+});     
