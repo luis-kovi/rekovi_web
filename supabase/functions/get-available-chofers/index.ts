@@ -49,15 +49,10 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Create a Supabase client with the service role key to bypass RLS
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      // Create client with Auth context of the user that called the function.
-      // This way your row-level-security (RLS) policies are applied.
-      // { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-      // NOTE: We are intentionally NOT passing the user's auth context here.
-      // This function is designed to be called from a trusted backend (the Next.js API route)
-      // and needs to use the service role key to bypass RLS.
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
     // The function will use the service role key from the environment.
