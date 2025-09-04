@@ -1221,7 +1221,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                                   const option = availableChofers.find(opt => opt.name === e.target.value);
                                   setChoferEmail(option?.email || '');
                                 }}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
                               >
                                 <option value="" className="text-gray-500">Selecione um chofer...</option>
                                 {availableChofers.map(option => (
@@ -1251,7 +1251,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             type="date" 
                             value={collectionDate}
                             onChange={(e) => setCollectionDate(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
                           />
                         </div>
 
@@ -1261,7 +1261,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             type="time" 
                             value={collectionTime}
                             onChange={(e) => setCollectionTime(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
                           />
                         </div>
 
@@ -1270,7 +1270,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <select 
                             value={billingType}
                             onChange={(e) => setBillingType(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-gray-900"
                           >
                             <option value="" style={{ color: '#6B7280' }}>Selecione o tipo...</option>
                             <option value="avulso">Avulso</option>
@@ -1293,7 +1293,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                                 setCollectionValue(formatted);
                               }}
                               placeholder="R$ 0,00"
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-600 text-black"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-500 text-gray-900"
                             />
                           </div>
                         )}
@@ -1312,7 +1312,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                               setAdditionalKm(formatted);
                             }}
                             placeholder="R$ 0,00"
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-600 text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-500 text-gray-900"
                           />
                         </div>
 
@@ -1360,7 +1360,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <select 
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white"
                           >
                             <option value="" style={{ color: '#6B7280' }}>Selecione um motivo...</option>
                             <option value="cliente_pagamento">Cliente realizou pagamento</option>
@@ -1378,7 +1378,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             onChange={(e) => setRejectionObservations(e.target.value)}
                             rows={4}
                             placeholder="Descreva detalhes adicionais sobre a rejeição..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none placeholder-gray-600 text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none placeholder-gray-500"
                           />
                         </div>
 
@@ -1507,7 +1507,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             onChange={(e) => setUnlockObservations(e.target.value)}
                             rows={3}
                             placeholder="Observações adicionais (opcional)..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white resize-none placeholder-gray-600 text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white resize-none placeholder-gray-500"
                           />
                         </div>
 
@@ -1555,7 +1555,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <select 
                             value={towingReason}
                             onChange={(e) => setTowingReason(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white"
                           >
                             <option value="" style={{ color: '#6B7280' }}>Selecione o motivo...</option>
                             <option value="Veículo com avarias / problemas mecânicos">Veículo com avarias / problemas mecânicos</option>
@@ -1609,7 +1609,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             onChange={(e) => setTowingObservations(e.target.value)}
                             rows={3}
                             placeholder="Observações adicionais (opcional)..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white resize-none placeholder-gray-600 text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white resize-none placeholder-gray-500"
                           />
                         </div>
 
@@ -1657,7 +1657,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                           <select 
                             value={problemType}
                             onChange={(e) => setProblemType(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white"
                           >
                             <option value="" style={{ color: '#6B7280' }}>Selecione a dificuldade...</option>
                             <option value="cliente_regularizou">Cliente regularizou o pagamento</option>
@@ -1865,7 +1865,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                                           setPatioExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
                                         }}
                                         placeholder="R$ 0,00"
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 placeholder-gray-600 text-black"
+                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 placeholder-gray-500"
                                       />
                                     </div>
                                     <div>
@@ -1997,7 +1997,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                                           setTowedExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
                                         }}
                                         placeholder="R$ 0,00"
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder-gray-600 text-black"
+                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder-gray-500"
                                       />
                                     </div>
                                     <div>
@@ -2070,7 +2070,7 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                             onChange={(e) => setMechanicalTowReason(e.target.value)}
                             rows={6}
                             placeholder="Descreva detalhadamente os problemas mecânicos identificados após o pedido de desbloqueio que justificam a necessidade do guincho..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none placeholder-gray-600 text-black"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none placeholder-gray-500"
                           />
                         </div>
 

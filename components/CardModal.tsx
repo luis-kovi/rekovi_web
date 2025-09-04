@@ -1183,7 +1183,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                   const option = availableChofers.find(opt => opt.name === e.target.value);
                                   setChoferEmail(option?.email || '');
                                 }}
-                                className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200 text-black"
+                                className="w-full p-3 border border-red-300/50 rounded-lg text-sm focus:ring-2 focus:ring-[#FF355A]/50 focus:border-[#FF355A] bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-200"
                               >
                                 <option value="">Selecione um nome...</option>
                                 {availableChofers.map(option => (
@@ -1351,7 +1351,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                 const option = availableChofers.find(opt => opt.name === e.target.value);
                                 setAllocateDriverEmail(option?.email || '');
                               }}
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                             >
                               <option value="">Selecione um chofer...</option>
                               {availableChofers.map(option => (
@@ -1370,7 +1370,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                 type="date" 
                                 value={collectionDate}
                                 onChange={(e) => setCollectionDate(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black"
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                               />
                             </div>
                             <div>
@@ -1381,7 +1381,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                 type="time" 
                                 value={collectionTime}
                                 onChange={(e) => setCollectionTime(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black"
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                               />
                             </div>
                           </div>
@@ -1394,7 +1394,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                             <select 
                               value={billingType}
                               onChange={(e) => setBillingType(e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                             >
                               <option value="">Selecione o tipo...</option>
                               <option value="avulso">Avulso</option>
@@ -1421,7 +1421,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                   setCollectionValue(formatted);
                                 }}
                                 placeholder="R$ 0,00"
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black placeholder-gray-600"
+                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                               />
                             </div>
                           )}
@@ -1444,7 +1444,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                 setAdditionalKm(formatted);
                               }}
                               placeholder="R$ 0,00"
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black placeholder-gray-600"
+                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200"
                             />
                           </div>
 
@@ -1507,7 +1507,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                         <select 
                           value={rejectionReason}
                           onChange={(e) => setRejectionReason(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 text-black"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200"
                         >
                           <option value="">Selecione um motivo...</option>
                           <option value="cliente_pagamento">Cliente realizou pagamento</option>
@@ -1528,7 +1528,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                           onChange={(e) => setRejectionObservations(e.target.value)}
                           rows={4}
                           placeholder="Descreva detalhes adicionais sobre a rejeição..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none text-black placeholder-gray-600"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none"
                         />
                       </div>
 
@@ -1735,7 +1735,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                         setPatioExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
                                       }}
                                       placeholder="R$ 0,00"
-                                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 text-black placeholder-gray-600"
+                                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500"
                                     />
                                   </div>
                                   <div>
@@ -1896,7 +1896,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                                         setTowedExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
                                       }}
                                       placeholder="R$ 0,00"
-                                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 text-black placeholder-gray-600"
+                                      className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500"
                                     />
                                   </div>
                                   <div>
@@ -1988,7 +1988,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                           onChange={(e) => setMechanicalTowReason(e.target.value)}
                           rows={6}
                           placeholder="Descreva detalhadamente os problemas mecânicos identificados após o pedido de desbloqueio que justificam a necessidade do guincho..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none text-black placeholder-gray-600"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white shadow-sm transition-all duration-200 resize-none"
                         />
                       </div>
 
@@ -2157,7 +2157,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                           onChange={(e) => setUnlockObservations(e.target.value)}
                           rows={3}
                           placeholder="Observações adicionais sobre o desbloqueio..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 resize-none text-black placeholder-gray-600"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white shadow-sm transition-all duration-200 resize-none"
                         />
                       </div>
 
@@ -2219,7 +2219,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                         <select 
                           value={towingReason}
                           onChange={(e) => setTowingReason(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200 text-black"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200"
                         >
                           <option value="">Selecione um motivo...</option>
                           <option value="Veículo com avarias / problemas mecânicos">Veículo com avarias / problemas mecânicos</option>
@@ -2283,7 +2283,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                           onChange={(e) => setTowingObservations(e.target.value)}
                           rows={3}
                           placeholder="Observações adicionais sobre a solicitação de guincho..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200 resize-none text-black placeholder-gray-600"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white shadow-sm transition-all duration-200 resize-none"
                         />
                       </div>
 
@@ -2344,7 +2344,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                         <select 
                           value={problemType}
                           onChange={(e) => setProblemType(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white shadow-sm transition-all duration-200 text-black"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white shadow-sm transition-all duration-200"
                         >
                           <option value="">Selecione uma dificuldade...</option>
                           <option value="Cliente regularizou o pagamento">Cliente regularizou o pagamento</option>
