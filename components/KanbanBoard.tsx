@@ -1,9 +1,8 @@
 // components/KanbanBoard.tsx
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
-import { FixedSizeList } from 'react-window'
-import AutoSizer from 'react-virtualized-auto-sizer'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
+import { useVirtual } from '@tanstack/react-virtual'
 import { createClient } from '@/utils/supabase/client'
 import ControlPanel from './ControlPanel'
 import CardComponent from './Card'
@@ -13,6 +12,50 @@ import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabl
 import type { Card, CardWithSLA } from '@/types'
 import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import { logger } from '@/utils/logger'
+
+const KanbanColumn = ({ cards, onCardClick, isDisabled }: { cards: CardWithSLA[], onCardClick: (card: CardWithSLA) => void, isDisabled: boolean }) => {
+  const parentRef = React.useRef<HTMLDivElement>(null);
+
+  const rowVirtualizer = useVirtual({
+    size: cards.length,
+    parentRef,
+    estimateSize: React.useCallback(() => 224, []), // h-56 = 14rem = 224px
+    overscan: 5,
+  });
+
+  return (
+    <div ref={parentRef} style={{ height: '100%', width: '100%', overflow: 'auto' }} className="scroll-container">
+      <div
+        style={{
+          height: `${rowVirtualizer.totalSize}px`,
+          width: '100%',
+          position: 'relative',
+        }}
+      >
+        {rowVirtualizer.virtualItems.map(virtualItem => {
+          const card = cards[virtualItem.index];
+          return (
+            <div
+              key={virtualItem.key}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualItem.size}px`,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+              onClick={isDisabled ? undefined : () => onCardClick(card)}
+              className={`transition-all duration-300 p-1 ${isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:translate-y-[-4px] hover:scale-[1.02]'}`}
+            >
+              <CardComponent card={card} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 interface KanbanBoardProps {
   initialCards: Card[]
@@ -1620,26 +1663,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                        </div>
                        <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
                          {cardsInPhase.length > 0 ? (
-                            <AutoSizer>
-                              {({ height, width }) => (
-                                <FixedSizeList
-                                  height={height}
-                                  itemCount={cardsInPhase.length}
-                                  itemSize={224} // h-56 = 14rem = 224px
-                                  width={width}
-                                  itemData={cardsInPhase}
-                                >
-                                  {({ index, style, data }) => {
-                                    const card = data[index];
-                                    return (
-                                      <div style={style} onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} className={`transition-all duration-300 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:translate-y-[-4px] hover:scale-[1.02]'}`}>
-                                        <CardComponent card={card} />
-                                      </div>
-                                    );
-                                  }}
-                                </FixedSizeList>
-                              )}
-                            </AutoSizer>
+                           <KanbanColumn cards={cardsInPhase} onCardClick={setSelectedCard} isDisabled={isDisabledPhase} />
                          ) : (
                            <div className="flex flex-col items-center justify-center h-32 text-center p-4">
                              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>

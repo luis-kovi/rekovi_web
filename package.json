@@ -16,12 +16,10 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
-    "@types/react-virtualized-auto-sizer": "^1.0.4",
+    "@tanstack/react-virtual": "^3.13.12",
     "next": "15.4.5",
     "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-virtualized-auto-sizer": "^1.0.26",
-    "react-window": "^2.0.2"
+    "react-dom": "19.1.0"
   },
   "engines": {
     "node": ">=18.0.0",
