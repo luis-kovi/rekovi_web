@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { FixedSizeList } from 'react-window';
+import { FixedSizeList as List } from 'react-window';
 import { createClient } from '@/utils/supabase/client'
 import ControlPanel from './ControlPanel'
 import CardComponent from './Card'
@@ -1515,7 +1515,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                        </div>
                        <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
                          {cardsInPhase.length > 0 ? (
-                            <FixedSizeList
+                            <List
                               height={600} // Adjust height as needed
                               itemCount={cardsInPhase.length}
                               itemSize={150} // Adjust itemSize to match your card height
@@ -1530,7 +1530,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                   </div>
                                 );
                               }}
-                            </FixedSizeList>
+                            </List>
                          ) : (
                            <div className="flex flex-col items-center justify-center h-32 text-center p-4">
                              <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
