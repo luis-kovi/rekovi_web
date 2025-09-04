@@ -1,8 +1,10 @@
 // utils/auth-validation.ts
 import { createClient } from '@/utils/supabase/client'
 import { logger } from '@/utils/logger'
+import { extractCityFromOrigin } from './helpers'
 
 export interface PreApprovedUser {
+  nome?: string;
   email: string
   permission_type: string
   status: 'active' | 'inactive'
@@ -58,29 +60,6 @@ export async function validateUserAccess(email: string): Promise<{
     canAccess: true,
     userData: userDataFromRPC as PreApprovedUser
   }
-}
-
-/**
- * Extrai a cidade do endereço de origem
- */
-export function extractCityFromOrigin(origem: string): string {
-  if (!origem) return ''
-  
-  const patterns = [
-    /^([^-]+)\s*-\s*[A-Z]{2}$/i,
-    /^([^/]+)\s*\/\s*[A-Z]{2}$/i,
-    /^([^,]+)\s*,\s*[A-Z]{2}$/i,
-    /^([^-,/]+)/i
-  ]
-  
-  for (const pattern of patterns) {
-    const match = origem.match(pattern)
-    if (match) {
-      return match[1].trim()
-    }
-  }
-  
-  return origem.trim()
 }
 
 /**
