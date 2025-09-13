@@ -268,7 +268,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
       return;
     }
 
-    if (billingType === 'avulso' && !collectionValue) {
+    if (billingType === 'Avulso' && !collectionValue) {
       setFeedback('Para faturamento avulso, o valor da recolha é obrigatório.');
       return;
     }
@@ -286,7 +286,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
       const dateTimeString = `${collectionDate} ${collectionTime}`;
       
       // Valor da recolha (apenas se for faturamento avulso)
-      const finalCollectionValue = billingType === 'avulso' ? collectionValue : '';
+      const finalCollectionValue = billingType === 'Avulso' ? collectionValue : '';
       
       await onAllocateDriver(card.id, allocateDriverName, allocateDriverEmail, dateTimeString, finalCollectionValue, additionalKm, billingType);
       
@@ -1397,13 +1397,13 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                               className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white shadow-sm transition-all duration-200 text-black"
                             >
                               <option value="">Selecione o tipo...</option>
-                              <option value="avulso">Avulso</option>
-                              <option value="franquia">Franquia</option>
+                              <option value="Avulso">Avulso</option>
+                              <option value="Franquia">Franquia</option>
                             </select>
                           </div>
 
                           {/* Valor da Recolha (apenas para Avulso) */}
-                          {billingType === 'avulso' && (
+                          {billingType === 'Avulso' && (
                             <div>
                               <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
                                 Valor da Recolha *
@@ -1427,7 +1427,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                           )}
 
                           {/* Km Adicional */}
-                          {billingType === 'avulso' && (
+                          {billingType === 'Avulso' && (
                           <div>
                             <label className="text-sm font-bold text-gray-700 mb-2 block" style={{ fontFamily: 'Inter, sans-serif' }}>
                               Km Adicional *
