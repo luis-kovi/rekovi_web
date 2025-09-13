@@ -345,8 +345,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     }
   };
 
-  const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => {
-    logger.log('Alocando chofer:', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm });
+  const handleAllocateDriver = async (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string, billingType: string) => {
+    logger.log('Alocando chofer:', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm, billingType });
     
     try {
       const supabase = createClient();
@@ -383,6 +383,10 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
         {
           fieldId: "ve_culo_ser_recolhido",
           value: "Sim"
+        },
+        {
+          fieldId: "tipo_de_faturamento",
+          value: billingType
         }
       ];
 
