@@ -1,0 +1,454 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 346 87% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 210 40% 98%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 98%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 98%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 346 87% 60%;
+    --radius: 0.75rem;
+    
+    /* Custom design tokens */
+    --primary-color: #FF355A;
+    --primary-color-darker: #E02E4D;
+    --scrollbar-track: #f1f1f1;
+    --scrollbar-thumb: #c1c1c1;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 346 87% 60%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 346 87% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  .scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+
+  .scroll-container:hover {
+    scrollbar-color: hsl(var(--scrollbar-thumb)) hsl(var(--scrollbar-track));
+  }
+
+  .scroll-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background-color: transparent;
+  }
+
+  .scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  .scroll-container::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  .scroll-container:hover::-webkit-scrollbar-track {
+    background: hsl(var(--scrollbar-track));
+  }
+
+  .scroll-container:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--scrollbar-thumb));
+  }
+
+  .scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: #a0a0a0;
+  }
+}
+
+@layer components {
+  /* Modern card styles */
+  .kanban-card {
+    @apply transition-all duration-300 ease-out;
+    @apply border border-border bg-card text-card-foreground;
+    @apply shadow-sm hover:shadow-lg;
+    @apply backdrop-blur-sm;
+  }
+
+  .kanban-card:hover {
+    @apply -translate-y-1 scale-[1.02];
+    @apply border-primary/20 shadow-xl;
+  }
+
+  /* Modern button styles */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground;
+    @apply transition-all duration-200 ease-out;
+    @apply shadow-sm hover:shadow-md;
+    @apply hover:-translate-y-0.5;
+  }
+
+  .btn-primary:hover {
+    @apply bg-primary/90;
+  }
+
+  /* Modern modal styles */
+  .modal-panel {
+    @apply transition-all duration-300 ease-out;
+    @apply shadow-2xl border-0;
+    @apply backdrop-blur-sm;
+  }
+
+  .modal-overlay {
+    @apply bg-black/10 backdrop-blur-sm;
+    @apply transition-opacity duration-200;
+  }
+
+  /* Modern table styles */
+  .table-list-item {
+    @apply transition-all duration-200 ease-out;
+    @apply hover:bg-muted/50 hover:scale-[1.01];
+  }
+
+  .table-list-item:hover {
+    @apply border-l-4 border-l-primary;
+  }
+
+  /* Toggle switch styles */
+  .toggle-switch {
+    @apply relative inline-block w-10 h-6;
+    @apply bg-muted border border-border rounded-full;
+    @apply transition-colors duration-200;
+  }
+
+  .toggle-switch.active {
+    @apply bg-primary border-primary;
+  }
+
+  .toggle-slider {
+    @apply absolute -top-px -left-px w-6 h-6;
+    @apply bg-muted-foreground rounded-full;
+    @apply transition-all duration-200;
+    @apply shadow-sm;
+  }
+
+  .toggle-switch.active .toggle-slider {
+    @apply bg-background translate-x-4;
+  }
+
+  /* Glassmorphism effects */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md;
+    @apply border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-black/10 backdrop-blur-md;
+    @apply border border-white/10;
+  }
+
+  /* Loading states */
+  .skeleton {
+    @apply animate-pulse bg-muted rounded;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-muted border-t-primary;
+  }
+
+  /* Focus styles */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  /* Mobile optimizations */
+  .mobile-touch {
+    @apply min-h-[44px] min-w-[44px];
+    @apply touch-manipulation;
+  }
+
+  .mobile-card {
+    @apply transition-all duration-200 ease-out;
+    @apply touch-action-pan-y;
+  }
+
+  .mobile-card:active {
+    @apply scale-98 transition-transform duration-100;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-in {
+    @apply animate-slide-in-from-bottom;
+  }
+
+  .animate-out {
+    @apply animate-slide-in-from-bottom;
+    animation-direction: reverse;
+  }
+
+  .fade-in {
+    @apply animate-fade-in;
+  }
+
+  .fade-out {
+    @apply animate-fade-out;
+  }
+
+  .scale-in {
+    @apply animate-scale-in;
+  }
+
+  .bounce-in {
+    @apply animate-bounce-in;
+  }
+
+  .pulse-animation {
+    @apply animate-pulse;
+  }
+
+  .shake-animation {
+    @apply animate-shake;
+  }
+
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Layout utilities */
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-padding {
+    @apply py-8 sm:py-12 lg:py-16;
+  }
+
+  /* Responsive utilities */
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+
+  .desktop-only {
+    @apply hidden sm:block;
+  }
+
+  /* Hover utilities */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  /* Shadow utilities */
+  .shadow-soft {
+    box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  }
+
+  .shadow-medium {
+    box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .shadow-strong {
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 2px 10px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Legacy styles for backward compatibility */
+.bg-primary { @apply bg-primary; }
+.text-primary { @apply text-primary; }
+.border-primary { @apply border-primary; }
+.focus-primary:focus { @apply border-primary ring-2 ring-primary/40; }
+
+/* Remove default focus outlines */
+select:focus,
+input:focus,
+button:focus {
+  @apply outline-none ring-2 ring-ring ring-offset-2;
+}
+
+/* Remove default select arrow */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+
+/* Kanban board specific styles */
+.kanban-board {
+  @apply bg-gradient-to-br from-muted/50 to-muted;
+  @apply min-h-[calc(100vh-120px)];
+}
+
+.phase-title {
+  @apply text-sm font-semibold;
+  @apply whitespace-nowrap overflow-hidden text-ellipsis;
+  @apply text-shadow-sm tracking-wide;
+}
+
+.card-count {
+  @apply backdrop-blur-sm shadow-soft;
+}
+
+/* Mobile modal styles */
+.mobile-modal-backdrop {
+  @apply fixed inset-0 z-[9998];
+  @apply bg-black/50 backdrop-blur-sm;
+  @apply animate-fade-in;
+}
+
+.mobile-modal-content {
+  @apply fixed bottom-0 left-0 right-0 z-[9999];
+  @apply bg-background rounded-t-3xl shadow-strong;
+  @apply max-h-[90vh] overflow-hidden;
+  @apply animate-slide-in-from-bottom;
+}
+
+.mobile-modal-content.closing {
+  @apply animate-slide-in-from-bottom;
+  animation-direction: reverse;
+}
+
+/* List view specific styles */
+#list-view {
+  @apply relative w-full;
+  @apply container-padding;
+  @apply bg-gradient-to-br from-muted/50 to-muted;
+}
+
+#list-view table {
+  @apply w-full table-fixed;
+  @apply border-separate border-spacing-0;
+  @apply bg-background;
+}
+
+#list-view thead {
+  @apply bg-gradient-to-r from-primary/5 to-primary/10;
+  @apply backdrop-blur-sm border-b border-primary/20;
+}
+
+#list-view thead th {
+  @apply sticky top-0 z-10;
+  @apply whitespace-nowrap p-4;
+  @apply font-semibold text-primary;
+}
+
+#list-view tbody tr {
+  @apply transition-colors duration-200;
+  @apply bg-background hover:bg-primary/5;
+  @apply h-10;
+}
+
+#list-view tbody td {
+  @apply align-middle whitespace-nowrap overflow-hidden;
+  @apply p-3 text-sm;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .animate-float,
+  .animate-float-delayed,
+  .animate-float-gentle {
+    animation-duration: 8s;
+  }
+  
+  .animate-tilt {
+    animation-duration: 15s;
+  }
+
+  #list-view {
+    @apply px-4;
+  }
+  
+  #list-view th,
+  #list-view td {
+    @apply p-2 text-xs;
+  }
+  
+  #list-view tbody tr {
+    @apply h-8;
+  }
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  .kanban-card:hover,
+  .table-list-item:hover,
+  .mobile-card:hover {
+    @apply transform-none shadow-sm;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .kanban-card,
+  .modal-panel {
+    @apply border-2 border-foreground;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
