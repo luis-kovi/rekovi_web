@@ -5,6 +5,27 @@ import { createClient } from '@/utils/supabase/client';
 import { Card } from '@/types/card.types';
 import { calcularSLA } from '@/utils/helpers';
 
+// Função auxiliar para criar objeto SLA com mais informações
+function createSLAObject(dataCriacao: string) {
+  const slaNumber = calcularSLA(dataCriacao);
+  const hours = slaNumber * 24; // Converter dias para horas aproximadamente
+  
+  let formatted: string;
+  if (slaNumber === 0) {
+    formatted = 'Hoje';
+  } else if (slaNumber === 1) {
+    formatted = '1 dia';
+  } else {
+    formatted = `${slaNumber} dias`;
+  }
+  
+  return {
+    days: slaNumber,
+    hours,
+    formatted,
+  };
+}
+
 // Query keys organizados
 export const cardsQueryKeys = {
   all: ['cards'] as const,
@@ -51,7 +72,7 @@ async function fetchCards(filters: {
   // Adicionar SLA calculado
   return (data || []).map((card: any) => ({
     ...card,
-    sla: calcularSLA(card.created_at, card.phase),
+    sla: createSLAObject(card.created_at),
   }));
 }
 
@@ -88,7 +109,7 @@ export function useCardQuery(cardId: string) {
       
       return {
         ...data,
-        sla: calcularSLA(data.created_at, data.phase),
+        sla: createSLAObject(data.created_at),
       };
     },
     enabled: !!cardId,
@@ -114,7 +135,7 @@ export function useCardsStats() {
         byOrigin: {} as Record<string, number>,
       };
       
-      data.forEach(card => {
+      data.forEach((card: any) => {
         stats.byPhase[card.phase] = (stats.byPhase[card.phase] || 0) + 1;
         stats.byOrigin[card.origin] = (stats.byOrigin[card.origin] || 0) + 1;
       });
@@ -151,7 +172,7 @@ export function useUpdateCardMutation() {
         cardsQueryKeys.detail(updatedCard.id),
         {
           ...updatedCard,
-          sla: calcularSLA(updatedCard.created_at, updatedCard.phase),
+          sla: createSLAObject(updatedCard.created_at),
         }
       );
     },
