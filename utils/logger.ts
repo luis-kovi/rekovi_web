@@ -72,6 +72,7 @@ export const logger = {
   log: (...args: any[]) => {
     if (isDevelopment) {
       const sanitizedArgs = args.map(arg => sanitize(arg));
+      // eslint-disable-next-line no-console
       console.log(...sanitizedArgs);
     }
   },
@@ -90,12 +91,14 @@ export const logger = {
   debug: (...args: any[]) => {
     if (isDevelopment) {
       const sanitizedArgs = args.map(arg => sanitize(arg));
+      // eslint-disable-next-line no-console
       console.debug(...sanitizedArgs);
     }
   },
   info: (...args: any[]) => {
     if (isDevelopment) {
       const sanitizedArgs = args.map(arg => sanitize(arg));
+      // eslint-disable-next-line no-console
       console.info(...sanitizedArgs);
     }
   }
