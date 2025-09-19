@@ -7,4 +7,3 @@
 export * from './SearchInput';
 export * from './StatusBadge';
 export * from './InfoField';
-export * from './LoadingSpinner';

@@ -32,21 +32,41 @@ export function useToast(): UseToastReturn {
     return id;
   }, [generateId]);
 
-  const createToastFunction = useCallback((type: ToastType) => {
-    return (title: string, message?: string, options?: Partial<Toast>) => {
-      return toast({
-        type,
-        title,
-        message,
-        ...options,
-      });
-    };
+  const success = useCallback((title: string, message?: string, options?: Partial<Toast>) => {
+    return toast({
+      type: 'success',
+      title,
+      message,
+      ...options,
+    });
   }, [toast]);
 
-  const success = useCallback(createToastFunction('success'), [createToastFunction]);
-  const error = useCallback(createToastFunction('error'), [createToastFunction]);
-  const warning = useCallback(createToastFunction('warning'), [createToastFunction]);
-  const info = useCallback(createToastFunction('info'), [createToastFunction]);
+  const error = useCallback((title: string, message?: string, options?: Partial<Toast>) => {
+    return toast({
+      type: 'error',
+      title,
+      message,
+      ...options,
+    });
+  }, [toast]);
+
+  const warning = useCallback((title: string, message?: string, options?: Partial<Toast>) => {
+    return toast({
+      type: 'warning',
+      title,
+      message,
+      ...options,
+    });
+  }, [toast]);
+
+  const info = useCallback((title: string, message?: string, options?: Partial<Toast>) => {
+    return toast({
+      type: 'info',
+      title,
+      message,
+      ...options,
+    });
+  }, [toast]);
 
   const dismiss = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));

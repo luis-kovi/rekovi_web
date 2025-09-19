@@ -5,7 +5,7 @@
 
 export type ViewMode = 'kanban' | 'list';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'success' | 'warning' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export type InputVariant = 'default' | 'error' | 'success';
