@@ -44,7 +44,7 @@ const iconPaths: Record<IconName, string> = {
   'chevron-down': 'M6 9l6 6 6-6',
 };
 
-export function Icon({ name, size = 'md', className, ...props }: IconProps) {
+function Icon({ name, size = 'md', className, ...props }: IconProps) {
   const path = iconPaths[name];
   
   if (!path) {
