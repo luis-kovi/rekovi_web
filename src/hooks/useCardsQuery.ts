@@ -194,7 +194,7 @@ export function useCardsSubscription() {
           schema: 'public',
           table: 'cards',
         },
-        (payload) => {
+        (payload: any) => {
           // Invalidar queries quando há mudanças
           queryClient.invalidateQueries({ queryKey: cardsQueryKeys.all });
         }
