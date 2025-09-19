@@ -12,3 +12,7 @@ export * from './useResponsive';
 
 // React Query hooks otimizados
 export * from './useCardsQuery';
+
+// Accessibility & Navigation hooks
+export * from './useKeyboardNavigation';
+export * from './useAccessibility';
