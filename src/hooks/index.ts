@@ -6,3 +6,6 @@
 
 export * from './useCards';
 export * from './usePipefyActions';
+export * from './useTheme';
+export * from './useToast';
+export * from './useResponsive';
