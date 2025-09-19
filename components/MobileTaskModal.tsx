@@ -4,17 +4,15 @@
 import { useState, useEffect } from 'react'
 import type { Card } from '@/types'
 import { createClient } from '@/utils/supabase/client'
-import { extractCityFromOrigin } from '@/utils/helpers'
 import { logger } from '@/utils/logger'
-
-interface PreApprovedUser {
-  nome: string
-  email: string
-  empresa: string
-  permission_type: string
-  status: string
-  area_atuacao: string[]
-}
+import AllocateDriverForm from './MobileTaskModal/FilaRecolhaActions/AllocateDriverForm'
+import RejectCollectionForm from './MobileTaskModal/FilaRecolhaActions/RejectCollectionForm'
+import UnlockVehicleForm from './MobileTaskModal/TentativaRecolhaActions/UnlockVehicleForm'
+import RequestTowingForm from './MobileTaskModal/TentativaRecolhaActions/RequestTowingForm'
+import ReportProblemForm from './MobileTaskModal/TentativaRecolhaActions/ReportProblemForm'
+import ConfirmPatioDeliveryForm from './MobileTaskModal/ConfirmacaoRecolhaActions/ConfirmPatioDeliveryForm'
+import CarTowedForm from './MobileTaskModal/ConfirmacaoRecolhaActions/CarTowedForm'
+import RequestTowMechanicalForm from './MobileTaskModal/ConfirmacaoRecolhaActions/RequestTowMechanicalForm'
 
 interface MobileTaskModalProps {
   card: Card
@@ -34,124 +32,16 @@ interface MobileTaskModalProps {
 
 export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem, onConfirmPatioDelivery, onConfirmCarTowed, onRequestTowMechanical }: MobileTaskModalProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
-
-  // Estados para os formulários
-  const [feedback, setFeedback] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
   
-  // Estados para fila de recolha
   const [showAllocateDriver, setShowAllocateDriver] = useState(false);
   const [showRejectCollection, setShowRejectCollection] = useState(false);
-  const [selectedChofer, setSelectedChofer] = useState('');
-  const [choferEmail, setChoferEmail] = useState('');
-  const [collectionDate, setCollectionDate] = useState('');
-  const [collectionTime, setCollectionTime] = useState('');
-  const [billingType, setBillingType] = useState('');
-  const [collectionValue, setCollectionValue] = useState('');
-  const [additionalKm, setAdditionalKm] = useState('');
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [rejectionObservations, setRejectionObservations] = useState('');
-  
-  // Estados para tentativas de recolha
   const [showUnlockVehicle, setShowUnlockVehicle] = useState(false);
   const [showRequestTowing, setShowRequestTowing] = useState(false);
   const [showReportProblem, setShowReportProblem] = useState(false);
-  
-  // Estados para desbloquear veículo
-  const [vehiclePhotos, setVehiclePhotos] = useState({
-    frente: null as File | null,
-    traseira: null as File | null,
-    lateralDireita: null as File | null,
-    lateralEsquerda: null as File | null,
-    estepe: null as File | null,
-    painel: null as File | null
-  });
-  const [unlockObservations, setUnlockObservations] = useState('');
-  
-  // Estados para solicitar guincho
-  const [towingReason, setTowingReason] = useState('');
-  const [towingPhotos, setTowingPhotos] = useState({
-    frente: null as File | null,
-    traseira: null as File | null,
-    lateralDireita: null as File | null,
-    lateralEsquerda: null as File | null,
-    estepe: null as File | null,
-    painel: null as File | null
-  });
-  const [towingObservations, setTowingObservations] = useState('');
-  
-  // Estados para reportar problema
-  const [problemType, setProblemType] = useState('');
-  const [problemEvidence, setProblemEvidence] = useState({
-    photo1: null as File | null,
-    photo2: null as File | null,
-    photo3: null as File | null
-  });
-
-  // Estados para Confirmação de Entrega no Pátio
   const [showConfirmPatioDelivery, setShowConfirmPatioDelivery] = useState(false);
   const [showCarTowed, setShowCarTowed] = useState(false);
   const [showRequestTowMechanical, setShowRequestTowMechanical] = useState(false);
-  
-  // Estados para confirmar entrega no pátio
-  const [patioVehiclePhotos, setPatioVehiclePhotos] = useState({
-    frente: null as File | null,
-    traseira: null as File | null,
-    lateralDireita: null as File | null,
-    lateralEsquerda: null as File | null,
-    estepe: null as File | null,
-    painel: null as File | null
-  });
-  const [patioExtraExpenses, setPatioExtraExpenses] = useState({
-    naoHouve: true,
-    gasolina: false,
-    pedagio: false,
-    estacionamento: false,
-    motoboy: false
-  });
-  const [patioExpenseValues, setPatioExpenseValues] = useState({
-    gasolina: '',
-    pedagio: '',
-    estacionamento: '',
-    motoboy: ''
-  });
-  const [patioExpenseReceipts, setPatioExpenseReceipts] = useState({
-    gasolina: null as File | null,
-    pedagio: null as File | null,
-    estacionamento: null as File | null,
-    motoboy: null as File | null
-  });
-  
-  // Estados para carro guinchado
-  const [towedCarPhoto, setTowedCarPhoto] = useState<File | null>(null);
-  const [towedExtraExpenses, setTowedExtraExpenses] = useState({
-    naoHouve: true,
-    gasolina: false,
-    pedagio: false,
-    estacionamento: false,
-    motoboy: false
-  });
-  const [towedExpenseValues, setTowedExpenseValues] = useState({
-    gasolina: '',
-    pedagio: '',
-    estacionamento: '',
-    motoboy: ''
-  });
-  const [towedExpenseReceipts, setTowedExpenseReceipts] = useState({
-    gasolina: null as File | null,
-    pedagio: null as File | null,
-    estacionamento: null as File | null,
-    motoboy: null as File | null
-  });
-  
-  // Estados para solicitar guincho (problemas mecânicos)
-  const [mechanicalTowReason, setMechanicalTowReason] = useState('');
 
-  // Estados para buscar chofers disponíveis
-  const [availableChofers, setAvailableChofers] = useState<{name: string, email: string}[]>([]);
-  const [loadingChofers, setLoadingChofers] = useState(false);
-
-  // Identificar fases
   const isFila = card.faseAtual === 'Fila de Recolha';
   const isTentativaRecolha = [
     'Tentativa 1 de Recolha', 
@@ -161,50 +51,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
   ].includes(card.faseAtual);
   const isConfirmacaoRecolha = card.faseAtual === 'Confirmação de Entrega no Pátio';
 
-  // Função para buscar chofers disponíveis da base de dados
-  const loadAvailableChofers = async () => {
-    if (!card || !card.empresaResponsavel || !card.origemLocacao) {
-      setAvailableChofers([]);
-      return;
-    }
-
-    setLoadingChofers(true);
-    try {
-      const response = await fetch(`/api/chofers?empresaResponsavel=${encodeURIComponent(card.empresaResponsavel)}&origemLocacao=${encodeURIComponent(card.origemLocacao)}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Falha ao buscar chofers');
-      }
-
-      const users: PreApprovedUser[] = await response.json();
-
-      if (!users || users.length === 0) {
-        setAvailableChofers([]);
-        return;
-      }
-
-      // Excluir o chofer atual
-      const filteredChofers = users.filter((user: PreApprovedUser) => {
-        return user.email !== card.emailChofer &&
-               (!user.nome || !card.chofer || user.nome.toLowerCase() !== card.chofer.toLowerCase());
-      });
-
-      const choferOptions = filteredChofers.map((user: PreApprovedUser) => ({
-        name: user.nome || user.email.split('@')[0],
-        email: user.email
-      }));
-
-      setAvailableChofers(choferOptions);
-    } catch (error) {
-      logger.error('Erro ao carregar chofers:', error);
-      setAvailableChofers([]);
-    } finally {
-      setLoadingChofers(false);
-    }
-  };
-
-  // Função para formatar data
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('pt-BR', {
@@ -216,599 +62,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     })
   }
 
-  // Funções para fila de recolha
-  const handleAllocateDriver = async () => {
-    if (!selectedChofer || !choferEmail || !collectionDate || !collectionTime || !billingType || !additionalKm) {
-      setFeedback('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-
-    if (billingType === 'avulso' && !collectionValue) {
-      setFeedback('Para faturamento avulso, o valor da recolha é obrigatório.');
-      return;
-    }
-
-    if (!onAllocateDriver) {
-      setFeedback('Funcionalidade de alocação não disponível.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando alocação de chofer...');
-    
-    try {
-      // Concatenar data e hora no formato esperado pelo Pipefy
-      const dateTimeString = `${collectionDate} ${collectionTime}`;
-      
-      // Valor da recolha (apenas se for faturamento avulso)
-      const finalCollectionValue = billingType === 'avulso' ? collectionValue : '';
-      
-      await onAllocateDriver(card.id, selectedChofer, choferEmail, dateTimeString, finalCollectionValue, additionalKm);
-      
-      setFeedback('Chofer alocado com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowAllocateDriver(false);
-        setFeedback('');
-        resetAllocateForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  const handleRejectCollection = async () => {
-    if (!rejectionReason || !rejectionObservations) {
-      setFeedback('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-
-    if (!onRejectCollection) {
-      setFeedback('Funcionalidade de rejeição não disponível.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando rejeição de recolha...');
-    
-    try {
-      await onRejectCollection(card.id, rejectionReason, rejectionObservations);
-      
-      setFeedback('Recolha rejeitada com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowRejectCollection(false);
-        setFeedback('');
-        resetRejectForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  // Funções para tentativas de recolha
-  const handleUnlockVehicle = async () => {
-    const hasAnyPhoto = Object.values(vehiclePhotos).some(photo => photo !== null);
-    if (!hasAnyPhoto) {
-      setFeedback('Por favor, envie pelo menos uma foto do veículo.');
-      return;
-    }
-
-    if (!onUnlockVehicle) {
-      setFeedback('Funcionalidade de desbloqueio não disponível.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando desbloqueio do veículo...');
-    
-    try {
-      // Filtrar apenas as fotos que foram enviadas
-      const photosToUpload = Object.fromEntries(
-        Object.entries(vehiclePhotos).filter(([key, file]) => file !== null)
-      ) as Record<string, File>;
-
-      await onUnlockVehicle(card.id, card.faseAtual, photosToUpload, unlockObservations);
-
-      setFeedback('Veículo desbloqueado com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowUnlockVehicle(false);
-        setFeedback('');
-        resetUnlockForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  const handleRequestTowing = async () => {
-    if (!towingReason) {
-      setFeedback('Por favor, selecione o motivo do guincho.');
-      return;
-    }
-
-    const hasAnyPhoto = Object.values(towingPhotos).some(photo => photo !== null);
-    if (!hasAnyPhoto) {
-      setFeedback('Por favor, envie pelo menos uma foto do veículo.');
-      return;
-    }
-
-    if (!onRequestTowing) {
-      setFeedback('Funcionalidade de guincho não disponível.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando solicitação de guincho...');
-    
-    try {
-      // Filtrar apenas as fotos que foram enviadas
-      const photosToUpload = Object.fromEntries(
-        Object.entries(towingPhotos).filter(([key, file]) => file !== null)
-      ) as Record<string, File>;
-
-      await onRequestTowing(card.id, card.faseAtual, towingReason, photosToUpload);
-
-      setFeedback('Guincho solicitado com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowRequestTowing(false);
-        setFeedback('');
-        resetTowingForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  const handleReportProblem = async () => {
-    if (!problemType) {
-      setFeedback('Por favor, selecione a dificuldade encontrada.');
-      return;
-    }
-
-    const hasAnyPhoto = Object.values(problemEvidence).some(photo => photo !== null);
-    if (!hasAnyPhoto) {
-      setFeedback('Por favor, envie pelo menos uma foto como evidência.');
-      return;
-    }
-
-    if (!onReportProblem) {
-      setFeedback('Funcionalidade de reporte não disponível.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando relato do problema...');
-    
-    try {
-      // Filtrar apenas as fotos que foram enviadas
-      const evidencesToUpload = Object.fromEntries(
-        Object.entries(problemEvidence).filter(([key, file]) => file !== null)
-      ) as Record<string, File>;
-
-      await onReportProblem(card.id, card.faseAtual, problemType, evidencesToUpload);
-
-      setFeedback('Problema reportado com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowReportProblem(false);
-        setFeedback('');
-        resetProblemForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  // Funções para resetar formulários
-  const resetAllocateForm = () => {
-    setSelectedChofer('');
-    setChoferEmail('');
-    setCollectionDate('');
-    setCollectionTime('');
-    setBillingType('');
-    setCollectionValue('');
-    setAdditionalKm('');
-  };
-
-  const resetRejectForm = () => {
-    setRejectionReason('');
-    setRejectionObservations('');
-  };
-
-  const resetUnlockForm = () => {
-    setVehiclePhotos({
-      frente: null,
-      traseira: null,
-      lateralDireita: null,
-      lateralEsquerda: null,
-      estepe: null,
-      painel: null
-    });
-    setUnlockObservations('');
-  };
-
-  const resetTowingForm = () => {
-    setTowingReason('');
-    setTowingPhotos({
-      frente: null,
-      traseira: null,
-      lateralDireita: null,
-      lateralEsquerda: null,
-      estepe: null,
-      painel: null
-    });
-    setTowingObservations('');
-  };
-
-  const resetProblemForm = () => {
-    setProblemType('');
-    setProblemEvidence({
-      photo1: null,
-      photo2: null,
-      photo3: null
-    });
-  };
-
-  // Função para obter URL da imagem (foto anexada ou ilustrativa)
-  const getImageUrl = (file: File | null, defaultImageUrl: string): string => {
-    if (file) {
-      return URL.createObjectURL(file);
-    }
-    return defaultImageUrl;
-  };
-
-  // Função para lidar com upload de fotos
-  const handlePhotoUpload = (photoType: string, file: File, formType: 'vehicle' | 'towing' | 'problem' | 'patio' | 'towed' | 'expense') => {
-    if (formType === 'vehicle') {
-      setVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
-    } else if (formType === 'towing') {
-      setTowingPhotos(prev => ({ ...prev, [photoType]: file }));
-    } else if (formType === 'problem') {
-      setProblemEvidence(prev => ({ ...prev, [photoType]: file }));
-    } else if (formType === 'patio') {
-      setPatioVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
-    } else if (formType === 'towed') {
-      setTowedCarPhoto(file);
-    } else if (formType === 'expense') {
-      const [expenseType, receiptType] = photoType.split('-');
-      if (receiptType === 'patio') {
-        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
-      } else if (receiptType === 'towed') {
-        setTowedExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
-      }
-    }
-  };
-
-  // Funções para manipular despesas extras
-  const handlePatioExpenseChange = (expenseType: string, checked: boolean) => {
-    if (expenseType === 'naoHouve') {
-      setPatioExtraExpenses({
-        naoHouve: checked,
-        gasolina: false,
-        pedagio: false,
-        estacionamento: false,
-        motoboy: false
-      });
-      if (checked) {
-        setPatioExpenseValues({
-          gasolina: '',
-          pedagio: '',
-          estacionamento: '',
-          motoboy: ''
-        });
-        setPatioExpenseReceipts({
-          gasolina: null,
-          pedagio: null,
-          estacionamento: null,
-          motoboy: null
-        });
-      }
-    } else {
-      setPatioExtraExpenses(prev => ({
-        ...prev,
-        naoHouve: false,
-        [expenseType]: checked
-      }));
-      if (!checked) {
-        setPatioExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
-        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
-      }
-    }
-  };
-
-  const handleTowedExpenseChange = (expenseType: string, checked: boolean) => {
-    if (expenseType === 'naoHouve') {
-      setTowedExtraExpenses({
-        naoHouve: checked,
-        gasolina: false,
-        pedagio: false,
-        estacionamento: false,
-        motoboy: false
-      });
-      if (checked) {
-        setTowedExpenseValues({
-          gasolina: '',
-          pedagio: '',
-          estacionamento: '',
-          motoboy: ''
-        });
-        setTowedExpenseReceipts({
-          gasolina: null,
-          pedagio: null,
-          estacionamento: null,
-          motoboy: null
-        });
-      }
-    } else {
-      setTowedExtraExpenses(prev => ({
-        ...prev,
-        naoHouve: false,
-        [expenseType]: checked
-      }));
-      if (!checked) {
-        setTowedExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
-        setTowedExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
-      }
-    }
-  };
-
-  // Funções para as ações de Confirmação de Recolha
-  const handleConfirmPatioDelivery = async () => {
-    const hasAnyPhoto = Object.values(patioVehiclePhotos).some(photo => photo !== null);
-    if (!hasAnyPhoto) {
-      setFeedback('Por favor, envie pelo menos uma foto do veículo no pátio.');
-      return;
-    }
-
-    const selectedExpenses = Object.entries(patioExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
-    for (const [expenseType] of selectedExpenses) {
-      if (!patioExpenseValues[expenseType as keyof typeof patioExpenseValues]) {
-        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
-        return;
-      }
-      if (!patioExpenseReceipts[expenseType as keyof typeof patioExpenseReceipts]) {
-        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
-        return;
-      }
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando confirmação de entrega no pátio...');
-    
-    try {
-      if (onConfirmPatioDelivery) {
-        // Filtrar apenas as fotos que foram realmente selecionadas
-        const selectedPhotos = Object.fromEntries(
-          Object.entries(patioVehiclePhotos).filter(([key, file]) => file !== null)
-        ) as Record<string, File>;
-
-        // Filtrar despesas selecionadas (exceto "naoHouve")
-        const selectedExpensesList = Object.entries(patioExtraExpenses)
-          .filter(([key, value]) => value)
-          .map(([key]) => {
-            const expenseNames: Record<string, string> = {
-              naoHouve: 'Não houve',
-              gasolina: 'Gasolina',
-              pedagio: 'Pedágio',
-              estacionamento: 'Estacionamento',
-              motoboy: 'Motoboy (busca de chave)'
-            };
-            return expenseNames[key] || key;
-          });
-
-        // Filtrar comprovantes apenas das despesas selecionadas
-        const selectedExpenseKeys = Object.entries(patioExtraExpenses)
-          .filter(([key, value]) => value)
-          .map(([key]) => key);
-        
-        const selectedExpenseReceipts = Object.fromEntries(
-          Object.entries(patioExpenseReceipts).filter(([key, file]) => 
-            selectedExpenseKeys.includes(key) && file !== null
-          )
-        ) as Record<string, File>;
-
-        await onConfirmPatioDelivery(
-          card.id,
-          selectedPhotos,
-          selectedExpensesList,
-          patioExpenseValues,
-          selectedExpenseReceipts
-        );
-      }
-
-      setFeedback('Entrega no pátio confirmada com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowConfirmPatioDelivery(false);
-        setFeedback('');
-        resetPatioForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  const handleCarTowed = async () => {
-    if (!towedCarPhoto) {
-      setFeedback('Por favor, envie a foto do veículo no guincho.');
-      return;
-    }
-
-    const selectedExpenses = Object.entries(towedExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
-    for (const [expenseType] of selectedExpenses) {
-      if (!towedExpenseValues[expenseType as keyof typeof towedExpenseValues]) {
-        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
-        return;
-      }
-      if (!towedExpenseReceipts[expenseType as keyof typeof towedExpenseReceipts]) {
-        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
-        return;
-      }
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando confirmação de carro guinchado...');
-    
-    try {
-      if (onConfirmCarTowed && towedCarPhoto) {
-        // Filtrar despesas selecionadas (exceto "naoHouve")
-        const selectedExpensesList = Object.entries(towedExtraExpenses)
-          .filter(([key, value]) => value)
-          .map(([key]) => {
-            const expenseNames: Record<string, string> = {
-              naoHouve: 'Não houve',
-              gasolina: 'Gasolina',
-              pedagio: 'Pedágio',
-              estacionamento: 'Estacionamento',
-              motoboy: 'Motoboy (busca de chave)'
-            };
-            return expenseNames[key] || key;
-          });
-
-        // Filtrar comprovantes apenas das despesas selecionadas  
-        const selectedExpenseKeys = Object.entries(towedExtraExpenses)
-          .filter(([key, value]) => value)
-          .map(([key]) => key);
-        
-        const selectedExpenseReceipts = Object.fromEntries(
-          Object.entries(towedExpenseReceipts).filter(([key, file]) => 
-            selectedExpenseKeys.includes(key) && file !== null
-          )
-        ) as Record<string, File>;
-
-        await onConfirmCarTowed(
-          card.id,
-          towedCarPhoto,
-          selectedExpensesList,
-          towedExpenseValues,
-          selectedExpenseReceipts
-        );
-      }
-
-      setFeedback('Carro guinchado confirmado com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowCarTowed(false);
-        setFeedback('');
-        resetTowedForm();
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  const handleRequestTowMechanical = async () => {
-    if (!mechanicalTowReason.trim()) {
-      setFeedback('Por favor, detalhe o motivo do guincho.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando solicitação de guincho...');
-    
-    try {
-      if (onRequestTowMechanical) {
-        await onRequestTowMechanical(card.id, mechanicalTowReason);
-      }
-
-      setFeedback('Guincho solicitado com sucesso! Os dados serão atualizados em até 3 minutos.');
-      setTimeout(() => {
-        setShowRequestTowMechanical(false);
-        setFeedback('');
-        setMechanicalTowReason('');
-        setIsUpdating(false);
-        onClose();
-      }, 3000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
-  };
-
-  // Funções para resetar os formulários de confirmação
-  const resetPatioForm = () => {
-    setPatioVehiclePhotos({
-      frente: null,
-      traseira: null,
-      lateralDireita: null,
-      lateralEsquerda: null,
-      estepe: null,
-      painel: null
-    });
-    setPatioExtraExpenses({
-      naoHouve: true,
-      gasolina: false,
-      pedagio: false,
-      estacionamento: false,
-      motoboy: false
-    });
-    setPatioExpenseValues({
-      gasolina: '',
-      pedagio: '',
-      estacionamento: '',
-      motoboy: ''
-    });
-    setPatioExpenseReceipts({
-      gasolina: null,
-      pedagio: null,
-      estacionamento: null,
-      motoboy: null
-    });
-  };
-
-  const resetTowedForm = () => {
-    setTowedCarPhoto(null);
-    setTowedExtraExpenses({
-      naoHouve: true,
-      gasolina: false,
-      pedagio: false,
-      estacionamento: false,
-      motoboy: false
-    });
-    setTowedExpenseValues({
-      gasolina: '',
-      pedagio: '',
-      estacionamento: '',
-      motoboy: ''
-    });
-    setTowedExpenseReceipts({
-      gasolina: null,
-      pedagio: null,
-      estacionamento: null,
-      motoboy: null
-    });
-  };
-
-  // Configurar data atual ao abrir formulários
-  useEffect(() => {
-    if (showAllocateDriver) {
-      loadAvailableChofers();
-      const today = new Date();
-      const formattedDate = today.toISOString().split('T')[0];
-      const formattedTime = today.toTimeString().slice(0, 5);
-      setCollectionDate(formattedDate);
-      setCollectionTime(formattedTime);
-    }
-  }, [showAllocateDriver]);
-
-  // Função para adaptar nomes das fases para melhor legibilidade
   const adaptPhaseName = (phase: string) => {
     const adaptations: { [key: string]: string } = {
       'Tentativa 1 de Recolha': 'Tentativa 1',
@@ -820,7 +73,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     return adaptations[phase] || phase
   }
 
-  // Função para obter cor da fase
   const getPhaseColor = (phase: string) => {
     const colors: { [key: string]: string } = {
       'Fila de Recolha': 'bg-blue-100 text-blue-800',
@@ -836,30 +88,19 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
     return colors[phase] || 'bg-gray-100 text-gray-800'
   }
 
-  // Função para copiar para clipboard
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    // Aqui você poderia adicionar um toast de confirmação
   }
 
-  // Função para abrir mapa
   const openMap = (link: string) => {
     if (link) {
       window.open(link, '_blank')
     }
   }
 
-  // Função para fazer ligação
   const makeCall = (phone: string) => {
     if (phone) {
       window.location.href = `tel:${phone.replace(/\D/g, '')}`
-    }
-  }
-
-  // Função para enviar email
-  const sendEmail = (email: string) => {
-    if (email) {
-      window.location.href = `mailto:${email}`
     }
   }
 
@@ -869,22 +110,18 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
   return (
     <div className="fixed inset-0 z-[9999] fade-in">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm mobile-modal-backdrop"
         onClick={onClose}
       />
       
-      {/* Modal */}
       <div className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform transition-transform duration-300 mobile-modal-content mobile-shadow-lg z-[10000] ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
       }`}>
-        {/* Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-12 h-1 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -909,7 +146,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-gray-200">
           {[
             { id: 'details', label: 'Detalhes', icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
@@ -933,12 +169,10 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
           ))}
         </div>
 
-        {/* Content */}
         <div className="max-h-[75vh] overflow-y-auto">
           <div className="min-h-[400px]">
             {activeTab === 'details' && (
               <div className="p-4 space-y-4">
-                {/* Status e Fase Atual */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border border-blue-100">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold text-gray-900 flex items-center gap-2">
@@ -956,10 +190,8 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                   </div>
                 </div>
 
-                {/* Grid Layout Compacto */}
                 <div className="grid grid-cols-1 gap-4">
                   
-                  {/* Veículo - Layout Horizontal Compacto */}
                   <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center">
@@ -983,7 +215,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       )}
                     </div>
 
-                    {/* Localização com destaque */}
                     {card.enderecoRecolha && (
                       <div className="mt-3 bg-orange-50 rounded-lg p-3 border border-orange-100">
                         <div className="flex items-center justify-between mb-2">
@@ -1012,7 +243,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                     )}
                   </div>
 
-                  {/* Cliente - Layout Compacto com Ações */}
                   <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -1030,7 +260,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {/* Telefones em Grid */}
                     <div className="grid grid-cols-1 gap-2">
                       {card.telefoneContato && (
                         <button
@@ -1073,7 +302,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       )}
                     </div>
 
-                    {/* Endereço de Cadastro */}
                     {card.enderecoCadastro && (
                       <div className="mt-3 bg-purple-50 rounded-lg p-3 border border-purple-100">
                         <div className="flex items-center justify-between mb-2">
@@ -1093,7 +321,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                     )}
                   </div>
 
-                  {/* Prestador - Layout Compacto */}
                   <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center">
@@ -1127,7 +354,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
             {activeTab === 'actions' && (
               <div className="h-full min-h-[500px] p-4">
                 {isFila ? (
-                  /* Interface para Fila de Recolha */
                   <div className="space-y-4">
                     <div className="text-center mb-6">
                       <h3 className="text-lg font-bold text-gray-800 mb-2">Gerenciar Recolha</h3>
@@ -1136,17 +362,15 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
 
                     {!showAllocateDriver && !showRejectCollection && (
                       <div className="space-y-3">
-                        {/* Verificar permissão para mostrar botão Alocar Chofer */}
                         {(() => {
                           const pType = permissionType?.toLowerCase();
                           const empresaCard = card?.empresaResponsavel?.toLowerCase();
                           
-                          // Verificar se tem permissão para alocar chofer
                           const canAllocate = 
-                            pType === 'admin' || // Admin pode sempre
-                            (pType === 'onsystem' && empresaCard === 'onsystem') || // OnSystem só se empresa for OnSystem
-                            (pType === 'rvs' && empresaCard === 'rvs') || // RVS só se empresa for RVS
-                            (pType === 'ativa' && empresaCard === 'ativa'); // Ativa só se empresa for Ativa
+                            pType === 'admin' ||
+                            (pType === 'onsystem' && empresaCard === 'onsystem') ||
+                            (pType === 'rvs' && empresaCard === 'rvs') ||
+                            (pType === 'ativa' && empresaCard === 'ativa');
                           
                           if (canAllocate) {
                             return (
@@ -1176,234 +400,25 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {/* Formulário Alocar Chofer */}
-                    {showAllocateDriver && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-green-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowAllocateDriver(false);
-                              resetAllocateForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Alocar Chofer</h3>
-                        </div>
-
-                        {loadingChofers ? (
-                          <div className="text-center py-4">
-                            <div className="inline-flex items-center gap-2 text-gray-600">
-                              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                              <span className="text-sm">Carregando chofers...</span>
-                            </div>
-                          </div>
-                        ) : availableChofers.length === 0 ? (
-                          <div className="text-center py-4">
-                            <div className="text-gray-500 text-sm">
-                              Não há outros chofers cadastrados para a região.
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Chofer *</label>
-                                                            <select 
-                                value={selectedChofer}
-                                onChange={(e) => {
-                                  setSelectedChofer(e.target.value);
-                                  const option = availableChofers.find(opt => opt.name === e.target.value);
-                                  setChoferEmail(option?.email || '');
-                                }}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
-                              >
-                                <option value="" className="text-gray-500">Selecione um chofer...</option>
-                                {availableChofers.map(option => (
-                                  <option key={option.email} value={option.name}>{option.name}</option>
-                                ))}
-                              </select>
-                        </div>
-
-                            {selectedChofer && (
-                        <div>
-                                <label className="text-sm font-bold text-gray-700 mb-2 block">E-mail do Chofer</label>
-                                                          <input
-                                  type="email"
-                                  value={choferEmail}
-                                  readOnly
-                                  className="w-full p-3 border border-gray-300 rounded-lg text-sm bg-gray-50 cursor-not-allowed text-gray-900"
-                                  placeholder="E-mail será preenchido automaticamente"
-                          />
-                        </div>
-                            )}
-                          </>
-                        )}
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Data prevista de recolha *</label>
-                          <input 
-                            type="date" 
-                            value={collectionDate}
-                            onChange={(e) => setCollectionDate(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Hora prevista de recolha *</label>
-                          <input 
-                            type="time" 
-                            value={collectionTime}
-                            onChange={(e) => setCollectionTime(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Tipo de Faturamento *</label>
-                          <select 
-                            value={billingType}
-                            onChange={(e) => setBillingType(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white text-black"
-                          >
-                            <option value="" style={{ color: '#6B7280' }}>Selecione o tipo...</option>
-                            <option value="avulso">Avulso</option>
-                            <option value="franquia">Franquia</option>
-                          </select>
-                        </div>
-
-                        {billingType === 'avulso' && (
-                          <div>
-                            <label className="text-sm font-bold text-gray-700 mb-2 block">Valor da Recolha *</label>
-                            <input 
-                              type="text" 
-                              value={collectionValue}
-                              onChange={(e) => {
-                                const value = e.target.value.replace(/\D/g, '');
-                                const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
-                                  style: 'currency',
-                                  currency: 'BRL'
-                                });
-                                setCollectionValue(formatted);
-                              }}
-                              placeholder="R$ 0,00"
-                              className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-600 text-black"
-                            />
-                          </div>
-                        )}
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Km Adicional *</label>
-                          <input 
-                            type="text" 
-                            value={additionalKm}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, '');
-                              const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL'
-                              });
-                              setAdditionalKm(formatted);
-                            }}
-                            placeholder="R$ 0,00"
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 bg-white placeholder-gray-600 text-black"
-                          />
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('preencha') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleAllocateDriver}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showAllocateDriver && onAllocateDriver && (
+                      <AllocateDriverForm
+                        card={card}
+                        onAllocateDriver={onAllocateDriver}
+                        onClose={onClose}
+                        onBack={() => setShowAllocateDriver(false)}
+                      />
                     )}
 
-                    {/* Formulário Rejeitar Recolha */}
-                    {showRejectCollection && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-red-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowRejectCollection(false);
-                              resetRejectForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Rejeitar Recolha</h3>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Motivo da não recolha *</label>
-                          <select 
-                            value={rejectionReason}
-                            onChange={(e) => setRejectionReason(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white text-black"
-                          >
-                            <option value="" style={{ color: '#6B7280' }}>Selecione um motivo...</option>
-                            <option value="cliente_pagamento">Cliente realizou pagamento</option>
-                            <option value="cliente_devolveu">Cliente já devolveu o veículo</option>
-                            <option value="veiculo_recolhido">Veículo já recolhido</option>
-                            <option value="fora_area">Fora da área de atuação</option>
-                            <option value="duplicada">Solicitação duplicada</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Observações *</label>
-                          <textarea 
-                            value={rejectionObservations}
-                            onChange={(e) => setRejectionObservations(e.target.value)}
-                            rows={4}
-                            placeholder="Descreva detalhes adicionais sobre a rejeição..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none placeholder-gray-600 text-black"
-                          />
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('preencha') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleRejectCollection}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showRejectCollection && onRejectCollection && (
+                      <RejectCollectionForm
+                        card={card}
+                        onRejectCollection={onRejectCollection}
+                        onClose={onClose}
+                        onBack={() => setShowRejectCollection(false)}
+                      />
                     )}
                   </div>
                 ) : isTentativaRecolha ? (
-                  /* Interface para Tentativas de Recolha */
                   <div className="space-y-4">
                     <div className="text-center mb-6">
                       <h3 className="text-lg font-bold text-gray-800 mb-2">Ações de Recolha</h3>
@@ -1445,283 +460,34 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {/* Formulário Desbloquear Veículo */}
-                    {showUnlockVehicle && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-blue-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowUnlockVehicle(false);
-                              resetUnlockForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Desbloquear Veículo</h3>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          {[
-                            { key: 'frente', label: 'Foto da Frente', image: '/images/placeholders/vehicle-front.webp' },
-                            { key: 'traseira', label: 'Foto da Traseira', image: '/images/placeholders/vehicle-rear.webp' },
-                            { key: 'lateralDireita', label: 'Lateral Direita', image: '/images/placeholders/vehicle-right.jpg' },
-                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: '/images/placeholders/vehicle-left.jpg' },
-                            { key: 'estepe', label: 'Foto do Estepe', image: '/images/placeholders/vehicle-spare.jpg' },
-                            { key: 'painel', label: 'Foto do Painel', image: '/images/placeholders/vehicle-dashboard.jpg' },
-                          ].map((photo) => (
-                            <div key={photo.key} className="space-y-2">
-                              <p className="text-xs font-bold text-gray-700">{photo.label}</p>
-                              <div className="w-full aspect-square">
-                                <img
-                                  src={getImageUrl(vehiclePhotos[photo.key as keyof typeof vehiclePhotos], photo.image)}
-                                  alt={photo.label}
-                                  className="w-full h-full object-cover rounded"
-                                />
-                              </div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    handlePhotoUpload(photo.key, file, 'vehicle');
-                                  }
-                                }}
-                                className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                              />
-                              {vehiclePhotos[photo.key as keyof typeof vehiclePhotos] && (
-                                <p className="text-xs text-green-600">✓ Foto enviada</p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Observações</label>
-                          <textarea 
-                            value={unlockObservations}
-                            onChange={(e) => setUnlockObservations(e.target.value)}
-                            rows={3}
-                            placeholder="Observações adicionais (opcional)..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 bg-white resize-none placeholder-gray-600 text-black"
-                          />
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('pelo menos') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleUnlockVehicle}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showUnlockVehicle && onUnlockVehicle && (
+                      <UnlockVehicleForm
+                        card={card}
+                        onUnlockVehicle={onUnlockVehicle}
+                        onClose={onClose}
+                        onBack={() => setShowUnlockVehicle(false)}
+                      />
                     )}
 
-                    {/* Formulário Solicitar Guincho */}
-                    {showRequestTowing && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-orange-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowRequestTowing(false);
-                              resetTowingForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Solicitar Guincho</h3>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Motivo do guincho *</label>
-                          <select 
-                            value={towingReason}
-                            onChange={(e) => setTowingReason(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white text-black"
-                          >
-                            <option value="" style={{ color: '#6B7280' }}>Selecione o motivo...</option>
-                            <option value="Veículo com avarias / problemas mecânicos">Veículo com avarias / problemas mecânicos</option>
-                            <option value="Veículo na rua sem recuperação da chave">Veículo na rua sem recuperação da chave</option>
-                            <option value="Chave danificada / perdida">Chave danificada / perdida</option>
-                          </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                          {[
-                            { key: 'frente', label: 'Foto da Frente', image: '/images/placeholders/vehicle-front.webp' },
-                            { key: 'traseira', label: 'Foto da Traseira', image: '/images/placeholders/vehicle-rear.webp' },
-                            { key: 'lateralDireita', label: 'Lateral Direita', image: '/images/placeholders/vehicle-right.jpg' },
-                            { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: '/images/placeholders/vehicle-left.jpg' },
-                            ...(towingReason !== 'Veículo na rua sem recuperação da chave' ? [
-                              { key: 'estepe', label: 'Foto do Estepe', image: '/images/placeholders/vehicle-spare.jpg' },
-                              { key: 'painel', label: 'Foto do Painel', image: '/images/placeholders/vehicle-dashboard.jpg' },
-                            ] : [])
-                          ].map((photo) => (
-                            <div key={photo.key} className="space-y-2">
-                              <p className="text-xs font-bold text-gray-700">{photo.label}</p>
-                              <div className="w-full aspect-square">
-                                <img
-                                  src={getImageUrl(towingPhotos[photo.key as keyof typeof towingPhotos], photo.image)}
-                                  alt={photo.label}
-                                  className="w-full h-full object-cover rounded"
-                                />
-                              </div>
-                              <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    handlePhotoUpload(photo.key, file, 'towing');
-                                  }
-                                }}
-                                className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                              />
-                              {towingPhotos[photo.key as keyof typeof towingPhotos] && (
-                                <p className="text-xs text-green-600">✓ Foto enviada</p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Observações</label>
-                          <textarea 
-                            value={towingObservations}
-                            onChange={(e) => setTowingObservations(e.target.value)}
-                            rows={3}
-                            placeholder="Observações adicionais (opcional)..."
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-white resize-none placeholder-gray-600 text-black"
-                          />
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('selecione') || feedback.includes('pelo menos') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleRequestTowing}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showRequestTowing && onRequestTowing && (
+                      <RequestTowingForm
+                        card={card}
+                        onRequestTowing={onRequestTowing}
+                        onClose={onClose}
+                        onBack={() => setShowRequestTowing(false)}
+                      />
                     )}
 
-                    {/* Formulário Reportar Problema */}
-                    {showReportProblem && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-purple-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowReportProblem(false);
-                              resetProblemForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Reportar Problema</h3>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Qual a dificuldade encontrada na recolha? *</label>
-                          <select 
-                            value={problemType}
-                            onChange={(e) => setProblemType(e.target.value)}
-                            className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 bg-white text-black"
-                          >
-                            <option value="" style={{ color: '#6B7280' }}>Selecione a dificuldade...</option>
-                            <option value="cliente_regularizou">Cliente regularizou o pagamento</option>
-                            <option value="cliente_recusa_pagamento">Cliente recusa a entrega e informa que vai fazer o pagamento</option>
-                            <option value="cliente_recusa_problemas">Cliente recusa a entrega devido a problemas com a Kovi</option>
-                            <option value="carro_localizado_cliente_nao">Carro localizado, mas cliente não encontrado</option>
-                            <option value="carro_nao_localizado">Carro não localizado e sem contato com o cliente</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-bold text-gray-700 mb-2">Evidências da dificuldade</p>
-                          <p className="text-xs text-gray-500 mb-3">Envie fotos da rua, da garagem que evidencie a dificuldade na recolha</p>
-                          
-                          <div className="grid grid-cols-3 gap-3">
-                            {['photo1', 'photo2', 'photo3'].map((photoKey, index) => (
-                              <div key={photoKey} className="space-y-2">
-                                <p className="text-xs font-bold text-gray-700">Foto {index + 1}</p>
-                                <div className="w-full aspect-square bg-gray-100 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
-                                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                </div>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handlePhotoUpload(photoKey, file, 'problem');
-                                    }
-                                  }}
-                                  className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                                />
-                                {problemEvidence[photoKey as keyof typeof problemEvidence] && (
-                                  <p className="text-xs text-green-600">✓ Foto enviada</p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('selecione') || feedback.includes('pelo menos') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleReportProblem}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showReportProblem && onReportProblem && (
+                      <ReportProblemForm
+                        card={card}
+                        onReportProblem={onReportProblem}
+                        onClose={onClose}
+                        onBack={() => setShowReportProblem(false)}
+                      />
                     )}
                   </div>
                 ) : isConfirmacaoRecolha ? (
-                  /* Interface para Confirmação de Entrega no Pátio */
                   <div className="space-y-4">
                     <div className="text-center mb-6">
                       <h3 className="text-lg font-bold text-gray-800 mb-2">Confirmação de Recolha</h3>
@@ -1766,336 +532,34 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {/* Formulário Confirmar Entrega no Pátio */}
-                    {showConfirmPatioDelivery && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-green-200 max-h-[60vh] overflow-y-auto">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowConfirmPatioDelivery(false);
-                              resetPatioForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Confirmar Entrega no Pátio</h3>
-                        </div>
-
-                        {/* Fotos do Veículo no Pátio */}
-                        <div>
-                          <p className="text-sm font-bold text-gray-700 mb-3">Fotos do veículo no pátio *</p>
-                          <div className="grid grid-cols-2 gap-3">
-                            {[
-                              { key: 'frente', label: 'Foto da Frente', image: '/images/placeholders/vehicle-front.webp' },
-                              { key: 'traseira', label: 'Foto da Traseira', image: '/images/placeholders/vehicle-rear.webp' },
-                              { key: 'lateralDireita', label: 'Lateral Direita', image: '/images/placeholders/vehicle-right.jpg' },
-                              { key: 'lateralEsquerda', label: 'Lateral Esquerda', image: '/images/placeholders/vehicle-left.jpg' },
-                              { key: 'estepe', label: 'Foto do Estepe', image: '/images/placeholders/vehicle-spare.jpg' },
-                              { key: 'painel', label: 'Foto do Painel', image: '/images/placeholders/vehicle-dashboard.jpg' }
-                            ].map((photo) => (
-                              <div key={photo.key} className="space-y-2">
-                                <p className="text-xs font-bold text-gray-700">{photo.label}</p>
-                                <div className="w-full aspect-square">
-                                  <img
-                                    src={getImageUrl(patioVehiclePhotos[photo.key as keyof typeof patioVehiclePhotos], photo.image)}
-                                    alt={photo.label}
-                                    className="w-full h-full object-cover rounded"
-                                  />
-                                </div>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      handlePhotoUpload(photo.key, file, 'patio');
-                                    }
-                                  }}
-                                  className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                                />
-                                {patioVehiclePhotos[photo.key as keyof typeof patioVehiclePhotos] && (
-                                  <p className="text-xs text-green-600">✓ Foto enviada</p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Despesas Extras */}
-                        <div>
-                          <p className="text-sm font-bold text-gray-700 mb-3">Houveram despesas extras no processo de recolha? *</p>
-                          <div className="space-y-3">
-                            {[
-                              { key: 'naoHouve', label: 'Não houve' },
-                              { key: 'gasolina', label: 'Gasolina' },
-                              { key: 'pedagio', label: 'Pedágio' },
-                              { key: 'estacionamento', label: 'Estacionamento' },
-                              { key: 'motoboy', label: 'Motoboy (busca de chave)' }
-                            ].map((expense) => (
-                              <div key={expense.key} className="space-y-2">
-                                <label className="flex items-center space-x-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={patioExtraExpenses[expense.key as keyof typeof patioExtraExpenses]}
-                                    onChange={(e) => handlePatioExpenseChange(expense.key, e.target.checked)}
-                                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                                  />
-                                  <span className="text-sm text-gray-700">{expense.label}</span>
-                                </label>
-                                
-                                {expense.key !== 'naoHouve' && patioExtraExpenses[expense.key as keyof typeof patioExtraExpenses] && (
-                                  <div className="ml-6 space-y-2 p-3 bg-gray-50 rounded-lg">
-                                    <div>
-                                      <label className="text-xs font-bold text-gray-700 block mb-1">
-                                        Valor do {expense.label.toLowerCase()}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={patioExpenseValues[expense.key as keyof typeof patioExpenseValues]}
-                                        onChange={(e) => {
-                                          const value = e.target.value.replace(/\D/g, '');
-                                          const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
-                                            style: 'currency',
-                                            currency: 'BRL'
-                                          });
-                                          setPatioExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
-                                        }}
-                                        placeholder="R$ 0,00"
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 placeholder-gray-600 text-black"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="text-xs font-bold text-gray-700 block mb-1">
-                                        Comprovante de pagamento do {expense.label.toLowerCase()}
-                                      </label>
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) handlePhotoUpload(`${expense.key}-patio`, file, 'expense');
-                                        }}
-                                        className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                                      />
-                                      {patioExpenseReceipts[expense.key as keyof typeof patioExpenseReceipts] && (
-                                        <p className="text-xs text-green-600 mt-1">✓ Comprovante enviado</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('Por favor') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleConfirmPatioDelivery}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showConfirmPatioDelivery && onConfirmPatioDelivery && (
+                      <ConfirmPatioDeliveryForm
+                        card={card}
+                        onConfirmPatioDelivery={onConfirmPatioDelivery}
+                        onClose={onClose}
+                        onBack={() => setShowConfirmPatioDelivery(false)}
+                      />
                     )}
 
-                    {/* Formulário Carro Guinchado */}
-                    {showCarTowed && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-orange-200 max-h-[60vh] overflow-y-auto">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowCarTowed(false);
-                              resetTowedForm();
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Carro Guinchado</h3>
-                        </div>
-
-                        {/* Foto do Veículo no Guincho */}
-                        <div>
-                          <p className="text-sm font-bold text-gray-700 mb-3">Foto do veículo no guincho *</p>
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-orange-400 transition-colors">
-                            <div className="mb-3">
-                              <img 
-                                src={getImageUrl(towedCarPhoto, "/images/placeholders/vehicle-on-tow.jpg")} 
-                                alt={towedCarPhoto ? "Foto do veículo no guincho" : "Formato esperado da imagem"}
-                                className="w-full max-w-xs mx-auto rounded-lg shadow-sm"
-                              />
-                              <p className="text-xs text-gray-500 mt-2">
-                                {towedCarPhoto ? "Foto anexada" : "Formato esperado da imagem"}
-                              </p>
-                            </div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) handlePhotoUpload('towed', file, 'towed');
-                              }}
-                              className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Despesas Extras */}
-                        <div>
-                          <p className="text-sm font-bold text-gray-700 mb-3">Houveram despesas extras no processo de recolha? *</p>
-                          <div className="space-y-3">
-                            {[
-                              { key: 'naoHouve', label: 'Não houve' },
-                              { key: 'gasolina', label: 'Gasolina' },
-                              { key: 'pedagio', label: 'Pedágio' },
-                              { key: 'estacionamento', label: 'Estacionamento' },
-                              { key: 'motoboy', label: 'Motoboy (busca de chave)' }
-                            ].map((expense) => (
-                              <div key={expense.key} className="space-y-2">
-                                <label className="flex items-center space-x-2">
-                                  <input
-                                    type="checkbox"
-                                    checked={towedExtraExpenses[expense.key as keyof typeof towedExtraExpenses]}
-                                    onChange={(e) => handleTowedExpenseChange(expense.key, e.target.checked)}
-                                    className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-                                  />
-                                  <span className="text-sm text-gray-700">{expense.label}</span>
-                                </label>
-                                
-                                {expense.key !== 'naoHouve' && towedExtraExpenses[expense.key as keyof typeof towedExtraExpenses] && (
-                                  <div className="ml-6 space-y-2 p-3 bg-gray-50 rounded-lg">
-                                    <div>
-                                      <label className="text-xs font-bold text-gray-700 block mb-1">
-                                        Valor do {expense.label.toLowerCase()}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={towedExpenseValues[expense.key as keyof typeof towedExpenseValues]}
-                                        onChange={(e) => {
-                                          const value = e.target.value.replace(/\D/g, '');
-                                          const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
-                                            style: 'currency',
-                                            currency: 'BRL'
-                                          });
-                                          setTowedExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
-                                        }}
-                                        placeholder="R$ 0,00"
-                                        className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 placeholder-gray-600 text-black"
-                                      />
-                                    </div>
-                                    <div>
-                                      <label className="text-xs font-bold text-gray-700 block mb-1">
-                                        Comprovante de pagamento do {expense.label.toLowerCase()}
-                                      </label>
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0];
-                                          if (file) handlePhotoUpload(`${expense.key}-towed`, file, 'expense');
-                                        }}
-                                        className="w-full text-xs p-1 border border-gray-300 rounded bg-white"
-                                      />
-                                      {towedExpenseReceipts[expense.key as keyof typeof towedExpenseReceipts] && (
-                                        <p className="text-xs text-green-600 mt-1">✓ Comprovante enviado</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('Por favor') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleCarTowed}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showCarTowed && onConfirmCarTowed && (
+                      <CarTowedForm
+                        card={card}
+                        onConfirmCarTowed={onConfirmCarTowed}
+                        onClose={onClose}
+                        onBack={() => setShowCarTowed(false)}
+                      />
                     )}
 
-                    {/* Formulário Solicitar Guincho (Problemas Mecânicos) */}
-                    {showRequestTowMechanical && (
-                      <div className="space-y-4 bg-white rounded-xl p-4 border border-red-200">
-                        <div className="flex items-center gap-3 mb-4">
-                          <button
-                            onClick={() => {
-                              setShowRequestTowMechanical(false);
-                              setMechanicalTowReason('');
-                              setFeedback('');
-                            }}
-                            className="text-gray-500 hover:text-gray-700 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <h3 className="text-lg font-bold text-gray-800">Solicitar Guincho</h3>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-bold text-gray-700 mb-2 block">Detalhe o motivo do guincho *</label>
-                          <textarea
-                            value={mechanicalTowReason}
-                            onChange={(e) => setMechanicalTowReason(e.target.value)}
-                            rows={6}
-                            placeholder="Descreva detalhadamente os problemas mecânicos identificados após o pedido de desbloqueio que justificam a necessidade do guincho..."
-                          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500/50 focus:border-red-500 bg-white resize-none placeholder-gray-600 text-black"
-                          />
-                        </div>
-
-                        {feedback && (
-                          <div className={`text-sm text-center p-3 rounded-lg font-medium ${
-                            feedback.includes('Erro') || feedback.includes('Por favor') 
-                              ? 'text-red-700 bg-red-100 border border-red-200' 
-                              : 'text-green-700 bg-green-100 border border-green-200'
-                          }`}>
-                            {feedback}
-                          </div>
-                        )}
-
-                        <button 
-                          onClick={handleRequestTowMechanical}
-                          disabled={isUpdating}
-                          className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 text-sm font-bold rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isUpdating ? 'Processando...' : 'Confirmar'}
-                        </button>
-                      </div>
+                    {showRequestTowMechanical && onRequestTowMechanical && (
+                      <RequestTowMechanicalForm
+                        card={card}
+                        onRequestTowMechanical={onRequestTowMechanical}
+                        onClose={onClose}
+                        onBack={() => setShowRequestTowMechanical(false)}
+                      />
                     )}
                   </div>
                 ) : (
-                  /* Interface original com iframe */
                   <div className="h-full min-h-[400px]">
                     {card.urlPublica ? (
                       <iframe
@@ -2146,7 +610,6 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
           </div>
         </div>
 
-        {/* Footer */}
         <div className="p-3 border-t border-gray-200">
           <div className="flex items-center justify-center">
             <span className="text-xs text-gray-500">ID: {card.id}</span>
