@@ -14,12 +14,12 @@ export * from './molecules';
 export * from './organisms';
 
 // Legacy exports para compatibilidade (temporário)
-export { default as CardComponent } from './Card';
-export { default as Header } from './Header';
-export { default as ControlPanel } from './ControlPanel';
-export { default as LoadingIndicator } from './LoadingIndicator';
-export { default as CardModal } from './CardModal';
-export { default as KanbanWrapper } from './KanbanWrapper';
-export { default as MobileTaskManager } from './MobileTaskManager';
-export { default as MobileHeader } from './MobileHeader';
-export { default as MobileWrapper } from './MobileWrapper';
+export { default as CardComponent } from '../../components/Card';
+export { default as Header } from '../../components/Header';
+export { default as ControlPanel } from '../../components/ControlPanel';
+export { default as LoadingIndicator } from '../../components/LoadingIndicator';
+export { default as CardModal } from '../../components/CardModal';
+export { default as KanbanWrapper } from '../../components/KanbanWrapper';
+export { default as MobileTaskManager } from '../../components/MobileTaskManager';
+export { default as MobileHeader } from '../../components/MobileHeader';
+export { default as MobileWrapper } from '../../components/MobileWrapper';
