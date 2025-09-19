@@ -9,6 +9,29 @@ const config: Config = {
   ],
   darkMode: "class",
   theme: {
+    // Breakpoints responsivos expandidos
+    screens: {
+      'xs': '480px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      '3xl': '1920px',
+      // Breakpoints para orientação
+      'portrait': { 'raw': '(orientation: portrait)' },
+      'landscape': { 'raw': '(orientation: landscape)' },
+      // Breakpoints para densidade de pixels
+      'retina': { 'raw': '(min-resolution: 2dppx)' },
+      // Breakpoints para acessibilidade
+      'motion-safe': { 'raw': '(prefers-reduced-motion: no-preference)' },
+      'motion-reduce': { 'raw': '(prefers-reduced-motion: reduce)' },
+      'contrast-more': { 'raw': '(prefers-contrast: more)' },
+      'contrast-less': { 'raw': '(prefers-contrast: less)' },
+      // Touch device detection
+      'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
+      'mouse': { 'raw': '(hover: hover) and (pointer: fine)' },
+    },
     extend: {
       // Cores da Kovi
       colors: {
@@ -243,12 +266,128 @@ const config: Config = {
         '90': '90',
         '100': '100',
       },
+
+      // Acessibilidade - Min touch targets (WCAG 2.1)
+      minHeight: {
+        'touch': '44px',
+        'touch-sm': '36px',
+      },
+      minWidth: {
+        'touch': '44px',
+        'touch-sm': '36px',
+      },
+
+      // Focus ring personalizados
+      ringWidth: {
+        '3': '3px',
+        '5': '5px',
+      },
+      ringOffsetWidth: {
+        '3': '3px',
+        '5': '5px',
+      },
+
+      // Utilities para acessibilidade
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '0.75rem' }],
+        'xs': ['0.75rem', { lineHeight: '1rem' }],
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],
+        'base': ['1rem', { lineHeight: '1.5rem' }],
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],
+        '5xl': ['3rem', { lineHeight: '1' }],
+        '6xl': ['3.75rem', { lineHeight: '1' }],
+        '7xl': ['4.5rem', { lineHeight: '1' }],
+        '8xl': ['6rem', { lineHeight: '1' }],
+        '9xl': ['8rem', { lineHeight: '1' }],
+      },
+
+      // Contrast ratios para melhor acessibilidade
+      contrast: {
+        '25': '.25',
+        '50': '.5',
+        '75': '.75',
+        '100': '1',
+        '125': '1.25',
+        '150': '1.5',
+        '200': '2',
+      },
     },
   },
   plugins: [
     require("@tailwindcss/forms"),
     require("@tailwindcss/typography"),
     require("tailwindcss-animate"),
+    // Plugin customizado para acessibilidade
+    function({ addUtilities, theme }: any) {
+      const newUtilities = {
+        // Screen reader only
+        '.sr-only': {
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: '0',
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: '0',
+        },
+        '.not-sr-only': {
+          position: 'static',
+          width: 'auto',
+          height: 'auto',
+          padding: '0',
+          margin: '0',
+          overflow: 'visible',
+          clip: 'auto',
+          whiteSpace: 'normal',
+        },
+        // Focus visible
+        '.focus-visible-only': {
+          '&:focus:not(:focus-visible)': {
+            outline: 'none',
+            boxShadow: 'none',
+          },
+        },
+        // Touch targets
+        '.touch-target': {
+          minHeight: theme('minHeight.touch'),
+          minWidth: theme('minWidth.touch'),
+        },
+        '.touch-target-sm': {
+          minHeight: theme('minHeight.touch-sm'),
+          minWidth: theme('minWidth.touch-sm'),
+        },
+        // High contrast borders
+        '.border-contrast': {
+          '@media (prefers-contrast: high)': {
+            borderWidth: '2px',
+            borderColor: 'currentColor',
+          },
+        },
+        // Reduced motion
+        '.motion-safe': {
+          '@media (prefers-reduced-motion: no-preference)': {
+            transitionProperty: 'color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter',
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionDuration: '150ms',
+          },
+        },
+        '.motion-reduce': {
+          '@media (prefers-reduced-motion: reduce)': {
+            animationDuration: '0.01ms !important',
+            animationIterationCount: '1 !important',
+            transitionDuration: '0.01ms !important',
+            scrollBehavior: 'auto !important',
+          },
+        },
+      };
+      addUtilities(newUtilities);
+    },
   ],
 };
 
