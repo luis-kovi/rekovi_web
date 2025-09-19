@@ -1,7 +1,7 @@
 // components/KanbanBoard.tsx
 'use client'
 
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import ControlPanel from './ControlPanel'
 import CardComponent from './Card'
@@ -9,8 +9,8 @@ import CardModal from './CardModal'
 import LoadingIndicator from './LoadingIndicator'
 import { calcularSLA, fixedPhaseOrder, phaseDisplayNames, disabledPhases, disabledPhaseMessages, formatPersonName, formatDate } from '@/utils/helpers'
 import type { Card, CardWithSLA } from '@/types'
-import type { CardRealtimePayload as RealtimePayload } from '@/types/supabase'
 import { logger } from '@/utils/logger'
+import { useCards } from '@/hooks/useCards'
 
 interface KanbanBoardProps {
   initialCards: Card[]
@@ -19,7 +19,7 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ initialCards, permissionType, onUpdateStatus }: KanbanBoardProps) {
-  const [cards, setCards] = useState<Card[]>(initialCards);
+  const { cards, setCards, isLoading } = useCards(initialCards, permissionType, onUpdateStatus);
   const [searchTerm, setSearchTerm] = useState('');
   const [slaFilter, setSlaFilter] = useState('all');
   const [hideEmptyPhases, setHideEmptyPhases] = useState(false);
@@ -28,155 +28,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
   const [showCalculator, setShowCalculator] = useState(false);
   const [calculatorPosition, setCalculatorPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const calculatorRef = useRef<HTMLDivElement>(null);
   const scrollPositionsRef = useRef<{ [key: string]: number }>({});
-
-  // Real-time subscription para atualização automática
-  useEffect(() => {
-    const supabase = createClient();
-    if (!supabase) return;
-
-    // Função para buscar dados atualizados
-    const fetchUpdatedData = async () => {
-      setIsUpdating(true);
-      onUpdateStatus?.(true);
-      try {
-        let query = supabase.from('v_pipefy_cards_detalhada').select(`
-          card_id, placa_veiculo, nome_driver, nome_chofer_recolha,
-          phase_name, created_at, email_chofer, empresa_recolha,
-          modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
-          endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
-          valor_recolha, custo_km_adicional, public_url
-        `).limit(100000);
-
-        // Filtrar apenas cards com fases válidas
-        const validPhases = [
-          'Fila de Recolha',
-          'Aprovar Custo de Recolha', 
-          'Tentativa 1 de Recolha',
-          'Tentativa 2 de Recolha',
-          'Tentativa 3 de Recolha',
-          'Desbloquear Veículo',
-          'Solicitar Guincho',
-          'Tentativa 4 de Recolha',
-          'Confirmação de Entrega no Pátio'
-        ];
-        
-        query = query.in('phase_name', validPhases);
-        
-        // Aplicar filtros de permissão
-        if (permissionType === 'ativa' || permissionType === 'onsystem' || permissionType === 'rvs') {
-          query = query.ilike('empresa_recolha', permissionType);
-        } else if (permissionType === 'chofer') {
-          // Para chofer, precisamos do email do usuário atual
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user?.email) {
-            query = query.eq('email_chofer', user.email);
-          }
-        } else if (permissionType !== 'kovi' && permissionType !== 'admin') {
-          query = query.eq('card_id', 'impossivel');
-        }
-
-        const { data: cardsData, error } = await query;
-        
-        if (error) {
-          logger.error('Erro ao buscar dados atualizados:', error);
-          return;
-        }
-
-        if (cardsData) {
-          const updatedCards: Card[] = cardsData.map((card: any) => ({
-            id: card.card_id,
-            placa: card.placa_veiculo,
-            nomeDriver: card.nome_driver,
-            chofer: card.nome_chofer_recolha,
-            faseAtual: card.phase_name,
-            dataCriacao: card.created_at,
-            emailChofer: card.email_chofer,
-            empresaResponsavel: card.empresa_recolha,
-            modeloVeiculo: card.modelo_veiculo,
-            telefoneContato: card.telefone_contato,
-            telefoneOpcional: card.telefone_opcional,
-            emailCliente: card.email_cliente,
-            enderecoCadastro: card.endereco_cadastro,
-            enderecoRecolha: card.endereco_recolha,
-            linkMapa: card.link_mapa,
-            origemLocacao: card.origem_locacao,
-            valorRecolha: card.valor_recolha,
-            custoKmAdicional: card.custo_km_adicional,
-            urlPublica: card.public_url,
-          })).filter((card: Card) => card.id && card.placa);
-
-          // Salvar posições de scroll antes da atualização
-          const containers = document.querySelectorAll('.phase-container');
-          containers.forEach((container, index) => {
-            const phaseName = container.getAttribute('data-phase');
-            if (phaseName) {
-              scrollPositionsRef.current[phaseName] = container.scrollTop;
-            }
-          });
-
-          setCards(updatedCards);
-          logger.log('Dados atualizados via real-time:', updatedCards.length, 'cards');
-
-          // Restaurar posições de scroll após a atualização
-          setTimeout(() => {
-            containers.forEach((container) => {
-              const phaseName = container.getAttribute('data-phase');
-              if (phaseName && scrollPositionsRef.current[phaseName] !== undefined) {
-                container.scrollTop = scrollPositionsRef.current[phaseName];
-              }
-            });
-          }, 0);
-        }
-      } catch (error) {
-        logger.error('Erro ao buscar dados atualizados:', error);
-      } finally {
-        setIsUpdating(false);
-        onUpdateStatus?.(false);
-      }
-    };
-
-    // Configurar real-time subscription
-    const channel = supabase
-      .channel('cards-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'v_pipefy_cards_detalhada'
-        },
-        (payload: RealtimePayload) => {
-          logger.log('Mudança detectada no Supabase:', payload);
-          // Atualizar dados quando houver mudanças
-          fetchUpdatedData();
-        }
-      )
-      .subscribe();
-
-    // Buscar dados iniciais
-    fetchUpdatedData();
-
-               // Configurar atualização periódica como fallback (a cada 10 segundos)
-           const intervalId = setInterval(fetchUpdatedData, 10000);
-
-    // Cleanup
-    return () => {
-      channel.unsubscribe();
-      clearInterval(intervalId);
-    };
-  }, [permissionType]);
-
-  // Atualizar cards quando initialCards mudar (fallback)
-  useEffect(() => {
-    logger.log('Debug - Initial Cards:', initialCards);
-    logger.log('Debug - Cards Count:', initialCards.length);
-    logger.log('Debug - Permission Type:', permissionType);
-    setCards(initialCards);
-  }, [initialCards, permissionType]);
 
   const filteredCards = useMemo((): CardWithSLA[] => {
     // Filtrar por permissão
