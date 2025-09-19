@@ -131,17 +131,11 @@ export function useCards(initialCards: Card[], permissionType?: string, onUpdate
 
     fetchUpdatedData()
 
-    const intervalId = setInterval(fetchUpdatedData, 10000)
-
     return () => {
       channel.unsubscribe()
-      clearInterval(intervalId)
     }
   }, [permissionType, onUpdateStatus])
 
-  useEffect(() => {
-    setCards(initialCards)
-  }, [initialCards])
 
   return { cards, isLoading, isUpdating, containerRef, setCards }
 }

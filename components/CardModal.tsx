@@ -100,10 +100,10 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
   };
 
   useEffect(() => {
-    if (showChoferChange && card) {
+    if (showChoferChange) {
       loadAvailableChofers();
     }
-  }, [showChoferChange, card]);
+  }, [showChoferChange]);
 
   if (!card) return null;
 

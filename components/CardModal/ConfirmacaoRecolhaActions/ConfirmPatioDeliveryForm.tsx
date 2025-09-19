@@ -1,9 +1,8 @@
 // components/CardModal/ConfirmacaoRecolhaActions/ConfirmPatioDeliveryForm.tsx
 'use client'
 
-import { useState } from 'react'
 import type { CardWithSLA } from '@/types'
-import { logger } from '@/utils/logger'
+import { useConfirmPatioDeliveryForm } from '@/hooks/useConfirmPatioDeliveryForm'
 
 interface ConfirmPatioDeliveryFormProps {
   card: CardWithSLA;
@@ -13,186 +12,24 @@ interface ConfirmPatioDeliveryFormProps {
 }
 
 export default function ConfirmPatioDeliveryForm({ card, onConfirmPatioDelivery, onClose, onBack }: ConfirmPatioDeliveryFormProps) {
-  const [feedback, setFeedback] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [patioVehiclePhotos, setPatioVehiclePhotos] = useState({
-    frente: null as File | null,
-    traseira: null as File | null,
-    lateralDireita: null as File | null,
-    lateralEsquerda: null as File | null,
-    estepe: null as File | null,
-    painel: null as File | null
-  });
-  const [patioExtraExpenses, setPatioExtraExpenses] = useState({
-    naoHouve: true,
-    gasolina: false,
-    pedagio: false,
-    estacionamento: false,
-    motoboy: false
-  });
-  const [patioExpenseValues, setPatioExpenseValues] = useState({
-    gasolina: '',
-    pedagio: '',
-    estacionamento: '',
-    motoboy: ''
-  });
-  const [patioExpenseReceipts, setPatioExpenseReceipts] = useState({
-    gasolina: null as File | null,
-    pedagio: null as File | null,
-    estacionamento: null as File | null,
-    motoboy: null as File | null
-  });
+  const {
+    feedback,
+    isUpdating,
+    patioVehiclePhotos,
+    patioExtraExpenses,
+    patioExpenseValues,
+    patioExpenseReceipts,
+    getImageUrl,
+    handlePhotoUpload,
+    handlePatioExpenseChange,
+    handleCurrencyChange,
+    resetPatioForm,
+    handleConfirmPatioDelivery,
+  } = useConfirmPatioDeliveryForm({ card, onConfirmPatioDelivery, onClose });
 
-  const getImageUrl = (file: File | null, defaultImageUrl: string): string => {
-    if (file) {
-      return URL.createObjectURL(file);
-    }
-    return defaultImageUrl;
-  };
-
-  const handlePhotoUpload = (photoType: string, file: File, formType: 'patio' | 'expense') => {
-    if (formType === 'patio') {
-      setPatioVehiclePhotos(prev => ({ ...prev, [photoType]: file }));
-    } else if (formType === 'expense') {
-      const expenseType = photoType.split('-')[0];
-      setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: file }));
-    }
-  };
-
-  const handlePatioExpenseChange = (expenseType: string, checked: boolean) => {
-    if (expenseType === 'naoHouve') {
-      setPatioExtraExpenses({
-        naoHouve: checked,
-        gasolina: false,
-        pedagio: false,
-        estacionamento: false,
-        motoboy: false
-      });
-      if (checked) {
-        setPatioExpenseValues({
-          gasolina: '',
-          pedagio: '',
-          estacionamento: '',
-          motoboy: ''
-        });
-        setPatioExpenseReceipts({
-          gasolina: null,
-          pedagio: null,
-          estacionamento: null,
-          motoboy: null
-        });
-      }
-    } else {
-      setPatioExtraExpenses(prev => ({
-        ...prev,
-        naoHouve: false,
-        [expenseType]: checked
-      }));
-      if (!checked) {
-        setPatioExpenseValues(prev => ({ ...prev, [expenseType]: '' }));
-        setPatioExpenseReceipts(prev => ({ ...prev, [expenseType]: null }));
-      }
-    }
-  };
-
-  const resetPatioForm = () => {
-    setPatioVehiclePhotos({
-      frente: null,
-      traseira: null,
-      lateralDireita: null,
-      lateralEsquerda: null,
-      estepe: null,
-      painel: null
-    });
-    setPatioExtraExpenses({
-      naoHouve: true,
-      gasolina: false,
-      pedagio: false,
-      estacionamento: false,
-      motoboy: false
-    });
-    setPatioExpenseValues({
-      gasolina: '',
-      pedagio: '',
-      estacionamento: '',
-      motoboy: ''
-    });
-    setPatioExpenseReceipts({
-      gasolina: null,
-      pedagio: null,
-      estacionamento: null,
-      motoboy: null
-    });
-  };
-
-  const handleConfirmPatioDelivery = async () => {
-    const hasAnyPhoto = Object.values(patioVehiclePhotos).some(photo => photo !== null);
-    if (!hasAnyPhoto) {
-      setFeedback('Por favor, envie pelo menos uma foto do veículo no pátio.');
-      return;
-    }
-
-    const selectedExpenses = Object.entries(patioExtraExpenses).filter(([key, value]) => key !== 'naoHouve' && value);
-    for (const [expenseType] of selectedExpenses) {
-      if (!patioExpenseValues[expenseType as keyof typeof patioExpenseValues]) {
-        setFeedback(`Por favor, informe o valor da despesa: ${expenseType}.`);
-        return;
-      }
-      if (!patioExpenseReceipts[expenseType as keyof typeof patioExpenseReceipts]) {
-        setFeedback(`Por favor, anexe o comprovante da despesa: ${expenseType}.`);
-        return;
-      }
-    }
-
-    if (!onConfirmPatioDelivery) {
-      setFeedback('Funcionalidade de confirmação não disponível.');
-      return;
-    }
-
-    setIsUpdating(true);
-    setFeedback('Processando confirmação de entrega no pátio...');
-
-    try {
-      const photosToUpload = Object.fromEntries(
-        Object.entries(patioVehiclePhotos).filter(([key, file]) => file !== null)
-      ) as Record<string, File>;
-
-      const expensesList = Object.entries(patioExtraExpenses)
-        .filter(([key, value]) => value)
-        .map(([key]) => {
-          const expenseNames: Record<string, string> = {
-            naoHouve: 'Não houve',
-            gasolina: 'Gasolina',
-            pedagio: 'Pedágio',
-            estacionamento: 'Estacionamento',
-            motoboy: 'Motoboy (busca de chave)'
-          };
-          return expenseNames[key] || key;
-        });
-
-      const receiptsToUpload = Object.fromEntries(
-        Object.entries(patioExpenseReceipts).filter(([key, file]) => file !== null)
-      ) as Record<string, File>;
-
-      await onConfirmPatioDelivery(
-        card.id,
-        photosToUpload,
-        expensesList,
-        patioExpenseValues,
-        receiptsToUpload
-      );
-
-      setFeedback('Entrega no pátio confirmada com sucesso!');
-      setTimeout(() => {
-        setFeedback('');
-        resetPatioForm();
-        setIsUpdating(false);
-        onClose();
-      }, 2000);
-    } catch (error) {
-      setFeedback(`Erro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      setIsUpdating(false);
-    }
+  const handleBack = () => {
+    resetPatioForm();
+    onBack();
   };
 
   return (
@@ -201,11 +38,7 @@ export default function ConfirmPatioDeliveryForm({ card, onConfirmPatioDelivery,
       <div className="relative z-10 space-y-4">
         <div className="flex items-center gap-3 mb-4">
           <button
-            onClick={() => {
-              onBack();
-              resetPatioForm();
-              setFeedback('');
-            }}
+            onClick={handleBack}
             className="text-gray-500 hover:text-gray-700 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -301,14 +134,7 @@ export default function ConfirmPatioDeliveryForm({ card, onConfirmPatioDelivery,
                       <input
                         type="text"
                         value={patioExpenseValues[expense.key as keyof typeof patioExpenseValues]}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          const formatted = (Number(value) / 100).toLocaleString('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL'
-                          });
-                          setPatioExpenseValues(prev => ({ ...prev, [expense.key]: formatted }));
-                        }}
+                        onChange={(e) => handleCurrencyChange(expense.key, e.target.value)}
                         placeholder="R$ 0,00"
                         className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500/50 focus:border-green-500 text-black placeholder-gray-600"
                       />
