@@ -14,3 +14,4 @@ export * from './Skeleton';
 export * from './Toast';
 export * from './Loading';
 export * from './ErrorState';
+export * from './OptimizedImage';

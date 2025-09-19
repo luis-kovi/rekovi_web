@@ -1,20 +1,108 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  // Configuração para melhor performance
+  // Performance otimizada
   experimental: {
     // Otimizar imports de pacotes específicos
-    optimizePackageImports: ['@supabase/ssr']
+    optimizePackageImports: [
+      '@tanstack/react-query',
+      'framer-motion',
+      'lucide-react'
+    ],
+    // Otimizar CSS
+    optimizeCss: true,
   },
+  
+  // Pacotes externos para servidor
+  serverExternalPackages: ['@supabase/ssr'],
+  
+  // Otimizações de build
+  compress: true,
+  
+  // Code splitting e chunks
+  webpack: (config, { isServer, dev }) => {
+    // Otimizações de produção
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk para bibliotecas grandes
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20,
+            },
+            // Chunk separado para React Query
+            query: {
+              name: 'query',
+              chunks: 'all',
+              test: /node_modules\/@tanstack/,
+              priority: 30,
+            },
+            // Chunk separado para Framer Motion
+            framer: {
+              name: 'framer',
+              chunks: 'all',
+              test: /node_modules\/framer-motion/,
+              priority: 30,
+            },
+            // Common chunk para código compartilhado
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true,
+            },
+          },
+        },
+      };
+    }
+
+    // Resolver problemas de fallback
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    }
+    
+    return config;
+  },
+  
+  // Configuração de imagens otimizada
+  images: {
+    domains: [
+      'localhost',
+      '*.supabase.co',
+      'avatars.githubusercontent.com',
+      'lh3.googleusercontent.com',
+    ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 dias
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  
   // Configuração de trailing slash
   trailingSlash: false,
-  // Habilitar verificação de tipos durante o build (recomendado)
+  
+  // Verificações rigorosas
   typescript: {
     ignoreBuildErrors: false
   },
-  // Habilitar ESLint durante o build (recomendado)
   eslint: {
-    ignoreDuringBuilds: false
+    ignoreDuringBuilds: false,
+    dirs: ['app', 'components', 'src', 'lib', 'utils']
   },
   // Configurações de segurança
   headers: async () => {
@@ -53,21 +141,6 @@ const nextConfig: NextConfig = {
         ]
       }
     ]
-  },
-  // Webpack configuration para resolver o problema do Edge Runtime
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      // Configuração para o cliente
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-      }
-    }
-    
-    return config
   }
 }
 

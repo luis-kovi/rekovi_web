@@ -9,3 +9,6 @@ export * from './usePipefyActions';
 export * from './useTheme';
 export * from './useToast';
 export * from './useResponsive';
+
+// React Query hooks otimizados
+export * from './useCardsQuery';
