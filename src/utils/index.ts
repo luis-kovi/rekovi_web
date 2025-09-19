@@ -4,6 +4,6 @@
  * Exportação centralizada de todas as funções utilitárias
  */
 
-export * from './helpers';
+export * from '../../utils/helpers';
 export * from './cn';
 export * from './lazyImports';

@@ -3,26 +3,22 @@ import { lazy } from 'react';
 
 // Lazy loading para componentes pesados
 export const LazyKanbanBoard = lazy(() => 
-  import('../components/KanbanBoard').then(module => ({ default: module.default }))
+  import('../../components/KanbanBoard').then(module => ({ default: module.default }))
 );
 
 export const LazyMobileTaskManager = lazy(() => 
-  import('../components/MobileTaskManager').then(module => ({ default: module.default }))
+  import('../../components/MobileTaskManager').then(module => ({ default: module.default }))
 );
 
 export const LazyCardModal = lazy(() => 
-  import('../components/CardModal').then(module => ({ default: module.default }))
+  import('../../components/CardModal').then(module => ({ default: module.default }))
 );
 
 export const LazyMobileTaskModal = lazy(() => 
-  import('../components/MobileTaskModal').then(module => ({ default: module.default }))
+  import('../../components/MobileTaskModal').then(module => ({ default: module.default }))
 );
 
-export const LazyModernUIShowcase = lazy(() => 
-  import('../components/examples/ModernUIShowcase').then(module => ({ 
-    default: module.ModernUIShowcase 
-  }))
-);
+// ModernUIShowcase removido temporariamente devido a problemas de export
 
 // Lazy loading para páginas
 export const LazySettingsPage = lazy(() => 
@@ -37,10 +33,9 @@ export const loadComponentConditionally = async (
   if (!condition) return null;
 
   const componentMap = {
-    'kanban': () => import('../components/KanbanBoard'),
-    'mobile': () => import('../components/MobileTaskManager'),
-    'modal': () => import('../components/CardModal'),
-    'showcase': () => import('../components/examples/ModernUIShowcase'),
+    'kanban': () => import('../../components/KanbanBoard'),
+    'mobile': () => import('../../components/MobileTaskManager'),
+    'modal': () => import('../../components/CardModal'),
   };
 
   const loader = componentMap[componentName as keyof typeof componentMap];

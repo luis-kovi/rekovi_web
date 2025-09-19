@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
       'framer-motion',
       'lucide-react'
     ],
-    // Otimizar CSS
-    optimizeCss: true,
+    // CSS optimization disabled temporarily due to critters dependency issue
+    // optimizeCss: true,
   },
   
   // Pacotes externos para servidor
