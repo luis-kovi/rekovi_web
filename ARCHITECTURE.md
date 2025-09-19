@@ -1,338 +1,237 @@
-# 🏗️ Arquitetura e Estrutura de Componentes
+# 🏗️ Arquitetura e Estrutura do Projeto Rekovi Web
 
 ## 📋 Visão Geral
 
-Este projeto foi reorganizado seguindo a metodologia **Atomic Design** para criar um sistema de componentes escalável, reutilizável e bem estruturado.
+Este projeto é uma aplicação Next.js para gestão de recolhas da Kovi, seguindo uma arquitetura simples e funcional com componentes organizados por funcionalidade.
 
 ## 🎯 Princípios da Arquitetura
 
-### Atomic Design
-A arquitetura segue os cinco níveis do Atomic Design:
+### Estrutura Pragmática
+A arquitetura atual prioriza:
 
-1. **Atoms** (Átomos) - Componentes básicos e indivisíveis
-2. **Molecules** (Moléculas) - Combinações simples de átomos
-3. **Organisms** (Organismos) - Componentes complexos e funcionais
-4. **Templates** (Templates) - Estruturas de página
-5. **Pages** (Páginas) - Instâncias específicas dos templates
+1. **Simplicidade** - Componentes diretos e funcionais
+2. **Manutenibilidade** - Código fácil de entender e modificar  
+3. **Reutilização** - Componentes modulares e bem definidos
+4. **Performance** - Otimizações específicas para o domínio
 
 ### Separação de Responsabilidades
-- **Componentes de Apresentação**: Apenas renderização e UI
-- **Hooks Customizados**: Lógica de negócio e estado
-- **Utilitários**: Funções auxiliares reutilizáveis
-- **Tipos**: Definições TypeScript organizadas
+- **Páginas (app/)**: Lógica de rota e dados do servidor
+- **Componentes (components/)**: UI e interações do usuário
+- **Utilitários (utils/)**: Funções auxiliares e configurações
+- **Tipos (types/)**: Definições TypeScript centralizadas
 
 ## 📁 Estrutura de Pastas
 
 ```
-src/
-├── components/
-│   ├── ui/                    # Atoms - Componentes básicos
-│   │   ├── Button/
-│   │   ├── Input/
-│   │   ├── Badge/
-│   │   ├── Icon/
-│   │   └── index.ts
-│   ├── molecules/             # Molecules - Componentes compostos
-│   │   ├── SearchInput/
-│   │   ├── StatusBadge/
-│   │   ├── InfoField/
-│   │   ├── LoadingSpinner/
-│   │   └── index.ts
-│   ├── organisms/             # Organisms - Componentes complexos
-│   │   ├── TaskCard/
-│   │   ├── KanbanColumn/
-│   │   └── index.ts
-│   ├── examples/              # Exemplos de uso
-│   └── index.ts
-├── hooks/                     # Custom hooks
-│   ├── useCards.ts
-│   ├── usePipefyActions.ts
-│   └── index.ts
-├── types/                     # Definições de tipos
-│   ├── card.types.ts
-│   ├── user.types.ts
-│   ├── ui.types.ts
-│   ├── api.types.ts
-│   └── index.ts
-├── styles/
-│   ├── tokens/                # Design tokens
-│   │   ├── colors.ts
-│   │   ├── spacing.ts
-│   │   ├── typography.ts
-│   │   └── index.ts
-│   └── globals.css
-└── utils/
-    ├── cn.ts                  # Utility para classes condicionais
-    └── helpers.ts
+rekovi_web/
+├── app/                       # App Router do Next.js 15
+│   ├── api/                   # API routes
+│   ├── auth/                  # Páginas de autenticação
+│   ├── kanban/                # Dashboard Kanban
+│   ├── mobile/                # Interface mobile
+│   ├── settings/              # Configurações admin
+│   └── layout.tsx             # Layout global
+├── components/                # Componentes React
+│   ├── Header.tsx             # Cabeçalho da aplicação
+│   ├── KanbanBoard.tsx        # Board principal
+│   ├── KanbanWrapper.tsx      # Wrapper do Kanban
+│   ├── MobileWrapper.tsx      # Wrapper mobile
+│   ├── MobileTaskManager.tsx  # Gerenciador mobile
+│   ├── CardModal.tsx          # Modal de detalhes
+│   └── ...                    # Outros componentes
+├── types/                     # Definições TypeScript
+│   ├── card.types.ts          # Tipos dos cards
+│   ├── database.types.ts      # Tipos do Supabase
+│   └── supabase.ts            # Tipos específicos
+├── utils/                     # Utilitários
+│   ├── supabase/              # Configuração Supabase
+│   ├── auth-validation.ts     # Validação de permissões
+│   ├── rate-limiter.ts        # Controle de taxa
+│   └── logger.ts              # Sistema de logs
+└── middleware.ts              # Middleware de autenticação
 ```
 
-## 🎨 Sistema de Design
+## 🎨 Componentes Principais
 
-### Design Tokens
-Implementamos um sistema de design tokens consistente:
+### Header.tsx
+Cabeçalho comum com:
+- Logo da Kovi
+- Informações do usuário logado
+- Indicadores de conexão
+- Menu de navegação
 
+### KanbanBoard.tsx  
+Dashboard principal com:
+- Colunas de fases do processo
+- Cards de recolha drag & drop
+- Filtros e busca
+- Modais de ação
+
+### MobileTaskManager.tsx
+Interface otimizada para mobile:
+- Lista de cards responsiva
+- Filtros simplificados
+- Ações touch-friendly
+
+### CardModal.tsx
+Modal de detalhes e ações:
+- Informações completas do card
+- Formulários de ação
+- Upload de fotos/documentos
+- Integração com Pipefy
+
+## 🔧 Padrões de Desenvolvimento
+
+### 1. Importações
 ```typescript
-// Cores
-import { colors } from '@/styles/tokens';
-const primaryColor = colors.primary[500]; // #FF355A
+// Componentes locais
+import Header from '@/components/Header'
+import KanbanBoard from '@/components/KanbanBoard'
 
-// Espaçamento
-import { spacing } from '@/styles/tokens';
-const padding = spacing[4]; // 16px
+// Utilitários
+import { createClient } from '@/utils/supabase/server'
+import { logger } from '@/utils/logger'
 
-// Tipografia
-import { fontSizes } from '@/styles/tokens';
-const textSize = fontSizes.lg; // 18px
+// Tipos
+import type { Card } from '@/types'
 ```
 
-### Componentes UI (Atoms)
-
-#### Button
+### 2. Props e TypeScript
 ```typescript
-import { Button } from '@/components/ui/Button';
+interface ComponentProps {
+  initialCards: Card[]
+  permissionType: string
+  user: any
+}
 
-<Button 
-  variant="primary" 
-  size="md" 
-  leftIcon={<Icon name="user" />}
-  isLoading={loading}
->
-  Alocar Chofer
-</Button>
-```
-
-#### Input
-```typescript
-import { Input } from '@/components/ui/Input';
-
-<Input
-  label="Nome do Chofer"
-  placeholder="Digite o nome..."
-  error="Campo obrigatório"
-  leftIcon={<Icon name="user" />}
-/>
-```
-
-#### Badge
-```typescript
-import { Badge } from '@/components/ui/Badge';
-
-<Badge variant="success" icon={<Icon name="check" />}>
-  No Prazo
-</Badge>
-```
-
-#### Icon
-```typescript
-import { Icon } from '@/components/ui/Icon';
-
-<Icon name="user" size="md" className="text-blue-500" />
-```
-
-### Componentes Molecules
-
-#### SearchInput
-```typescript
-import { SearchInput } from '@/components/molecules/SearchInput';
-
-<SearchInput
-  value={searchTerm}
-  onChange={setSearchTerm}
-  placeholder="Pesquisar..."
-  onClear={() => setSearchTerm('')}
-/>
-```
-
-#### StatusBadge
-```typescript
-import { StatusBadge } from '@/components/molecules/StatusBadge';
-
-<StatusBadge 
-  status={card.slaText} 
-  slaValue={card.sla}
-  showIcon={true}
-/>
-```
-
-#### InfoField
-```typescript
-import { InfoField } from '@/components/molecules/InfoField';
-
-<InfoField
-  label="Motorista"
-  value={card.nomeDriver}
-  icon="user"
-  variant="compact"
-/>
-```
-
-### Componentes Organisms
-
-#### TaskCard
-```typescript
-import { TaskCard } from '@/components/organisms/TaskCard';
-
-<TaskCard
-  card={cardWithSLA}
-  onClick={() => setSelectedCard(card)}
-  variant="default"
-/>
-```
-
-#### KanbanColumn
-```typescript
-import { KanbanColumn } from '@/components/organisms/KanbanColumn';
-
-<KanbanColumn
-  title="Fila de Recolha"
-  cards={cardsInPhase}
-  onCardClick={handleCardClick}
-  colorScheme={phaseColorScheme}
-/>
-```
-
-## 🔧 Hooks Customizados
-
-### useCards
-Gerencia estado e operações dos cards:
-
-```typescript
-import { useCards } from '@/hooks/useCards';
-
-const {
-  filteredCards,
-  isLoading,
-  filters,
-  setFilters,
-  refreshCards,
-  statusCounts
-} = useCards(initialCards, {
-  permissionType,
-  realTimeEnabled: true
-});
-```
-
-### usePipefyActions
-Operações de integração com Pipefy:
-
-```typescript
-import { usePipefyActions } from '@/hooks/usePipefyActions';
-
-const {
-  onUpdateChofer,
-  onAllocateDriver,
-  onRejectCollection,
-  uploadImageToPipefy
-} = usePipefyActions();
-```
-
-## 📊 Sistema de Tipos
-
-### Tipos de Card
-```typescript
-import { Card, CardWithSLA, CardFilters } from '@/types/card.types';
-```
-
-### Tipos de UI
-```typescript
-import { ButtonVariant, IconName, ModalProps } from '@/types/ui.types';
-```
-
-### Tipos de Usuário
-```typescript
-import { User, PermissionType, UserPermissions } from '@/types/user.types';
-```
-
-## 🚀 Como Usar
-
-### 1. Importação de Componentes
-```typescript
-// Importar componentes específicos
-import { Button, Input } from '@/components/ui';
-import { SearchInput, StatusBadge } from '@/components/molecules';
-import { TaskCard, KanbanColumn } from '@/components/organisms';
-
-// Ou importar tudo
-import * as UI from '@/components/ui';
-import * as Molecules from '@/components/molecules';
-```
-
-### 2. Uso com Hooks
-```typescript
-import React from 'react';
-import { useCards, usePipefyActions } from '@/hooks';
-import { KanbanColumn, TaskCard } from '@/components/organisms';
-
-function MyKanbanBoard({ initialCards, permissionType }) {
-  const { filteredCards, setFilters } = useCards(initialCards, { permissionType });
-  const { onAllocateDriver } = usePipefyActions();
-
-  return (
-    <div className="flex gap-4">
-      {phases.map(phase => (
-        <KanbanColumn
-          key={phase}
-          title={phase}
-          cards={filteredCards.filter(c => c.faseAtual === phase)}
-          onCardClick={handleCardClick}
-        />
-      ))}
-    </div>
-  );
+export default function Component({ initialCards, permissionType, user }: ComponentProps) {
+  // Implementação
 }
 ```
 
-### 3. Personalização com Tokens
+### 3. Estado e Hooks
 ```typescript
-import { colors, spacing } from '@/styles/tokens';
-import { cn } from '@/utils/cn';
+'use client'
 
-// Usar tokens diretamente
-const customStyle = {
-  backgroundColor: colors.primary[500],
-  padding: spacing[4]
-};
+import { useState, useEffect } from 'react'
 
-// Ou com classes Tailwind personalizadas
-<div className={cn(
-  'bg-primary-500 p-4',
-  isActive && 'ring-2 ring-primary-200'
-)}>
-  Conteúdo
-</div>
+export default function Component() {
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<Card[]>([])
+  
+  // useEffect para carregamento inicial
+  useEffect(() => {
+    loadData()
+  }, [])
+}
 ```
 
-## 🔄 Migração dos Componentes Legados
+## 🔄 Fluxo de Dados
 
-Os componentes antigos ainda funcionam através de exports de compatibilidade, mas recomendamos migrar gradualmente:
-
+### 1. Server-Side (páginas app/)
 ```typescript
-// ❌ Antigo
-import CardComponent from '@/components/Card';
-
-// ✅ Novo
-import { TaskCard } from '@/components/organisms/TaskCard';
+// Busca dados no servidor
+export default async function Page() {
+  const supabase = await createClient()
+  const { data } = await supabase.from('cards').select()
+  
+  return <Component initialData={data} />
+}
 ```
+
+### 2. Client-Side (componentes)
+```typescript
+// Atualiza dados no cliente
+const handleUpdate = async (cardId: string) => {
+  setLoading(true)
+  try {
+    await supabase.from('cards').update(data).eq('id', cardId)
+    // Atualizar estado local
+  } catch (error) {
+    logger.error('Erro:', error)
+  } finally {
+    setLoading(false)
+  }
+}
+```
+
+## 🚀 Funcionalidades Principais
+
+### Autenticação
+- Login com Google OAuth
+- Validação de permissões por tabela `pre_approved_users`
+- Rate limiting para segurança
+- Redirecionamento baseado em device
+
+### Gestão de Recolhas
+- Visualização em Kanban (desktop)
+- Lista responsiva (mobile)
+- Filtros por SLA, fase, empresa
+- Ações específicas por fase do processo
+
+### Integrações
+- **Supabase**: Banco de dados e autenticação
+- **Pipefy**: Sincronização de cards e ações
+- **Google OAuth**: Autenticação social
+
+## 📱 Responsividade
+
+### Desktop (>= 1024px)
+- Interface Kanban completa
+- Múltiplas colunas visíveis
+- Drag & drop funcional
+
+### Mobile (< 768px)  
+- Interface lista simplificada
+- Filtros em modal
+- Navegação touch-friendly
+
+### Tablet (768px - 1023px)
+- Híbrido entre mobile e desktop
+- Colunas colapsáveis
+
+## 🔒 Segurança
+
+### Rate Limiting
+- Controle de tentativas de login
+- Reset automático após sucesso
+- Proteção contra ataques
+
+### Validação de Permissões
+- Verificação em tabela `pre_approved_users`
+- Filtros baseados em empresa/área
+- Middleware de autenticação
+
+### Sanitização
+- Validação de inputs
+- Escape de dados do usuário
+- Headers de segurança
 
 ## 📝 Próximos Passos
 
-1. **Templates**: Criar templates de página reutilizáveis
-2. **Temas**: Implementar suporte a múltiplos temas
-3. **Testes**: Adicionar testes unitários para componentes
-4. **Storybook**: Documentação visual dos componentes
-5. **Acessibilidade**: Melhorar suporte a ARIA e navegação por teclado
+1. **Performance**: Implementar lazy loading
+2. **PWA**: Adicionar service worker
+3. **Testes**: Cobertura de testes unitários
+4. **Monitoramento**: Métricas de performance
+5. **Acessibilidade**: Melhorar ARIA labels
 
-## 🤝 Contribuição
+## 🛠️ Desenvolvimento
 
-Ao adicionar novos componentes, siga esta estrutura:
+### Comandos
+```bash
+npm run dev          # Desenvolvimento
+npm run build        # Build de produção  
+npm run lint         # Verificar código
+npm run type-check   # Verificar tipos
+```
 
-1. **Atoms**: Componentes básicos e reutilizáveis
-2. **Molecules**: Combinações lógicas de atoms
-3. **Organisms**: Componentes funcionais complexos
-4. **Hooks**: Lógica de negócio extraída
-5. **Tipos**: Definições TypeScript apropriadas
-6. **Testes**: Cobertura de teste adequada
+### Estrutura de Commits
+```
+feat: nova funcionalidade
+fix: correção de bug
+refactor: refatoração
+docs: documentação
+style: formatação
+```
 
----
-
-Esta arquitetura garante escalabilidade, manutenibilidade e reutilização eficiente dos componentes em todo o projeto.
+Esta arquitetura foca na simplicidade e manutenibilidade, priorizando código funcional e bem estruturado sobre abstrações complexas.

@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "../src/styles/accessibility.css";
 
 :root {
   --background: 0 0% 100%;
