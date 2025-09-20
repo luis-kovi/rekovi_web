@@ -8,16 +8,15 @@ import MobileTaskCard from './MobileTaskCard'
 import MobileTaskModal from './MobileTaskModal'
 import MobileFilterPanel from './MobileFilterPanel'
 import { logger } from '@/utils/logger'
-import { useCards } from '@/hooks/useCards'
+import { useKanbanData } from './kanban/hooks/useKanbanData';
 
 interface MobileTaskManagerProps {
-  initialCards: Card[]
-  permissionType: string
-  onUpdateStatus?: (isUpdating: boolean) => void
+  permissionType: string;
 }
 
-export default function MobileTaskManager({ initialCards, permissionType, onUpdateStatus }: MobileTaskManagerProps) {
-  const { cards, setCards, isLoading, isUpdating, containerRef } = useCards(initialCards, permissionType, onUpdateStatus)
+export default function MobileTaskManager({ permissionType }: MobileTaskManagerProps) {
+  const { cards, isLoading } = useKanbanData(permissionType);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
