@@ -1,7 +1,8 @@
 // app/kanban/page.tsx
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import KanbanWrapper from '@/components/KanbanWrapper'
+import { KanbanBoard } from '@/components/kanban'
+import { KanbanColumnType } from '@/types/kanban.types'
 import { getUserDataServer } from '@/utils/user-data-server'
 import { filterCardsByPermissionsImproved } from '@/utils/auth-validation'
 import type { Card } from '@/types'
@@ -35,17 +36,17 @@ export default async function KanbanPage() {
     return redirect('/auth/signin?error=user_inactive')
   }
   
-  // Buscar todos os cards válidos (filtros serão aplicados depois)
-  const validPhases = [
-    'Fila de Recolha',
-    'Aprovar Custo de Recolha', 
-    'Tentativa 1 de Recolha',
-    'Tentativa 2 de Recolha',
-    'Tentativa 3 de Recolha',
-    'Desbloquear Veículo',
-    'Solicitar Guincho',
-    'Tentativa 4 de Recolha',
-    'Confirmação de Entrega no Pátio'
+  // Definir colunas Kanban modernas
+  const kanbanColumns: KanbanColumnType[] = [
+    { id: 'Fila de Recolha', title: 'Fila de Recolha', color: '#2563eb', wipLimit: 20 },
+    { id: 'Aprovar Custo de Recolha', title: 'Aprovar Custo', color: '#059669', wipLimit: 10 },
+    { id: 'Tentativa 1 de Recolha', title: 'Tentativa 1', color: '#f59e42', wipLimit: 15 },
+    { id: 'Tentativa 2 de Recolha', title: 'Tentativa 2', color: '#f59e42', wipLimit: 15 },
+    { id: 'Tentativa 3 de Recolha', title: 'Tentativa 3', color: '#f59e42', wipLimit: 15 },
+    { id: 'Tentativa 4 de Recolha', title: 'Tentativa 4', color: '#f59e42', wipLimit: 15 },
+    { id: 'Desbloquear Veículo', title: 'Desbloquear Veículo', color: '#e11d48', wipLimit: 10 },
+    { id: 'Solicitar Guincho', title: 'Solicitar Guincho', color: '#6366f1', wipLimit: 8 },
+    { id: 'Confirmação de Entrega no Pátio', title: 'Entrega no Pátio', color: '#10b981', wipLimit: 10 },
   ];
 
   let query = supabase.from('v_pipefy_cards_detalhada').select(`
@@ -54,7 +55,7 @@ export default async function KanbanPage() {
     modelo_veiculo, telefone_contato, telefone_opcional, email_cliente,
     endereco_cadastro, endereco_recolha, link_mapa, origem_locacao,
     valor_recolha, custo_km_adicional, public_url
-  `).in('phase_name', validPhases).limit(100000);
+  `).in('phase_name', kanbanColumns.map(col => col.id)).limit(100000);
 
   // Para chofer, aplicar filtro específico por email
   if (userData.permission_type.toLowerCase() === 'chofer') {
@@ -97,11 +98,18 @@ export default async function KanbanPage() {
   logger.log('Debug - Total cards before filter:', allCards.length);
   logger.log('Debug - Total cards after filter:', filteredCards.length);
 
+  // Estados de loading, erro e vazio
+  const loading = false;
+  const errorMsg = error ? 'Erro ao buscar os cards' : undefined;
+  const wipLimits = Object.fromEntries(kanbanColumns.map(col => [col.id, col.wipLimit ?? 0]));
+
   return (
-    <KanbanWrapper 
-      initialCards={filteredCards} 
-      permissionType={userData.permission_type} 
-      user={user} 
+    <KanbanBoard
+      columns={kanbanColumns}
+      cards={filteredCards}
+      loading={loading}
+      error={errorMsg}
+      wipLimits={wipLimits}
     />
   )
 }
