@@ -1,3 +1,4 @@
+"use client";
 import React, { useMemo } from 'react';
 import { Card } from '@/types/card.types';
 import { KanbanColumnType } from '@/types/kanban.types';

@@ -1,3 +1,4 @@
+"use client";
 import React, { Suspense } from 'react';
 import { Card } from '@/types/card.types';
 import { motion } from 'framer-motion';

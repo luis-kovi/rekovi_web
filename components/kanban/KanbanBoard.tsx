@@ -1,3 +1,4 @@
+"use client";
 import React, { Suspense, useMemo } from 'react';
 import KanbanColumn from './KanbanColumn';
 import MetricsWidget from '../../widgets/MetricsWidget';
