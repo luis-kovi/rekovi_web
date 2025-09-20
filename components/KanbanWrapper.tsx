@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Header from './Header'
-import KanbanBoard from './KanbanBoard'
+import NewKanbanBoard from './NewKanbanBoard'
 import type { Card } from '@/types'
 
 interface KanbanWrapperProps {
@@ -17,7 +17,7 @@ export default function KanbanWrapper({ initialCards, permissionType, user }: Ka
   return (
     <div className="app-kanban flex flex-col h-screen bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
       <Header user={user} permissionType={permissionType} isUpdating={isUpdating} />
-      <KanbanBoard 
+      <NewKanbanBoard
         initialCards={initialCards} 
         permissionType={permissionType} 
         onUpdateStatus={setIsUpdating}
