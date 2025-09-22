@@ -1356,7 +1356,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                        };
                     
                    return (
-                     <div key={phaseName} className={`w-64 ${colorScheme.bg} rounded-2xl flex flex-col flex-shrink-0 shadow-md border ${colorScheme.border} hover:shadow-lg hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm relative overflow-hidden group`}>
+                     <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-2xl flex flex-col flex-shrink-0 shadow-md border ${colorScheme.border} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 backdrop-blur-sm relative overflow-hidden group`}>
                        {/* Borda animada premium no hover */}
                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
                        <div className={`${colorScheme.header} text-white p-3 rounded-t-2xl relative overflow-hidden`}>
@@ -1409,7 +1409,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                              <div 
                                key={card.id} 
                                onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
-                               className={`transition-all duration-300 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.02]'}`}
+                               className={`transition-all duration-200 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.01]'}`}
                              >
                                <CardComponent card={card} />
                              </div>
