@@ -16,21 +16,13 @@ export default function Card({ card }: CardProps) {
         {/* Efeito de carregamento animado premium */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50 animate-pulse"></div>
         <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-100/60 to-gray-50/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
-          <h3 className="font-bold text-gray-600 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>{card.placa}</h3>
-          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-200/80 text-gray-600 backdrop-blur-sm">Processando</span>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-gray-600 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>{card.placa}</h3>
+            <p className="text-xs text-gray-500 truncate font-medium">{formatPersonName(card.modeloVeiculo)}</p>
+          </div>
+          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-200/80 text-gray-600 backdrop-blur-sm flex-shrink-0">Processando</span>
         </div>
         <div className="px-3 py-1.5 space-y-2 text-xs flex-1 relative z-10">
-          <div className="text-gray-500">
-            <div className="flex items-center gap-1.5 font-semibold text-gray-600 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
-              <div className="w-3 h-3 flex items-center justify-center bg-blue-100/60 rounded-sm">
-                <svg className="w-2 h-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <span>MODELO</span>
-            </div>
-            <div className="truncate text-gray-700 font-medium">{formatPersonName(card.modeloVeiculo)}</div>
-          </div>
           <div className="text-gray-500 card-driver">
             <div className="flex items-center gap-1.5 font-semibold text-gray-600 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
               <div className="w-3 h-3 flex items-center justify-center bg-green-100/60 rounded-sm">
@@ -53,25 +45,20 @@ export default function Card({ card }: CardProps) {
             </div>
             <div className="truncate text-gray-700 font-medium">{formatPersonName(card.chofer)}</div>
           </div>
-          <div className="text-gray-500">
-            <div className="flex items-center gap-1.5 font-semibold text-gray-600 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
-              <div className="w-3 h-3 flex items-center justify-center bg-purple-100/60 rounded-sm">
-                <svg className="w-2 h-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <span>EMPRESA</span>
-            </div>
-            <div className="truncate text-gray-700 font-medium">{card.empresaResponsavel || '-'}</div>
-          </div>
         </div>
-        <div className="p-2 flex items-center justify-center border-t border-gray-200/50 bg-gradient-to-r from-gray-50/60 to-white/80 rounded-b-2xl mt-auto relative z-10">
+        <div className="p-2 flex items-center justify-between border-t border-gray-200/50 bg-gradient-to-r from-gray-50/60 to-white/80 rounded-b-2xl mt-auto relative z-10">
+          <div className="flex items-center gap-1 text-xs text-gray-600 font-semibold min-w-0">
+            <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span className="truncate">{card.empresaResponsavel || '-'}</span>
+          </div>
           <div className="flex items-center text-xs text-gray-600 font-semibold">
-            <svg className="animate-spin mr-2 h-3 w-3 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg className="animate-spin mr-1 h-2.5 w-2.5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span className="text-center text-xs">{message}</span>
+            <span className="text-xs">{message}</span>
           </div>
         </div>
       </div>
@@ -87,23 +74,16 @@ export default function Card({ card }: CardProps) {
       {/* Efeito de brilho animado premium no hover */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out pointer-events-none"></div>
       <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-50/60 to-white/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
-        <h3 className="font-bold text-gray-900 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>{card.placa}</h3>
-        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${slaColor} backdrop-blur-sm`}>
-          {card.slaText}
-        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-gray-900 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>{card.placa}</h3>
+          <p className="text-xs text-gray-600 truncate font-medium">{formatPersonName(card.modeloVeiculo)}</p>
+        </div>
+        <div className={`text-xs font-bold px-1.5 py-1 rounded-lg ${slaColor} backdrop-blur-sm text-center flex-shrink-0`}>
+          <div>{card.slaText}</div>
+          <div className="text-xs opacity-90">SLA: {card.sla}d</div>
+        </div>
       </div>
       <div className="px-3 py-1.5 space-y-2 text-xs flex-1 relative z-10">
-        <div className="text-gray-600">
-          <div className="flex items-center gap-1.5 font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
-            <div className="w-3 h-3 flex items-center justify-center bg-blue-100/80 rounded-sm">
-              <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            </div>
-            <span>MODELO</span>
-          </div>
-          <div className="truncate text-gray-900 font-semibold text-xs">{formatPersonName(card.modeloVeiculo)}</div>
-        </div>
         <div className="text-gray-600 card-driver">
           <div className="flex items-center gap-1.5 font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
             <div className="w-3 h-3 flex items-center justify-center bg-emerald-100/80 rounded-sm">
@@ -126,30 +106,13 @@ export default function Card({ card }: CardProps) {
           </div>
           <div className="truncate text-gray-900 font-semibold text-xs">{card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
         </div>
-        <div className="text-gray-600">
-          <div className="flex items-center gap-1.5 font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
-            <div className="w-3 h-3 flex items-center justify-center bg-purple-100/80 rounded-sm">
-              <svg className="w-2 h-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <span>EMPRESA</span>
-          </div>
-          <div className="truncate text-gray-900 font-semibold text-xs">{card.empresaResponsavel || '-'}</div>
-        </div>
       </div>
       <div className="p-2 flex items-center justify-between border-t border-gray-200/40 bg-gradient-to-r from-gray-50/60 to-white/80 rounded-b-2xl mt-auto relative z-10 backdrop-blur-sm">
-        <div className="flex items-center text-xs font-bold">
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full shadow-sm ${
-            card.sla >= 3 ? 'bg-red-100/80 text-red-700 border border-red-200/50' : 
-            card.sla === 2 ? 'bg-yellow-100/80 text-yellow-700 border border-yellow-200/50' : 
-            'bg-emerald-100/80 text-emerald-700 border border-emerald-200/50'
-          }`}>
-            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{card.sla}d</span>
-          </div>
+        <div className="flex items-center gap-1 text-xs text-gray-700 font-semibold min-w-0">
+          <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          <span className="truncate">{card.empresaResponsavel || '-'}</span>
         </div>
         <div className="flex items-center gap-1 text-xs text-gray-700 font-semibold min-w-0">
           <svg className="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
