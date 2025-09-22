@@ -369,6 +369,17 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                         </div>
                         <div className="text-gray-800 font-medium text-sm">{keepOriginalFormat(card.origemLocacao)}</div>
                     </div>
+                    <div className="text-gray-600">
+                        <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
+                          <div className="w-3 h-3 flex items-center justify-center bg-purple-100 rounded-sm">
+                            <svg className="w-2 h-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <span>EMPRESA</span>
+                        </div>
+                        <div className="text-gray-800 font-medium text-sm">{card.empresaResponsavel || '-'}</div>
+                    </div>
                                          <div className="text-gray-600">
                         <div className="flex items-center gap-1.5 font-bold text-gray-700 mb-1" style={{ fontSize: '11px', fontFamily: 'Inter, sans-serif' }}>
                           <div className="w-3 h-3 flex items-center justify-center bg-red-100 rounded-sm">

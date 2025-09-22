@@ -12,7 +12,7 @@ export default function Card({ card }: CardProps) {
   if (isDisabledPhase) {
     const message = disabledPhaseMessages[card.faseAtual];
     return (
-      <div className="kanban-card bg-gradient-to-br from-gray-50/90 to-gray-100/70 rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-48 opacity-70 cursor-not-allowed backdrop-blur-sm relative overflow-hidden group">
+      <div className="kanban-card bg-gradient-to-br from-gray-50/90 to-gray-100/70 rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-52 opacity-70 cursor-not-allowed backdrop-blur-sm relative overflow-hidden group">
         {/* Efeito de carregamento animado premium */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50 animate-pulse"></div>
         <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-100/60 to-gray-50/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
@@ -53,6 +53,17 @@ export default function Card({ card }: CardProps) {
             </div>
             <div className="truncate text-gray-700 font-medium">{formatPersonName(card.chofer)}</div>
           </div>
+          <div className="text-gray-500">
+            <div className="flex items-center gap-1.5 font-semibold text-gray-600 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
+              <div className="w-3 h-3 flex items-center justify-center bg-purple-100/60 rounded-sm">
+                <svg className="w-2 h-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <span>EMPRESA</span>
+            </div>
+            <div className="truncate text-gray-700 font-medium">{card.empresaResponsavel || '-'}</div>
+          </div>
         </div>
         <div className="p-2 flex items-center justify-center border-t border-gray-200/50 bg-gradient-to-r from-gray-50/60 to-white/80 rounded-b-2xl mt-auto relative z-10">
           <div className="flex items-center text-xs text-gray-600 font-semibold">
@@ -72,7 +83,7 @@ export default function Card({ card }: CardProps) {
                  : 'bg-emerald-100/80 text-emerald-700 shadow-sm border border-emerald-200/50';
 
   return (
-    <div className="kanban-card data-item bg-white/98 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-48 cursor-pointer hover:shadow-lg hover:border-gray-300/80 hover:bg-white hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
+    <div className="kanban-card data-item bg-white/98 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-52 cursor-pointer hover:shadow-lg hover:border-gray-300/80 hover:bg-white hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
       {/* Efeito de brilho animado premium no hover */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out pointer-events-none"></div>
       <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-50/60 to-white/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
@@ -114,6 +125,17 @@ export default function Card({ card }: CardProps) {
             <span>CHOFER</span>
           </div>
           <div className="truncate text-gray-900 font-semibold text-xs">{card.faseAtual !== 'Fila de Recolha' ? formatPersonName(card.chofer) : '-'}</div>
+        </div>
+        <div className="text-gray-600">
+          <div className="flex items-center gap-1.5 font-semibold text-gray-700 mb-1" style={{ fontSize: '10px', fontFamily: 'Inter, sans-serif' }}>
+            <div className="w-3 h-3 flex items-center justify-center bg-purple-100/80 rounded-sm">
+              <svg className="w-2 h-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <span>EMPRESA</span>
+          </div>
+          <div className="truncate text-gray-900 font-semibold text-xs">{card.empresaResponsavel || '-'}</div>
         </div>
       </div>
       <div className="p-2 flex items-center justify-between border-t border-gray-200/40 bg-gradient-to-r from-gray-50/60 to-white/80 rounded-b-2xl mt-auto relative z-10 backdrop-blur-sm">
