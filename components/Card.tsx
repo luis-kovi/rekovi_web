@@ -15,9 +15,9 @@ export default function Card({ card }: CardProps) {
       <div className="kanban-card bg-gradient-to-br from-gray-50/90 to-gray-100/70 rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-48 opacity-70 cursor-not-allowed backdrop-blur-sm relative overflow-hidden group">
         {/* Efeito de carregamento animado premium */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-50 animate-pulse"></div>
-        <div className="p-2.5 flex justify-between items-center bg-gradient-to-r from-gray-100/60 to-gray-50/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
-          <h3 className="font-bold text-gray-600 card-placa truncate text-sm tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>{card.placa}</h3>
-          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-200/80 text-gray-600 backdrop-blur-sm">Processando</span>
+        <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-100/60 to-gray-50/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
+          <h3 className="font-bold text-gray-600 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>{card.placa}</h3>
+          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-200/80 text-gray-600 backdrop-blur-sm">Processando</span>
         </div>
         <div className="px-3 py-1.5 space-y-2 text-xs flex-1 relative z-10">
           <div className="text-gray-500">
@@ -75,9 +75,9 @@ export default function Card({ card }: CardProps) {
     <div className="kanban-card data-item bg-white/98 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-48 cursor-pointer hover:shadow-lg hover:border-gray-300/80 hover:bg-white hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
       {/* Efeito de brilho animado premium no hover */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out pointer-events-none"></div>
-      <div className="p-2.5 flex justify-between items-center bg-gradient-to-r from-gray-50/60 to-white/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
-        <h3 className="font-bold text-gray-900 card-placa truncate text-sm tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>{card.placa}</h3>
-        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${slaColor} backdrop-blur-sm`}>
+      <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-50/60 to-white/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
+        <h3 className="font-bold text-gray-900 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>{card.placa}</h3>
+        <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${slaColor} backdrop-blur-sm`}>
           {card.slaText}
         </span>
       </div>
