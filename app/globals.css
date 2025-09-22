@@ -73,7 +73,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Inter', sans-serif;
-  background-color: #f7f9fa;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

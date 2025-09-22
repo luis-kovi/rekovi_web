@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "../styles/kanban-premium.css";
 
 // Configurar fonte Inter otimizada
 const inter = Inter({
