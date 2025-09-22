@@ -1312,11 +1312,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           <LoadingIndicator message="A carregar dados..." />
         ) : (
           activeView === 'kanban' ? (
-            <div id="kanban-view" className="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-6 scroll-container bg-gradient-to-br from-white via-gray-50/20 to-blue-50/10 relative">
+            <div id="kanban-view" className="flex-1 overflow-hidden bg-gradient-to-br from-white via-gray-50/20 to-blue-50/10 relative">
               {/* Background decorativo premium */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,53,90,0.02)_0%,transparent_60%),radial-gradient(circle_at_75%_75%,rgba(59,130,246,0.02)_0%,transparent_60%)] pointer-events-none"></div>
               <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200/30 to-transparent"></div>
-              <div id="kanban-container" className="flex gap-5 relative z-10">
+              <div className="h-full overflow-x-auto overflow-y-hidden p-6 scroll-container">
+                <div id="kanban-container" className="flex gap-5 relative z-10 min-w-max">
                 {fixedPhaseOrder.map((phaseName, index) => {
                   const cardsInPhase = phases[phaseName] || [];
                   if (hideEmptyPhases && cardsInPhase.length === 0) return null;
@@ -1403,7 +1404,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                             </div>
                          </div>
                        </div>
-                       <div className={`flex-1 p-4 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
+                       <div className={`flex-1 p-4 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName} style={{ maxHeight: 'calc(100vh - 280px)' }}>
                          {cardsInPhase.length > 0 ? (
                            cardsInPhase.map(card => (
                              <div 
@@ -1471,6 +1472,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                      </div>
                    );
                 })}
+                </div>
               </div>
             </div>
           ) : (
