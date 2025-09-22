@@ -1316,8 +1316,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
               {/* Background decorativo premium */}
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,53,90,0.02)_0%,transparent_60%),radial-gradient(circle_at_75%_75%,rgba(59,130,246,0.02)_0%,transparent_60%)] pointer-events-none"></div>
               <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200/30 to-transparent"></div>
-              <div className="h-full overflow-x-auto overflow-y-hidden p-6 scroll-container">
-                <div id="kanban-container" className="flex gap-5 relative z-10 min-w-max">
+              <div className="h-full overflow-x-scroll overflow-y-hidden p-6 kanban-scroll">
+                <div id="kanban-container" className="flex gap-5 relative z-10" style={{ width: 'max-content' }}>
                 {fixedPhaseOrder.map((phaseName, index) => {
                   const cardsInPhase = phases[phaseName] || [];
                   if (hideEmptyPhases && cardsInPhase.length === 0) return null;

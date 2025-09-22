@@ -16,13 +16,58 @@
 }
 
 .scroll-container::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
+  background: rgba(156, 163, 175, 0.4);
   border-radius: 10px;
   transition: background 0.3s ease;
 }
 
 .scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+/* Scroll horizontal do Kanban */
+.kanban-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+  scroll-behavior: smooth;
+}
+
+.kanban-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.kanban-scroll::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 4px;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.kanban-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+}
+
+/* Scroll das fases */
+.phase-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.phase-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.phase-container::-webkit-scrollbar-thumb {
+  background: rgba(209, 213, 219, 0.6);
+  border-radius: 2px;
+}
+
+.phase-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
 }
 
 /* Animações premium */
@@ -131,5 +176,9 @@
   
   .phase-container {
     padding: 12px;
+  }
+  
+  .kanban-scroll::-webkit-scrollbar {
+    height: 6px;
   }
 }
