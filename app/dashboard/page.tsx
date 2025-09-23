@@ -32,16 +32,7 @@ export default function DashboardPage() {
         })
 
         setCards(cardsWithSLA)
-        console.error('[DEBUG] Cards loaded:', cardsWithSLA.length)
-        if (cardsWithSLA.length > 0) {
-          console.error('[DEBUG] Sample card fields:', Object.keys(cardsWithSLA[0]))
-          console.error('[DEBUG] Sample card data:', {
-            origem_locacao: (cardsWithSLA[0] as any).origem_locacao,
-            empresa_recolha: (cardsWithSLA[0] as any).empresa_recolha,
-            nome_chofer_recolha: (cardsWithSLA[0] as any).nome_chofer_recolha,
-            phase_name: (cardsWithSLA[0] as any).phase_name
-          })
-        }
+
       } catch (error) {
         console.error('[VERCEL] Dashboard error:', error)
         logger.error('Dashboard fetch error', { error: error instanceof Error ? error.message : String(error) })
@@ -133,13 +124,7 @@ export default function DashboardPage() {
       phasesCount: Object.keys(cardsByPhase).length
     }
     
-    console.error('[DEBUG] Data processed:', processedData)
-    
-    if (Object.keys(slaByCity).length > 0) {
-      console.error('[DEBUG] Sample city data:', Object.entries(slaByCity)[0])
-    } else {
-      console.error('[DEBUG] No city data found')
-    }
+
 
     return {
       slaByCity,
@@ -262,17 +247,7 @@ export default function DashboardPage() {
           </div>
         )}
         
-        {/* Debug Info Temporário */}
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-bold mb-2">Debug - Dados para Gráficos:</h4>
-          <div className="text-xs space-y-1">
-            <p>Total Cards: {dashboardData.totalCards}</p>
-            <p>Cidades: {Object.keys(dashboardData.slaByCity).length}</p>
-            <p>Empresas: {Object.keys(dashboardData.slaByCompany).length}</p>
-            <p>Chofers: {Object.keys(dashboardData.slaByChofer).length}</p>
-            <p>Fases: {Object.keys(dashboardData.cardsByPhase).length}</p>
-          </div>
-        </div>
+
         
         {/* Gráficos */}
         <DashboardCharts data={dashboardData} />

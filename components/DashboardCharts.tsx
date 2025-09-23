@@ -17,11 +17,10 @@ interface DashboardChartsProps {
 export default function DashboardCharts({ data }: DashboardChartsProps) {
   const chartData = useMemo(() => {
     
-    // Top 5 cidades
+    // Todas as cidades
     const topCities = Object.entries(data.slaByCity)
       .map(([city, sla]) => ({ city, total: sla.atrasado + sla.alerta + sla.prazo, ...sla }))
       .sort((a, b) => b.total - a.total)
-      .slice(0, 5)
 
     // Top 5 empresas
     const topCompanies = Object.entries(data.slaByCompany)
@@ -72,10 +71,27 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
                       <span className="text-sm font-bold text-gray-900">{value}</span>
                     </div>
                     <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${percentage}%` }}
-                      />
+                      {item.atrasado !== undefined ? (
+                        <div className="h-full flex rounded-full overflow-hidden">
+                          <div 
+                            className="bg-emerald-500 transition-all duration-1000 ease-out"
+                            style={{ width: `${(item.prazo / value) * 100}%` }}
+                          />
+                          <div 
+                            className="bg-yellow-500 transition-all duration-1000 ease-out"
+                            style={{ width: `${(item.alerta / value) * 100}%` }}
+                          />
+                          <div 
+                            className="bg-red-500 transition-all duration-1000 ease-out"
+                            style={{ width: `${(item.atrasado / value) * 100}%` }}
+                          />
+                        </div>
+                      ) : (
+                        <div 
+                          className="h-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] rounded-full transition-all duration-1000 ease-out"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      )}
                     </div>
                     {item.atrasado !== undefined && (
                       <div className="flex gap-2 text-xs">
