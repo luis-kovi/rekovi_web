@@ -42,9 +42,7 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
     return result
   }, [data])
 
-  const PieChart = ({ title, items, keyName }: { title: string; items: any[]; keyName: string }) => {
-    const total = items.reduce((sum, item) => sum + item.total, 0)
-    
+  const DetailedChart = ({ title, items, keyName }: { title: string; items: any[]; keyName: string }) => {
     return (
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 relative overflow-hidden group">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
@@ -55,27 +53,52 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
               Nenhum dado disponível
             </div>
           ) : (
-            <div className="space-y-3">
-              {items.map((item, index) => {
-                const percentage = total > 0 ? (item.total / total) * 100 : 0
-                return (
-                  <div key={index} className="flex items-center justify-between">
+            <div className="space-y-4">
+              {items.map((item, index) => (
+                <div key={index} className="border border-gray-100 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="font-semibold text-gray-800" title={item[keyName]}>
+                      {item[keyName]}
+                    </h4>
+                    <span className="text-lg font-bold text-gray-900">{item.total}</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 text-sm">
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: `hsl(${(index * 137.5) % 360}, 70%, 50%)` }}
-                      />
-                      <span className="text-sm font-medium text-gray-700 truncate" title={item[keyName]}>
-                        {item[keyName]}
-                      </span>
+                      <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                      <span className="text-gray-600">No Prazo</span>
+                      <span className="font-semibold text-emerald-600">{item.prazo}</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-gray-900">{item.total}</div>
-                      <div className="text-xs text-gray-500">{percentage.toFixed(1)}%</div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <span className="text-gray-600">Alerta</span>
+                      <span className="font-semibold text-yellow-600">{item.alerta}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <span className="text-gray-600">Atrasado</span>
+                      <span className="font-semibold text-red-600">{item.atrasado}</span>
                     </div>
                   </div>
-                )
-              })}
+                  
+                  <div className="mt-3 w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                    <div className="h-full flex rounded-full overflow-hidden">
+                      <div 
+                        className="bg-emerald-500 transition-all duration-1000 ease-out"
+                        style={{ width: `${(item.prazo / item.total) * 100}%` }}
+                      />
+                      <div 
+                        className="bg-yellow-500 transition-all duration-1000 ease-out"
+                        style={{ width: `${(item.alerta / item.total) * 100}%` }}
+                      />
+                      <div 
+                        className="bg-red-500 transition-all duration-1000 ease-out"
+                        style={{ width: `${(item.atrasado / item.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -170,13 +193,13 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <PieChart 
+      <DetailedChart 
         title="Recolhas por Cidade" 
         items={chartData.topCities} 
         keyName="city" 
       />
       
-      <PieChart 
+      <DetailedChart 
         title="Recolhas por Empresa" 
         items={chartData.topCompanies} 
         keyName="company" 
