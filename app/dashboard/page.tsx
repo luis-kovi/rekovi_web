@@ -32,12 +32,15 @@ export default function DashboardPage() {
         })
 
         setCards(cardsWithSLA)
-        // console.log('🔍 DASHBOARD DEBUG - Cards loaded:', cardsWithSLA.length)
-        // console.log('🔍 DASHBOARD DEBUG - Sample card:', cardsWithSLA[0])
-        // console.log('🔍 DASHBOARD DEBUG - All cards:', cardsWithSLA)
+        console.log('[VERCEL] Cards loaded:', cardsWithSLA.length)
+        logger.info('Cards loaded', { count: cardsWithSLA.length })
+        if (cardsWithSLA.length > 0) {
+          console.log('[VERCEL] Sample card fields:', Object.keys(cardsWithSLA[0]))
+          logger.info('Sample card structure', { fields: Object.keys(cardsWithSLA[0]) })
+        }
       } catch (error) {
-        console.error('🚨 DASHBOARD ERROR - Erro ao carregar dados:', error)
-        logger.error('Erro ao carregar dados:', error)
+        console.error('[VERCEL] Dashboard error:', error)
+        logger.error('Dashboard fetch error', { error: error instanceof Error ? error.message : String(error) })
       } finally {
         setIsLoading(false)
       }
@@ -118,16 +121,21 @@ export default function DashboardPage() {
       return acc
     }, {} as Record<string, number>)
 
-    // console.log('🔍 DASHBOARD DEBUG - Data processed:', {
-    //   totalCards: cards.length,
-    //   citiesCount: Object.keys(slaByCity).length,
-    //   companiesCount: Object.keys(slaByCompany).length,
-    //   chofersCount: Object.keys(slaByChofer).length,
-    //   phasesCount: Object.keys(cardsByPhase).length,
-    //   slaByCity,
-    //   slaByCompany,
-    //   cardsByPhase
-    // })
+    const processedData = {
+      totalCards: cards.length,
+      citiesCount: Object.keys(slaByCity).length,
+      companiesCount: Object.keys(slaByCompany).length,
+      chofersCount: Object.keys(slaByChofer).length,
+      phasesCount: Object.keys(cardsByPhase).length
+    }
+    
+    console.log('[VERCEL] Data processed:', processedData)
+    logger.info('Dashboard data processed', processedData)
+    
+    if (Object.keys(slaByCity).length > 0) {
+      console.log('[VERCEL] Sample city data:', Object.entries(slaByCity)[0])
+      logger.info('Sample city data', { sample: Object.entries(slaByCity)[0] })
+    }
 
     return {
       slaByCity,
@@ -249,6 +257,18 @@ export default function DashboardPage() {
             <pre className="text-xs">{JSON.stringify(dashboardData, null, 2)}</pre>
           </div>
         )}
+        
+        {/* Debug Info Temporário */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h4 className="font-bold mb-2">Debug - Dados para Gráficos:</h4>
+          <div className="text-xs space-y-1">
+            <p>Total Cards: {dashboardData.totalCards}</p>
+            <p>Cidades: {Object.keys(dashboardData.slaByCity).length}</p>
+            <p>Empresas: {Object.keys(dashboardData.slaByCompany).length}</p>
+            <p>Chofers: {Object.keys(dashboardData.slaByChofer).length}</p>
+            <p>Fases: {Object.keys(dashboardData.cardsByPhase).length}</p>
+          </div>
+        </div>
         
         {/* Gráficos */}
         <DashboardCharts data={dashboardData} />

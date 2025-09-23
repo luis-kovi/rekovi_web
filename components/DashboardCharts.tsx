@@ -16,6 +16,13 @@ interface DashboardChartsProps {
 
 export default function DashboardCharts({ data }: DashboardChartsProps) {
   const chartData = useMemo(() => {
+    console.log('[VERCEL] Charts raw data:', {
+      slaByCity: Object.keys(data.slaByCity).length,
+      slaByCompany: Object.keys(data.slaByCompany).length,
+      slaByChofer: Object.keys(data.slaByChofer).length,
+      cardsByPhase: Object.keys(data.cardsByPhase).length
+    })
+    
     // Top 5 cidades
     const topCities = Object.entries(data.slaByCity)
       .map(([city, sla]) => ({ city, total: sla.atrasado + sla.alerta + sla.prazo, ...sla }))
@@ -39,11 +46,19 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
       .map(([phase, count]) => ({ phase, count }))
       .sort((a, b) => b.count - a.count)
 
-    return { topCities, topCompanies, topChofers, phases }
+    const result = { topCities, topCompanies, topChofers, phases }
+    console.log('[VERCEL] Charts processed data:', {
+      topCities: topCities.length,
+      topCompanies: topCompanies.length, 
+      topChofers: topChofers.length,
+      phases: phases.length
+    })
+    
+    return result
   }, [data])
 
   const BarChart = ({ title, items, keyName }: { title: string; items: any[]; keyName: string }) => {
-    const maxValue = Math.max(...items.map(item => item.total || item.count))
+    const maxValue = items.length > 0 ? Math.max(...items.map(item => item.total || item.count)) : 0
     
     return (
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 relative overflow-hidden group">
@@ -51,44 +66,60 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
         <div className="relative z-10">
           <h3 className="text-lg font-bold text-gray-800 mb-6" style={{ fontFamily: 'Inter, sans-serif' }}>{title}</h3>
           <div className="space-y-4">
-            {items.map((item, index) => {
-              const value = item.total || item.count
-              const percentage = (value / maxValue) * 100
-              
-              return (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-gray-700 truncate" title={item[keyName]}>
-                      {item[keyName]}
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">{value}</span>
-                  </div>
-                  <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  {item.atrasado !== undefined && (
-                    <div className="flex gap-2 text-xs">
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                        {item.atrasado} atrasado
+            {items.length === 0 ? (
+              <div className="text-center text-gray-500 py-4">
+                Nenhum dado disponível
+              </div>
+            ) : (
+              items.map((item, index) => {
+                const value = item.total || item.count
+                const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0
+                
+                return (
+                  <div key={index} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-semibold text-gray-700 truncate" title={item[keyName]}>
+                        {item[keyName]}
                       </span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        {item.alerta} alerta
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                        {item.prazo} prazo
-                      </span>
+                      <span className="text-sm font-bold text-gray-900">{value}</span>
                     </div>
-                  )}
-                </div>
-              )
-            })}
+                    <div className="w-full bg-gray-200/60 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-[#FF355A] to-[#E02E4D] rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    {item.atrasado !== undefined && (
+                      <div className="flex gap-2 text-xs">
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          {item.atrasado} atrasado
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                          {item.alerta} alerta
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                          {item.prazo} prazo
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data || Object.keys(data.slaByCity).length === 0) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50 text-center">
+          <p className="text-gray-500">Nenhum dado disponível para gráficos</p>
         </div>
       </div>
     )
