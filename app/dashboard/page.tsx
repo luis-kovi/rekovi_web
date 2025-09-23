@@ -24,7 +24,7 @@ export default function DashboardPage() {
         if (error) throw error
 
         const cardsWithSLA = (data || []).map((card: Card) => {
-          const sla = calcularSLA(card.dataCriacao)
+          const sla = calcularSLA(card.created_at)
           let slaText: CardWithSLA['slaText'] = 'No Prazo'
           if (sla >= 3) slaText = 'Atrasado'
           else if (sla === 2) slaText = 'Em Alerta'
@@ -36,10 +36,10 @@ export default function DashboardPage() {
         if (cardsWithSLA.length > 0) {
           console.error('[DEBUG] Sample card fields:', Object.keys(cardsWithSLA[0]))
           console.error('[DEBUG] Sample card data:', {
-            origemLocacao: cardsWithSLA[0].origemLocacao,
-            empresaResponsavel: cardsWithSLA[0].empresaResponsavel,
-            chofer: cardsWithSLA[0].chofer,
-            faseAtual: cardsWithSLA[0].faseAtual
+            origem_locacao: cardsWithSLA[0].origem_locacao,
+            empresa_recolha: cardsWithSLA[0].empresa_recolha,
+            nome_chofer_recolha: cardsWithSLA[0].nome_chofer_recolha,
+            phase_name: cardsWithSLA[0].phase_name
           })
         }
       } catch (error) {
@@ -70,10 +70,10 @@ export default function DashboardPage() {
       }
     }
 
-    // SLA por Cidade (origemLocacao)
+    // SLA por Cidade (origem_locacao)
     const slaByCity = cards.reduce((acc, card) => {
-      if (!card.origemLocacao) return acc
-      const city = keepOriginalFormat(card.origemLocacao)
+      if (!card.origem_locacao) return acc
+      const city = keepOriginalFormat(card.origem_locacao)
       if (!acc[city]) acc[city] = { atrasado: 0, alerta: 0, prazo: 0 }
       
       if (card.slaText === 'Atrasado') acc[city].atrasado++
@@ -85,8 +85,8 @@ export default function DashboardPage() {
 
     // SLA por Empresa
     const slaByCompany = cards.reduce((acc, card) => {
-      if (!card.empresaResponsavel) return acc
-      const company = card.empresaResponsavel
+      if (!card.empresa_recolha) return acc
+      const company = card.empresa_recolha
       if (!acc[company]) acc[company] = { atrasado: 0, alerta: 0, prazo: 0 }
       
       if (card.slaText === 'Atrasado') acc[company].atrasado++
@@ -98,8 +98,8 @@ export default function DashboardPage() {
 
     // SLA por Chofer
     const slaByChofer = cards.reduce((acc, card) => {
-      if (!card.chofer || card.chofer === 'N/A') return acc
-      const chofer = formatPersonName(card.chofer)
+      if (!card.nome_chofer_recolha || card.nome_chofer_recolha === 'N/A') return acc
+      const chofer = formatPersonName(card.nome_chofer_recolha)
       if (!acc[chofer]) acc[chofer] = { atrasado: 0, alerta: 0, prazo: 0 }
       
       if (card.slaText === 'Atrasado') acc[chofer].atrasado++
@@ -111,16 +111,16 @@ export default function DashboardPage() {
 
     // Cards por Fase
     const cardsByPhase = cards.reduce((acc, card) => {
-      if (!card.faseAtual) return acc
-      const phase = card.faseAtual
+      if (!card.phase_name) return acc
+      const phase = card.phase_name
       acc[phase] = (acc[phase] || 0) + 1
       return acc
     }, {} as Record<string, number>)
 
     // Cards por Data (últimos 7 dias)
     const cardsByDate = cards.reduce((acc, card) => {
-      if (!card.dataCriacao) return acc
-      const date = new Date(card.dataCriacao).toLocaleDateString('pt-BR')
+      if (!card.created_at) return acc
+      const date = new Date(card.created_at).toLocaleDateString('pt-BR')
       acc[date] = (acc[date] || 0) + 1
       return acc
     }, {} as Record<string, number>)
