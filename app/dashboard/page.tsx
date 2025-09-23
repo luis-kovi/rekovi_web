@@ -43,9 +43,24 @@ export default function DashboardPage() {
   }, [])
 
   const dashboardData = useMemo(() => {
-    // SLA por Cidade
+    if (!cards || cards.length === 0) {
+      return {
+        slaByCity: {},
+        slaByCompany: {},
+        slaByChofer: {},
+        cardsByPhase: {},
+        cardsByDate: {},
+        totalCards: 0,
+        totalAtrasado: 0,
+        totalAlerta: 0,
+        totalPrazo: 0
+      }
+    }
+
+    // SLA por Cidade (origemLocacao)
     const slaByCity = cards.reduce((acc, card) => {
-      const city = keepOriginalFormat(card.origemLocacao) || 'Não informado'
+      if (!card.origemLocacao) return acc
+      const city = keepOriginalFormat(card.origemLocacao)
       if (!acc[city]) acc[city] = { atrasado: 0, alerta: 0, prazo: 0 }
       
       if (card.slaText === 'Atrasado') acc[city].atrasado++
@@ -57,7 +72,8 @@ export default function DashboardPage() {
 
     // SLA por Empresa
     const slaByCompany = cards.reduce((acc, card) => {
-      const company = card.empresaResponsavel || 'Não informado'
+      if (!card.empresaResponsavel) return acc
+      const company = card.empresaResponsavel
       if (!acc[company]) acc[company] = { atrasado: 0, alerta: 0, prazo: 0 }
       
       if (card.slaText === 'Atrasado') acc[company].atrasado++
@@ -69,7 +85,8 @@ export default function DashboardPage() {
 
     // SLA por Chofer
     const slaByChofer = cards.reduce((acc, card) => {
-      const chofer = formatPersonName(card.chofer) || 'Não alocado'
+      if (!card.chofer || card.chofer === 'N/A') return acc
+      const chofer = formatPersonName(card.chofer)
       if (!acc[chofer]) acc[chofer] = { atrasado: 0, alerta: 0, prazo: 0 }
       
       if (card.slaText === 'Atrasado') acc[chofer].atrasado++
@@ -81,17 +98,27 @@ export default function DashboardPage() {
 
     // Cards por Fase
     const cardsByPhase = cards.reduce((acc, card) => {
-      const phase = card.faseAtual || 'Não informado'
+      if (!card.faseAtual) return acc
+      const phase = card.faseAtual
       acc[phase] = (acc[phase] || 0) + 1
       return acc
     }, {} as Record<string, number>)
 
-    // Cards por Data
+    // Cards por Data (últimos 7 dias)
     const cardsByDate = cards.reduce((acc, card) => {
+      if (!card.dataCriacao) return acc
       const date = new Date(card.dataCriacao).toLocaleDateString('pt-BR')
       acc[date] = (acc[date] || 0) + 1
       return acc
     }, {} as Record<string, number>)
+
+    logger.log('Dashboard data processed:', {
+      totalCards: cards.length,
+      citiesCount: Object.keys(slaByCity).length,
+      companiesCount: Object.keys(slaByCompany).length,
+      chofersCount: Object.keys(slaByChofer).length,
+      phasesCount: Object.keys(cardsByPhase).length
+    })
 
     return {
       slaByCity,
