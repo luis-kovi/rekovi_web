@@ -91,11 +91,13 @@ export default function DashboardPage() {
     const slaByChofer = cards.reduce((acc, card: any) => {
       if (!card.nome_chofer_recolha || card.nome_chofer_recolha === 'N/A') return acc
       const chofer = formatPersonName(card.nome_chofer_recolha)
-      if (!acc[chofer]) acc[chofer] = { atrasado: 0, alerta: 0, prazo: 0 }
+      const empresa = card.empresa_recolha || 'N/A'
+      const choferKey = `${chofer} (${empresa})`
+      if (!acc[choferKey]) acc[choferKey] = { atrasado: 0, alerta: 0, prazo: 0 }
       
-      if (card.slaText === 'Atrasado') acc[chofer].atrasado++
-      else if (card.slaText === 'Em Alerta') acc[chofer].alerta++
-      else acc[chofer].prazo++
+      if (card.slaText === 'Atrasado') acc[choferKey].atrasado++
+      else if (card.slaText === 'Em Alerta') acc[choferKey].alerta++
+      else acc[choferKey].prazo++
       
       return acc
     }, {} as Record<string, { atrasado: number; alerta: number; prazo: number }>)
