@@ -16,12 +16,6 @@ interface DashboardChartsProps {
 
 export default function DashboardCharts({ data }: DashboardChartsProps) {
   const chartData = useMemo(() => {
-    console.log('[VERCEL] Charts raw data:', {
-      slaByCity: Object.keys(data.slaByCity).length,
-      slaByCompany: Object.keys(data.slaByCompany).length,
-      slaByChofer: Object.keys(data.slaByChofer).length,
-      cardsByPhase: Object.keys(data.cardsByPhase).length
-    })
     
     // Top 5 cidades
     const topCities = Object.entries(data.slaByCity)
@@ -47,12 +41,6 @@ export default function DashboardCharts({ data }: DashboardChartsProps) {
       .sort((a, b) => b.count - a.count)
 
     const result = { topCities, topCompanies, topChofers, phases }
-    console.log('[VERCEL] Charts processed data:', {
-      topCities: topCities.length,
-      topCompanies: topCompanies.length, 
-      topChofers: topChofers.length,
-      phases: phases.length
-    })
     
     return result
   }, [data])

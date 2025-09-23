@@ -32,10 +32,8 @@ export default function DashboardPage() {
         })
 
         setCards(cardsWithSLA)
-        console.log('[VERCEL] Cards loaded:', cardsWithSLA.length)
         logger.info('Cards loaded', { count: cardsWithSLA.length })
         if (cardsWithSLA.length > 0) {
-          console.log('[VERCEL] Sample card fields:', Object.keys(cardsWithSLA[0]))
           logger.info('Sample card structure', { fields: Object.keys(cardsWithSLA[0]) })
         }
       } catch (error) {
@@ -129,11 +127,9 @@ export default function DashboardPage() {
       phasesCount: Object.keys(cardsByPhase).length
     }
     
-    console.log('[VERCEL] Data processed:', processedData)
     logger.info('Dashboard data processed', processedData)
     
     if (Object.keys(slaByCity).length > 0) {
-      console.log('[VERCEL] Sample city data:', Object.entries(slaByCity)[0])
       logger.info('Sample city data', { sample: Object.entries(slaByCity)[0] })
     }
 
