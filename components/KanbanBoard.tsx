@@ -94,6 +94,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     return filtered;
   }, [cards, searchTerm, slaFilter, permissionType, activeView]);
 
+  const [visibleCards, setVisibleCards] = useState<{ [key: string]: number }>({});
+
   const phases = useMemo(() => {
     const phaseMap: { [key: string]: CardWithSLA[] } = {};
     let phaseOrderToRender = fixedPhaseOrder;
@@ -117,6 +119,22 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     
     return phaseMap;
   }, [filteredCards, permissionType]);
+
+  const handleScroll = (phaseName: string, e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 100) {
+      setVisibleCards(prev => ({
+        ...prev,
+        [phaseName]: Math.min((prev[phaseName] || 10) + 10, phases[phaseName]?.length || 0)
+      }));
+    }
+  };
+
+  const getVisibleCardsForPhase = (phaseName: string) => {
+    const allCards = phases[phaseName] || [];
+    const visibleCount = visibleCards[phaseName] || 10;
+    return allCards.slice(0, visibleCount);
+  };
 
   const handleUpdateChofer = async (cardId: string, newName: string, newEmail: string) => {
     logger.log('Atualizando chofer:', { cardId, newName, newEmail });
@@ -1404,17 +1422,31 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                             </div>
                          </div>
                        </div>
-                       <div className={`flex-1 p-4 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName} style={{ maxHeight: 'calc(100vh - 280px)' }}>
+                       <div 
+                         className={`flex-1 p-4 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} 
+                         data-phase={phaseName} 
+                         style={{ maxHeight: 'calc(100vh - 280px)' }}
+                         onScroll={(e) => handleScroll(phaseName, e)}
+                       >
                          {cardsInPhase.length > 0 ? (
-                           cardsInPhase.map(card => (
-                             <div 
-                               key={card.id} 
-                               onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
-                               className={`transition-all duration-200 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.01]'}`}
-                             >
-                               <CardComponent card={card} />
-                             </div>
-                           ))
+                           <>
+                             {getVisibleCardsForPhase(phaseName).map(card => (
+                               <div 
+                                 key={card.id} 
+                                 onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
+                                 className={`transition-all duration-200 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.01]'}`}
+                               >
+                                 <CardComponent card={card} />
+                               </div>
+                             ))}
+                             {(visibleCards[phaseName] || 10) < cardsInPhase.length && (
+                               <div className="flex justify-center py-2">
+                                 <div className="text-xs text-gray-500 bg-gray-100/80 px-3 py-1 rounded-full">
+                                   +{cardsInPhase.length - (visibleCards[phaseName] || 10)} mais
+                                 </div>
+                               </div>
+                             )}
+                           </>
                          ) : (
                            <div className="flex flex-col items-center justify-center h-36 text-center p-4">
                              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${isDisabledPhase ? 'bg-gray-200/60' : 'bg-gray-100/80'} backdrop-blur-sm shadow-sm`}>
