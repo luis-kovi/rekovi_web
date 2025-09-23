@@ -94,6 +94,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     return filtered;
   }, [cards, searchTerm, slaFilter, permissionType, activeView]);
 
+  const [visibleCards, setVisibleCards] = useState<{ [key: string]: number }>({});
+
   const phases = useMemo(() => {
     const phaseMap: { [key: string]: CardWithSLA[] } = {};
     let phaseOrderToRender = fixedPhaseOrder;
@@ -117,6 +119,22 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
     
     return phaseMap;
   }, [filteredCards, permissionType]);
+
+  const handleScroll = (phaseName: string, e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight + 100) {
+      setVisibleCards(prev => ({
+        ...prev,
+        [phaseName]: Math.min((prev[phaseName] || 10) + 10, phases[phaseName]?.length || 0)
+      }));
+    }
+  };
+
+  const getVisibleCardsForPhase = (phaseName: string) => {
+    const allCards = phases[phaseName] || [];
+    const visibleCount = visibleCards[phaseName] || 10;
+    return allCards.slice(0, visibleCount);
+  };
 
   const handleUpdateChofer = async (cardId: string, newName: string, newEmail: string) => {
     logger.log('Atualizando chofer:', { cardId, newName, newEmail });
@@ -1312,10 +1330,12 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
           <LoadingIndicator message="A carregar dados..." />
         ) : (
           activeView === 'kanban' ? (
-            <div id="kanban-view" className="flex-1 flex overflow-x-auto overflow-y-hidden kanban-board p-6 scroll-container bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 relative">
-              {/* Background decorativo */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
-              <div id="kanban-container" className="flex gap-4 relative z-10">
+            <div id="kanban-view" className="flex-1 overflow-hidden bg-gradient-to-br from-white via-gray-50/20 to-blue-50/10 relative">
+              {/* Background decorativo premium */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,53,90,0.02)_0%,transparent_60%),radial-gradient(circle_at_75%_75%,rgba(59,130,246,0.02)_0%,transparent_60%)] pointer-events-none"></div>
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200/30 to-transparent"></div>
+              <div className="h-full overflow-x-scroll overflow-y-hidden p-6 kanban-scroll">
+                <div id="kanban-container" className="flex gap-5 relative z-10" style={{ width: 'max-content' }}>
                 {fixedPhaseOrder.map((phaseName, index) => {
                   const cardsInPhase = phases[phaseName] || [];
                   if (hideEmptyPhases && cardsInPhase.length === 0) return null;
@@ -1323,19 +1343,6 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                   const displayPhaseName = phaseDisplayNames[phaseName] || phaseName;
                   const isDisabledPhase = disabledPhases.includes(phaseName);
                   const lateOrAlertCount = cardsInPhase.filter(c => c.sla >= 2).length;
-                  
-                                                  // Esquema de cores moderno e elegante baseado na cor primária #FF355A
-             const columnColors = [
-                    { bg: 'bg-gradient-to-b from-red-50/80 to-red-100/60', border: 'border-red-200/50', header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]', text: 'text-red-600', icon: 'M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' },
-                    { bg: 'bg-gradient-to-b from-orange-50/80 to-orange-100/60', border: 'border-orange-200/50', header: 'bg-gradient-to-br from-orange-500 via-orange-600 to-red-500', text: 'text-orange-600', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1' },
-                    { bg: 'bg-gradient-to-b from-yellow-50/80 to-yellow-100/60', border: 'border-yellow-200/50', header: 'bg-gradient-to-br from-yellow-500 via-yellow-600 to-orange-500', text: 'text-yellow-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-                    { bg: 'bg-gradient-to-b from-amber-50/80 to-amber-100/60', border: 'border-amber-200/50', header: 'bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-500', text: 'text-amber-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-                    { bg: 'bg-gradient-to-b from-lime-50/80 to-lime-100/60', border: 'border-lime-200/50', header: 'bg-gradient-to-br from-lime-500 via-lime-600 to-green-500', text: 'text-lime-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-                    { bg: 'bg-gradient-to-b from-emerald-50/80 to-emerald-100/60', border: 'border-emerald-200/50', header: 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-500', text: 'text-emerald-600', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-                    { bg: 'bg-gradient-to-b from-blue-50/80 to-blue-100/60', border: 'border-blue-200/50', header: 'bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-500', text: 'text-blue-600', icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' },
-                    { bg: 'bg-gradient-to-b from-indigo-50/80 to-indigo-100/60', border: 'border-indigo-200/50', header: 'bg-gradient-to-br from-indigo-500 via-indigo-600 to-purple-500', text: 'text-indigo-600', icon: 'M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0' },
-                    { bg: 'bg-gradient-to-b from-green-50/80 to-green-100/60', border: 'border-green-200/50', header: 'bg-gradient-to-br from-green-500 via-green-600 to-emerald-500', text: 'text-green-600', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' }
-                  ];
                    
                    // Ícones personalizados para fases específicas
                    const getPhaseIcon = (phaseName: string) => {
@@ -1353,34 +1360,34 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                    
                    const colorScheme = isDisabledPhase 
                      ? { 
-                         bg: 'bg-gradient-to-b from-gray-100/60 to-gray-200/40', // Manter cinza para fases desabilitadas
-                         border: 'border-gray-300/50', 
+                         bg: 'bg-gradient-to-b from-gray-50/70 to-gray-100/50', 
+                         border: 'border-gray-200/60', 
                          header: 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600', 
                          text: 'text-gray-500',
                          icon: getPhaseIcon(phaseName)
                        }
                      : {
-                         bg: 'bg-gradient-to-b from-red-50/80 to-red-100/60', // Cor padrão da Fila de Recolha para fases ativas
-                         border: 'border-red-200/50',
+                         bg: 'bg-white/95 backdrop-blur-sm', 
+                         border: 'border-gray-200/60',
                          header: 'bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846]',
-                         text: 'text-red-600',
+                         text: 'text-gray-700',
                          icon: getPhaseIcon(phaseName)
                        };
                     
                    return (
-                     <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-xl flex flex-col flex-shrink-0 shadow-lg border ${colorScheme.border} hover:shadow-xl transition-all duration-300 backdrop-blur-sm relative overflow-hidden group animate-in`}>
-                       {/* Borda animada no hover */}
-                       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                       <div className={`${colorScheme.header} text-white p-2.5 rounded-t-xl relative overflow-hidden`}>
+                     <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-2xl flex flex-col flex-shrink-0 shadow-md border ${colorScheme.border} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 backdrop-blur-sm relative overflow-hidden group`}>
+                       {/* Borda animada premium no hover */}
+                       <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                       <div className={`${colorScheme.header} text-white p-2 rounded-t-2xl relative overflow-hidden`}>
                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                         {/* Partículas decorativas */}
-                         <div className="absolute top-1.5 right-2 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
-                         <div className="absolute top-2 right-4 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
+                         {/* Partículas decorativas premium */}
+                         <div className="absolute top-2 right-3 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
+                         <div className="absolute top-2.5 right-5 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
                          <div className="relative z-10">
-                           {/* Header principal compacto */}
+                           {/* Header principal premium */}
                          <div className="flex items-center justify-between">
-                             <div className="flex items-center gap-1.5 flex-1 min-w-0 pr-1">
-                               <div className="w-3 h-3 flex items-center justify-center flex-shrink-0">
+                             <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
+                               <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 bg-white/20 rounded-lg backdrop-blur-sm">
                                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                    <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                  </svg>
@@ -1390,46 +1397,60 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                            </h2>
                              </div>
                              
-                             {/* Indicadores lado a lado - menores */}
-                             <div className="flex items-center gap-1 flex-shrink-0">
-                               {/* Indicador de alertas */}
+                             {/* Indicadores premium lado a lado */}
+                             <div className="flex items-center gap-2 flex-shrink-0">
+                               {/* Indicador de alertas premium */}
                               {!isDisabledPhase && lateOrAlertCount > 0 && (
                                  <div className="relative">
-                                   <div className="flex items-center gap-0.5 text-amber-200 font-bold text-[9px] bg-amber-900/90 backdrop-blur-sm rounded-full px-1 py-0.5 shadow-lg border border-amber-700/50">
-                                     <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                   <div className="flex items-center gap-1 text-amber-100 font-bold text-xs bg-amber-900/90 backdrop-blur-sm rounded-full px-2 py-1 shadow-lg border border-amber-700/50">
+                                     <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                   </svg>
-                                     <span>{lateOrAlertCount}</span>
+                                     <span className="text-[9px] font-bold">{lateOrAlertCount}</span>
                                    </div>
-                                   {/* Pulse animation */}
+                                   {/* Pulse animation premium */}
                                    <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
                                  </div>
                                )}
                                
-                               {/* Contador total */}
-                               <div className="flex items-center gap-0.5 bg-white/25 backdrop-blur-sm rounded-full px-1.5 py-0.5 shadow-sm">
-                                 <div className="w-1 h-1 bg-white rounded-full opacity-80"></div>
+                               {/* Contador total premium */}
+                               <div className="flex items-center gap-1 bg-white/30 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-sm border border-white/20">
+                                 <div className="w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
                                  <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>
                                </div>
                              </div>
                             </div>
                          </div>
                        </div>
-                       <div className={`flex-1 p-3 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} data-phase={phaseName}>
+                       <div 
+                         className={`flex-1 p-4 space-y-3 overflow-y-auto scroll-container phase-container ${isDisabledPhase ? 'opacity-60' : ''}`} 
+                         data-phase={phaseName} 
+                         style={{ maxHeight: 'calc(100vh - 280px)' }}
+                         onScroll={(e) => handleScroll(phaseName, e)}
+                       >
                          {cardsInPhase.length > 0 ? (
-                           cardsInPhase.map(card => (
-                             <div 
-                               key={card.id} 
-                               onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
-                               className={`transition-all duration-300 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:translate-y-[-4px] hover:scale-[1.02]'}`}
-                             >
-                               <CardComponent card={card} />
-                             </div>
-                           ))
+                           <>
+                             {getVisibleCardsForPhase(phaseName).map(card => (
+                               <div 
+                                 key={card.id} 
+                                 onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
+                                 className={`transition-all duration-75 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.01]'}`}
+                               >
+                                 <CardComponent card={card} />
+                               </div>
+                             ))}
+                             {(visibleCards[phaseName] || 10) < cardsInPhase.length && (
+                               <div className="flex justify-center py-2">
+                                 <div className="text-xs text-gray-500 bg-gray-100/80 px-3 py-1 rounded-full">
+                                   +{cardsInPhase.length - (visibleCards[phaseName] || 10)} mais
+                                 </div>
+                               </div>
+                             )}
+                           </>
                          ) : (
-                           <div className="flex flex-col items-center justify-center h-32 text-center p-4">
-                             <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${isDisabledPhase ? 'bg-gray-300/50' : 'bg-gray-100'}`}>
-                               <svg className={`w-6 h-6 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                           <div className="flex flex-col items-center justify-center h-36 text-center p-4">
+                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${isDisabledPhase ? 'bg-gray-200/60' : 'bg-gray-100/80'} backdrop-blur-sm shadow-sm`}>
+                               <svg className={`w-7 h-7 ${isDisabledPhase ? 'text-gray-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                                  <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                 </svg>
                               </div>
@@ -1440,29 +1461,29 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                  switch (phaseName) {
                                    case 'Aprovar Custo de Recolha':
                                      return (
-                                       <p className="text-sm font-medium text-gray-400">
-                                         Não há custos de recolhas pendentes de aprovação
+                                       <p className="text-sm font-semibold text-gray-500">
+                                         Nenhum custo pendente
                                        </p>
                                      );
                                    case 'Desbloquear Veículo':
                                      return (
-                                       <p className="text-sm font-medium text-gray-400">
-                                         Não há pendências de desbloqueio
+                                       <p className="text-sm font-semibold text-gray-500">
+                                         Nenhum desbloqueio pendente
                                        </p>
                                      );
                                    case 'Solicitar Guincho':
                                      return (
-                                       <p className="text-sm font-medium text-gray-400">
-                                         Não há solicitações de guincho pendentes
+                                       <p className="text-sm font-semibold text-gray-500">
+                                         Nenhum guincho pendente
                                        </p>
                                      );
                                    default:
                                      return (
                                        <>
-                                         <p className="text-sm font-medium text-gray-400">
-                                           Fase em processamento
+                                         <p className="text-sm font-semibold text-gray-500">
+                                           Em processamento
                                          </p>
-                                         <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                                         <div className="mt-3 flex items-center gap-2 text-xs text-gray-500">
                                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                                            <span>Aguardando...</span>
                                          </div>
@@ -1471,8 +1492,8 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                  }
                                } else {
                                  return (
-                                   <p className="text-sm font-medium text-gray-600">
-                                     Nenhuma recolha nesta fase
+                                   <p className="text-sm font-semibold text-gray-600">
+                                     Nenhuma recolha
                                    </p>
                                  );
                                }
@@ -1483,101 +1504,103 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                      </div>
                    );
                 })}
+                </div>
               </div>
             </div>
           ) : (
-            <div id="list-view" className="h-full w-full bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50/30 pt-2 px-6 pb-6 relative">
-              {/* Background decorativo similar ao Kanban */}
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,53,90,0.03)_0%,transparent_50%),radial-gradient(circle_at_80%_80%,rgba(59,130,246,0.03)_0%,transparent_50%)] pointer-events-none"></div>
+            <div id="list-view" className="h-full w-full bg-gradient-to-br from-white via-gray-50/20 to-blue-50/10 pt-3 px-6 pb-6 relative">
+              {/* Background decorativo premium similar ao Kanban */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,53,90,0.02)_0%,transparent_60%),radial-gradient(circle_at_75%_75%,rgba(59,130,246,0.02)_0%,transparent_60%)] pointer-events-none"></div>
+              <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gray-200/30 to-transparent"></div>
               
-              <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 h-full overflow-hidden relative z-10">
-                {/* Header moderno com estilo Kanban */}
-                <div className="bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846] text-white px-0 py-3 rounded-t-xl relative overflow-hidden">
+              <div className="bg-white/98 backdrop-blur-md rounded-2xl shadow-lg border border-gray-200/60 h-full overflow-hidden relative z-10">
+                {/* Header premium com estilo Kanban */}
+                <div className="bg-gradient-to-br from-[#FF355A] via-[#E02E4D] to-[#D12846] text-white px-0 py-4 rounded-t-2xl relative overflow-hidden">
                   <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                  {/* Partículas decorativas */}
-                  <div className="absolute top-2 right-8 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
-                  <div className="absolute top-3 right-12 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
+                  {/* Partículas decorativas premium */}
+                  <div className="absolute top-3 right-8 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
+                  <div className="absolute top-4 right-12 w-0.5 h-0.5 bg-white/20 rounded-full opacity-40"></div>
                   
                   <div className="flex items-center justify-between relative z-10 px-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white/25 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-white/30 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                       </div>
                       <div>
-                        <h2 className="text-sm font-bold tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>Lista de Recolhas</h2>
-                        <p className="text-white/80 text-xs">Visualização detalhada</p>
+                        <h2 className="text-base font-bold tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>Lista de Recolhas</h2>
+                        <p className="text-white/90 text-sm font-medium">Visualização detalhada</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 bg-white/25 backdrop-blur-sm rounded-full px-2 py-1 shadow-sm">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80"></div>
-                        <span className="text-xs font-bold text-white">{filteredCards.length}</span>
+                      <div className="flex items-center gap-2 bg-white/30 backdrop-blur-sm rounded-full px-3 py-2 shadow-sm border border-white/20">
+                        <div className="w-2 h-2 bg-white rounded-full opacity-90"></div>
+                        <span className="text-sm font-bold text-white">{filteredCards.length}</span>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Container da tabela com scroll moderno e fundo cinza */}
-                <div className="overflow-y-auto scroll-container" style={{ height: 'calc(100% - 4rem)' }}>
-                  <table className="w-full text-sm bg-white mb-4">
-                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-red-50/90 to-red-100/70 backdrop-blur-sm border-b border-red-200/50">
-                      <tr className="text-[10px] font-bold text-red-700 uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        <th className="px-4 py-2.5 text-left">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 flex items-center justify-center bg-red-100 rounded-sm">
-                              <svg className="w-2 h-2 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                {/* Container da tabela premium com scroll moderno */}
+                <div className="overflow-y-auto scroll-container" style={{ height: 'calc(100% - 5rem)' }}>
+                  <table className="w-full text-sm bg-white">
+                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-gray-50/95 to-white/90 backdrop-blur-md border-b border-gray-200/60">
+                      <tr className="text-xs font-bold text-gray-700 uppercase tracking-wider" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <th className="px-6 py-4 text-left">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 flex items-center justify-center bg-red-100/80 rounded-lg">
+                              <svg className="w-2.5 h-2.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                               </svg>
                             </div>
                             <span>Placa</span>
                           </div>
                         </th>
-                        <th className="px-4 py-2.5 text-left">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 flex items-center justify-center bg-green-100 rounded-sm">
-                              <svg className="w-2 h-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <th className="px-6 py-4 text-left">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 flex items-center justify-center bg-emerald-100/80 rounded-lg">
+                              <svg className="w-2.5 h-2.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
                             </div>
                             <span>Driver</span>
                           </div>
                         </th>
-                        <th className="px-4 py-2.5 text-left">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 flex items-center justify-center bg-orange-100 rounded-sm">
-                              <svg className="w-2 h-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <th className="px-6 py-4 text-left">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 flex items-center justify-center bg-orange-100/80 rounded-lg">
+                              <svg className="w-2.5 h-2.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
                             <span>Chofer</span>
                           </div>
                         </th>
-                        <th className="px-4 py-2.5 text-left">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 flex items-center justify-center bg-blue-100 rounded-sm">
-                              <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <th className="px-6 py-4 text-left">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 flex items-center justify-center bg-blue-100/80 rounded-lg">
+                              <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                               </svg>
                             </div>
                             <span>Fase</span>
                           </div>
                         </th>
-                        <th className="px-4 py-2.5 text-left">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 flex items-center justify-center bg-purple-100 rounded-sm">
-                              <svg className="w-2 h-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <th className="px-6 py-4 text-left">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 flex items-center justify-center bg-purple-100/80 rounded-lg">
+                              <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
                             </div>
                             <span>Data</span>
                           </div>
                         </th>
-                        <th className="px-4 py-2.5 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <div className="w-3 h-3 flex items-center justify-center bg-yellow-100 rounded-sm">
-                              <svg className="w-2 h-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                        <th className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-4 h-4 flex items-center justify-center bg-yellow-100/80 rounded-lg">
+                              <svg className="w-2.5 h-2.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                             </div>
@@ -1595,22 +1618,22 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                         
                         if (isDisabled) {
                           return (
-                            <tr key={card.id} className="border-b border-gray-100/50 bg-gray-50/30 opacity-60 cursor-not-allowed">
-                              <td className="px-4 py-1.5 font-medium text-gray-400">{card.placa}</td>
-                              <td className="px-4 py-1.5 text-gray-400">{formatPersonName(card.nomeDriver)}</td>
-                              <td className="px-4 py-1.5 text-gray-400">
+                            <tr key={card.id} className="border-b border-gray-100/50 bg-gray-50/40 opacity-70 cursor-not-allowed">
+                              <td className="px-6 py-3 font-semibold text-gray-500">{card.placa}</td>
+                              <td className="px-6 py-3 text-gray-500">{formatPersonName(card.nomeDriver)}</td>
+                              <td className="px-6 py-3 text-gray-500">
                                 {!card.chofer || card.chofer === 'N/A' ? (
-                                  <span className="italic text-xs text-gray-400">Não alocado</span>
+                                  <span className="italic text-sm text-gray-500">Não alocado</span>
                                 ) : (
                                   formatPersonName(card.chofer)
                                 )}
                               </td>
-                              <td className="px-4 py-1.5 text-gray-400">{displayPhase}</td>
-                              <td className="px-4 py-1.5 text-gray-400">{formattedDate}</td>
-                              <td className="px-4 py-1.5 text-center">
-                                <div className="flex items-center justify-center">
-                                  <div className="w-2 h-2 bg-gray-300 rounded-full animate-pulse"></div>
-                                  <span className="text-xs text-gray-400 ml-2">Processando</span>
+                              <td className="px-6 py-3 text-gray-500">{displayPhase}</td>
+                              <td className="px-6 py-3 text-gray-500">{formattedDate}</td>
+                              <td className="px-6 py-3 text-center">
+                                <div className="flex items-center justify-center gap-2">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
+                                  <span className="text-sm text-gray-500 font-medium">Processando</span>
                                 </div>
                               </td>
                             </tr>
@@ -1620,89 +1643,89 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                         return (
                           <tr 
                             key={card.id} 
-                            className={`border-b border-red-100/20 hover:bg-red-50/60 cursor-pointer transition-all duration-200 ${
-                              index % 2 === 0 ? 'bg-white' : 'bg-red-50/30'
+                            className={`border-b border-gray-100/40 hover:bg-gray-50/60 hover:shadow-sm cursor-pointer transition-all duration-300 ${
+                              index % 2 === 0 ? 'bg-white' : 'bg-gray-50/20'
                             }`}
                             onClick={() => setSelectedCard(card)}
                           >
-                            <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 bg-red-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg className="w-2.5 h-2.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 bg-red-100/80 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-3 h-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                   </svg>
                                 </div>
-                                <span className="font-bold text-gray-900 text-xs truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                <span className="font-bold text-gray-900 text-sm truncate" style={{ fontFamily: 'Inter, sans-serif' }}>
                                   {card.placa}
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 bg-green-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg className="w-2.5 h-2.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 bg-emerald-100/80 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                   </svg>
                                 </div>
-                                <span className="text-gray-800 text-xs font-medium truncate">
+                                <span className="text-gray-900 text-sm font-semibold truncate">
                                 {formatPersonName(card.nomeDriver)}
                               </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 bg-orange-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg className="w-2.5 h-2.5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 bg-orange-100/80 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
                                 </div>
                               {!card.chofer || card.chofer === 'N/A' ? (
-                                  <span className="italic text-xs text-gray-500">Não alocado</span>
+                                  <span className="italic text-sm text-gray-500 font-medium">Não alocado</span>
                               ) : (
-                                  <span className="text-gray-800 text-xs font-medium truncate">
+                                  <span className="text-gray-900 text-sm font-semibold truncate">
                                   {formatPersonName(card.chofer)}
                                 </span>
                               )}
                               </div>
                             </td>
-                            <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 bg-blue-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 bg-blue-100/80 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                                   </svg>
                                 </div>
-                                <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-red-100 text-red-700">
+                                <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100/80 text-red-700 border border-red-200/50">
                                 {displayPhase}
                               </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-5 h-5 bg-purple-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg className="w-2.5 h-2.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <td className="px-6 py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 bg-purple-100/80 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                   </svg>
                                 </div>
-                                <span className="text-gray-700 text-xs font-medium">
+                                <span className="text-gray-900 text-sm font-semibold">
                                 {formattedDate}
                               </span>
                               </div>
                             </td>
-                            <td className="px-4 py-2 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                <div className="w-5 h-5 bg-yellow-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg className="w-2.5 h-2.5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                            <td className="px-6 py-3 text-center">
+                              <div className="flex items-center justify-center gap-3">
+                                <div className="w-6 h-6 bg-yellow-100/80 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <svg className="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                   </svg>
                                 </div>
                                 <div className="relative">
-                                  <span className={`inline-flex items-center justify-center w-7 h-5 rounded-md text-xs font-bold text-white ${
+                                  <span className={`inline-flex items-center justify-center w-8 h-6 rounded-xl text-sm font-bold text-white shadow-sm ${
                                   slaStatus === 'atrasado' 
                                       ? 'bg-red-500' 
                                     : slaStatus === 'alerta' 
                                       ? 'bg-yellow-500' 
-                                      : 'bg-green-500'
+                                      : 'bg-emerald-500'
                                 }`}>
                                   {card.sla}
                                 </span>
@@ -1716,20 +1739,20 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                     </tbody>
                   </table>
                   
-                  {/* Estado vazio moderno com estilo Kanban */}
+                  {/* Estado vazio premium com estilo Kanban */}
                   {filteredCards.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 text-center relative">
-                      <div className="w-20 h-20 bg-gradient-to-br from-red-100/80 to-red-200/60 rounded-2xl flex items-center justify-center mb-4 shadow-lg backdrop-blur-sm relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
-                        <svg className="w-8 h-8 text-red-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+                    <div className="flex flex-col items-center justify-center py-20 text-center relative">
+                      <div className="w-24 h-24 bg-gradient-to-br from-red-100/90 to-red-200/70 rounded-3xl flex items-center justify-center mb-6 shadow-lg backdrop-blur-sm relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+                        <svg className="w-10 h-10 text-red-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                       </div>
-                      <h3 className="text-lg font-bold text-gray-700 mb-2" style={{ fontFamily: 'Inter, sans-serif' }}>Nenhuma recolha encontrada</h3>
-                      <p className="text-sm text-gray-500 font-medium">Tente ajustar os filtros ou a busca</p>
-                      <div className="mt-4 flex items-center gap-1 text-xs text-red-500">
-                        <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                        <span>Sistema atualizado em tempo real</span>
+                      <h3 className="text-xl font-bold text-gray-800 mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>Nenhuma recolha encontrada</h3>
+                      <p className="text-base text-gray-600 font-medium mb-4">Tente ajustar os filtros ou a busca</p>
+                      <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50/80 px-4 py-2 rounded-full border border-red-200/50">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="font-medium">Sistema atualizado em tempo real</span>
                       </div>
                     </div>
                   )}
