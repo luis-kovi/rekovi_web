@@ -1360,7 +1360,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                      <div key={phaseName} className={`w-56 ${colorScheme.bg} rounded-2xl flex flex-col flex-shrink-0 shadow-md border ${colorScheme.border} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 backdrop-blur-sm relative overflow-hidden group`}>
                        {/* Borda animada premium no hover */}
                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                       <div className={`${colorScheme.header} text-white p-3 rounded-t-2xl relative overflow-hidden`}>
+                       <div className={`${colorScheme.header} text-white p-2 rounded-t-2xl relative overflow-hidden`}>
                          <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                          {/* Partículas decorativas premium */}
                          <div className="absolute top-2 right-3 w-1 h-1 bg-white/30 rounded-full opacity-60"></div>
@@ -1374,7 +1374,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                    <path strokeLinecap="round" strokeLinejoin="round" d={colorScheme.icon} />
                                  </svg>
                                </div>
-                               <h2 className="phase-title text-xs font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
+                               <h2 className="phase-title text-[10px] font-bold tracking-wide truncate leading-tight" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>
                              {displayPhaseName}
                            </h2>
                              </div>
@@ -1388,7 +1388,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                   </svg>
-                                     <span>{lateOrAlertCount}</span>
+                                     <span className="text-[9px] font-bold">{lateOrAlertCount}</span>
                                    </div>
                                    {/* Pulse animation premium */}
                                    <div className="absolute inset-0 bg-amber-400/30 rounded-full animate-ping"></div>
@@ -1398,7 +1398,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                {/* Contador total premium */}
                                <div className="flex items-center gap-1 bg-white/30 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-sm border border-white/20">
                                  <div className="w-1.5 h-1.5 bg-white rounded-full opacity-90"></div>
-                                 <span className="text-xs font-bold text-white">{cardsInPhase.length}</span>
+                                 <span className="text-[9px] font-bold text-white">{cardsInPhase.length}</span>
                                </div>
                              </div>
                             </div>
