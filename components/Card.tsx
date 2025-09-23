@@ -70,9 +70,9 @@ export default function Card({ card }: CardProps) {
                  : 'bg-emerald-100/80 text-emerald-700 shadow-sm border border-emerald-200/50';
 
   return (
-    <div className="kanban-card data-item bg-white/98 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-44 cursor-pointer hover:shadow-lg hover:border-gray-300/80 hover:bg-white hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
+    <div className="kanban-card data-item bg-white/98 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200/60 flex flex-col h-44 cursor-pointer hover:shadow-lg hover:border-gray-300/80 hover:bg-white hover:-translate-y-0.5 transition-all duration-75 group relative overflow-hidden">
       {/* Efeito de brilho animado premium no hover */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 ease-out pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-300 ease-out pointer-events-none"></div>
       <div className="p-1.5 flex justify-between items-center bg-gradient-to-r from-gray-50/60 to-white/80 rounded-t-2xl border-b border-gray-200/40 relative z-10">
         <div className="min-w-0 flex-1">
           <h3 className="font-bold text-gray-900 card-placa truncate text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontWeight: '700' }}>{card.placa}</h3>

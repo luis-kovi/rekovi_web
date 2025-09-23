@@ -1434,7 +1434,7 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
                                <div 
                                  key={card.id} 
                                  onClick={isDisabledPhase ? undefined : () => setSelectedCard(card)} 
-                                 className={`transition-all duration-200 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.01]'}`}
+                                 className={`transition-all duration-75 ${isDisabledPhase ? 'cursor-not-allowed opacity-70' : 'cursor-pointer hover:scale-[1.01]'}`}
                                >
                                  <CardComponent card={card} />
                                </div>

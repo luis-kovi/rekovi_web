@@ -53,6 +53,16 @@
 }
 
 /* Scroll das fases */
+.phase-container {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.1s ease;
+}
+
+.phase-container:hover {
+  scrollbar-color: rgba(209, 213, 219, 0.4) transparent;
+}
+
 .phase-container::-webkit-scrollbar {
   width: 4px;
 }
@@ -62,12 +72,17 @@
 }
 
 .phase-container::-webkit-scrollbar-thumb {
-  background: rgba(209, 213, 219, 0.6);
+  background: transparent;
   border-radius: 2px;
+  transition: background 0.1s ease;
+}
+
+.phase-container:hover::-webkit-scrollbar-thumb {
+  background: rgba(209, 213, 219, 0.4);
 }
 
 .phase-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.8);
+  background: rgba(156, 163, 175, 0.6);
 }
 
 /* Animações premium */
