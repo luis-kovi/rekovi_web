@@ -10,6 +10,8 @@ import DashboardCharts from '@/components/DashboardCharts'
 export default function DashboardPage() {
   const [cards, setCards] = useState<CardWithSLA[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  
+  console.log('🚀 DASHBOARD INIT - Component mounted')
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -30,9 +32,11 @@ export default function DashboardPage() {
         })
 
         setCards(cardsWithSLA)
-        logger.log('Cards loaded:', cardsWithSLA.length)
-        logger.log('Sample card:', cardsWithSLA[0])
+        console.log('🔍 DASHBOARD DEBUG - Cards loaded:', cardsWithSLA.length)
+        console.log('🔍 DASHBOARD DEBUG - Sample card:', cardsWithSLA[0])
+        console.log('🔍 DASHBOARD DEBUG - All cards:', cardsWithSLA)
       } catch (error) {
+        console.error('🚨 DASHBOARD ERROR - Erro ao carregar dados:', error)
         logger.error('Erro ao carregar dados:', error)
       } finally {
         setIsLoading(false)
@@ -114,7 +118,7 @@ export default function DashboardPage() {
       return acc
     }, {} as Record<string, number>)
 
-    logger.log('Dashboard data processed:', {
+    console.log('🔍 DASHBOARD DEBUG - Data processed:', {
       totalCards: cards.length,
       citiesCount: Object.keys(slaByCity).length,
       companiesCount: Object.keys(slaByCompany).length,
