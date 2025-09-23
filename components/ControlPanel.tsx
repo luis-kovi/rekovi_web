@@ -92,7 +92,8 @@ export default function ControlPanel({
               id="slaFilter"
               value={slaFilter}
               onChange={(e) => setSlaFilter(e.target.value)}
-              className="text-sm border border-gray-300/60 rounded-2xl px-4 py-2.5 pr-10 focus:ring-2 focus:ring-[#FF355A]/30 focus:border-[#FF355A] focus:outline-none transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white appearance-none font-medium"
+              className="text-sm border border-gray-300/60 rounded-2xl px-4 py-2.5 pr-10 focus:ring-2 focus:ring-[#FF355A]/30 focus:border-[#FF355A] focus:outline-none transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white appearance-none font-medium text-gray-800"
+              style={{ color: slaFilter !== 'all' ? '#374151' : '#6B7280' }}
             >
               <option value="all">Filtrar por SLA</option>
               <option value="No Prazo">No Prazo</option>
@@ -118,7 +119,7 @@ export default function ControlPanel({
               placeholder="Buscar por placa, driver ou chofer..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-72 pl-12 pr-4 py-2.5 text-sm border border-gray-300/60 rounded-2xl focus:ring-2 focus:ring-[#FF355A]/30 focus:border-[#FF355A] focus:outline-none transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white font-medium placeholder:text-gray-500"
+              className="w-72 pl-12 pr-4 py-2.5 text-sm border border-gray-300/60 rounded-2xl focus:ring-2 focus:ring-[#FF355A]/30 focus:border-[#FF355A] focus:outline-none transition-all duration-300 bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md hover:bg-white font-medium placeholder:text-gray-500 text-gray-800"
             />
           </div>
 
