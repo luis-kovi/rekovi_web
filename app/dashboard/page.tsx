@@ -162,7 +162,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-800">Atrasadas</h3>
-                  <p className="text-sm text-gray-600">SLA > 3 dias</p>
+                  <p className="text-sm text-gray-600">SLA &gt; 3 dias</p>
                 </div>
               </div>
               <div className="text-3xl font-bold text-red-600">{dashboardData.totalAtrasado}</div>
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-gray-800">No Prazo</h3>
-                  <p className="text-sm text-gray-600">SLA < 2 dias</p>
+                  <p className="text-sm text-gray-600">SLA &lt; 2 dias</p>
                 </div>
               </div>
               <div className="text-3xl font-bold text-emerald-600">{dashboardData.totalPrazo}</div>
