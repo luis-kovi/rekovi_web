@@ -30,6 +30,8 @@ export default function DashboardPage() {
         })
 
         setCards(cardsWithSLA)
+        logger.log('Cards loaded:', cardsWithSLA.length)
+        logger.log('Sample card:', cardsWithSLA[0])
       } catch (error) {
         logger.error('Erro ao carregar dados:', error)
       } finally {
@@ -117,7 +119,10 @@ export default function DashboardPage() {
       citiesCount: Object.keys(slaByCity).length,
       companiesCount: Object.keys(slaByCompany).length,
       chofersCount: Object.keys(slaByChofer).length,
-      phasesCount: Object.keys(cardsByPhase).length
+      phasesCount: Object.keys(cardsByPhase).length,
+      slaByCity,
+      slaByCompany,
+      cardsByPhase
     })
 
     return {
@@ -233,6 +238,14 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Debug Info */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+            <h4 className="font-bold mb-2">Debug Info:</h4>
+            <pre className="text-xs">{JSON.stringify(dashboardData, null, 2)}</pre>
+          </div>
+        )}
+        
         {/* Gráficos */}
         <DashboardCharts data={dashboardData} />
       </div>
