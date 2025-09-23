@@ -32,9 +32,15 @@ export default function DashboardPage() {
         })
 
         setCards(cardsWithSLA)
-        logger.info('Cards loaded', { count: cardsWithSLA.length })
+        console.error('[DEBUG] Cards loaded:', cardsWithSLA.length)
         if (cardsWithSLA.length > 0) {
-          logger.info('Sample card structure', { fields: Object.keys(cardsWithSLA[0]) })
+          console.error('[DEBUG] Sample card fields:', Object.keys(cardsWithSLA[0]))
+          console.error('[DEBUG] Sample card data:', {
+            origemLocacao: cardsWithSLA[0].origemLocacao,
+            empresaResponsavel: cardsWithSLA[0].empresaResponsavel,
+            chofer: cardsWithSLA[0].chofer,
+            faseAtual: cardsWithSLA[0].faseAtual
+          })
         }
       } catch (error) {
         console.error('[VERCEL] Dashboard error:', error)
@@ -127,10 +133,12 @@ export default function DashboardPage() {
       phasesCount: Object.keys(cardsByPhase).length
     }
     
-    logger.info('Dashboard data processed', processedData)
+    console.error('[DEBUG] Data processed:', processedData)
     
     if (Object.keys(slaByCity).length > 0) {
-      logger.info('Sample city data', { sample: Object.entries(slaByCity)[0] })
+      console.error('[DEBUG] Sample city data:', Object.entries(slaByCity)[0])
+    } else {
+      console.error('[DEBUG] No city data found')
     }
 
     return {
