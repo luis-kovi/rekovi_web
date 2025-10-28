@@ -1,7 +1,7 @@
 // components/CardModal.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CardWithSLA } from '@/types'
 import { formatPersonName, keepOriginalFormat, formatDate, phaseDisplayNames } from '@/utils/helpers'
 import { createClient } from '@/utils/supabase/client'
@@ -57,6 +57,30 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
   const [showConfirmPatioDelivery, setShowConfirmPatioDelivery] = useState(false);
   const [showCarTowed, setShowCarTowed] = useState(false);
   const [showRequestTowMechanical, setShowRequestTowMechanical] = useState(false);
+  const [showPublicLinkModal, setShowPublicLinkModal] = useState(false);
+  const lastFocusedElementRef = useRef<HTMLElement | null>(null);
+  const publicLinkCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const showPublicLinkModalRef = useRef(showPublicLinkModal);
+
+  const handleClosePublicLink = useCallback(() => {
+    setShowPublicLinkModal(false);
+
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        lastFocusedElementRef.current?.focus?.()
+      }, 0);
+    } else {
+      lastFocusedElementRef.current?.focus?.()
+    }
+  }, []);
+
+  const handleOpenPublicLink = useCallback(() => {
+    if (typeof document !== 'undefined') {
+      lastFocusedElementRef.current = document.activeElement as HTMLElement | null;
+    }
+
+    setShowPublicLinkModal(true);
+  }, []);
 
   const loadAvailableChofers = async () => {
     if (!card || !card.empresaResponsavel || !card.origemLocacao) {
@@ -105,19 +129,75 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
     }
   }, [showChoferChange, card]);
 
+  const publicLink = useMemo(() => {
+    if (!card?.urlPublica) {
+      return null;
+    }
+
+    const trimmed = card.urlPublica.trim();
+    if (!trimmed || trimmed.toLowerCase() === 'null') {
+      return null;
+    }
+
+    if (!/^https?:\/\//i.test(trimmed)) {
+      return `https://${trimmed}`;
+    }
+
+    return trimmed;
+  }, [card?.urlPublica]);
+
+  useEffect(() => {
+    showPublicLinkModalRef.current = showPublicLinkModal;
+  }, [showPublicLinkModal]);
+
+  useEffect(() => {
+    if (!showPublicLinkModalRef.current) {
+      return;
+    }
+
+    handleClosePublicLink();
+  }, [card?.id, publicLink, handleClosePublicLink]);
+
+  useEffect(() => {
+    if (!showPublicLinkModal) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleClosePublicLink();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showPublicLinkModal, handleClosePublicLink]);
+
+  useEffect(() => {
+    if (!showPublicLinkModal) {
+      return;
+    }
+
+    publicLinkCloseButtonRef.current?.focus?.();
+  }, [showPublicLinkModal]);
+
   if (!card) return null;
 
   const isFila = card?.faseAtual === 'Fila de Recolha';
   const isTentativaRecolha = card?.faseAtual && [
-    'Tentativa 1 de Recolha', 
-    'Tentativa 2 de Recolha', 
-    'Tentativa 3 de Recolha', 
+    'Tentativa 1 de Recolha',
+    'Tentativa 2 de Recolha',
+    'Tentativa 3 de Recolha',
     'Tentativa 4 de Recolha'
   ].includes(card.faseAtual);
   const isConfirmacaoRecolha = card?.faseAtual === 'Confirmação de Entrega no Pátio';
   const displayPhase = phaseDisplayNames[card?.faseAtual] || card?.faseAtual;
   const editablePhases = ['Tentativa 1 de Recolha', 'Tentativa 2 de Recolha', 'Tentativa 3 de Recolha', 'Tentativa 4 de Recolha', 'Confirmação de Entrega no Pátio'];
   const allowChoferChange = card?.faseAtual ? editablePhases.includes(card.faseAtual) : false;
+  const hasPublicLink = Boolean(publicLink);
 
   const handleChoferChange = async () => {
     if (!selectedChofer || !choferEmail || !onUpdateChofer) return;
@@ -207,15 +287,35 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                </p>
              </div>
               
-              <button 
-                id="closeCardModal" 
-                onClick={onClose} 
-                className="text-white/80 hover:text-white transition-all duration-200 p-2 rounded-xl hover:bg-white/20 backdrop-blur-sm group"
-              >
-                <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {hasPublicLink && (
+                  <button
+                    type="button"
+                    onClick={handleOpenPublicLink}
+                    className="inline-flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-xs font-semibold transition-colors duration-200 backdrop-blur-sm"
+                    aria-haspopup="dialog"
+                    aria-expanded={showPublicLinkModal}
+                    aria-controls="publicLinkModal"
+                    title="Abrir visualização do link público"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14 3H6a2 2 0 00-2 2v12a2 2 0 002 2h8" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-5 5m0 0l5 5m-5-5H10" />
+                    </svg>
+                    <span>Abrir Link Público</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  id="closeCardModal"
+                  onClick={onClose}
+                  className="text-white/80 hover:text-white transition-all duration-200 p-2 rounded-xl hover:bg-white/20 backdrop-blur-sm group"
+                >
+                  <svg className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
                   </div>
                 </div>
          </div>
@@ -788,14 +888,69 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
               </div>
             ) : (
               <div className="h-full flex items-center justify-center">
-                <iframe 
-                  id="modalFormIframe" 
-                  src={card.urlPublica && card.urlPublica !== 'null' ? card.urlPublica : "about:blank"} 
+                <iframe
+                  id="modalFormIframe"
+                  src={publicLink ?? 'about:blank'}
                   className="w-full h-full rounded-lg relative z-10"
                 />
               </div>
             )}
           </div>
+
+        {showPublicLinkModal && hasPublicLink && (
+          <div
+            id="publicLinkModal"
+            className="fixed inset-0 z-[60000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            role="presentation"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleClosePublicLink();
+            }}
+          >
+            <div
+              className="relative w-full max-w-5xl h-[80vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="publicLinkModalTitle"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-gray-100 opacity-70"></div>
+              <div className="relative z-10 flex flex-col h-full">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white/70 backdrop-blur-sm">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 010 5.656l-1.414 1.414a4 4 0 01-5.656 0l-1.414-1.414a4 4 0 010-5.656l1.414-1.414a4 4 0 015.656 0l1.414 1.414z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a3 3 0 00-3-3H7a4 4 0 00-4 4v6a3 3 0 003 3h2" />
+                    </svg>
+                    <span
+                      id="publicLinkModalTitle"
+                      className="text-sm font-semibold text-gray-700"
+                      style={{ fontFamily: 'Inter, sans-serif' }}
+                    >
+                      Visualização do Link Público
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleClosePublicLink}
+                    className="text-gray-500 hover:text-gray-700 transition-colors duration-200 p-2 rounded-lg hover:bg-gray-100"
+                    aria-label="Fechar visualização do link público"
+                    ref={publicLinkCloseButtonRef}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <iframe
+                  src={publicLink ?? 'about:blank'}
+                  className="flex-1 w-full h-full"
+                  title="Link público do card"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         </div>
       </div>
