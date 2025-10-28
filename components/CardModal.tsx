@@ -150,6 +150,14 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
   };
 
   const slaStatus = card.sla >= 3 ? 'atrasado' : card.sla === 2 ? 'alerta' : 'no-prazo';
+  const hasPublicUrl = Boolean(card.urlPublica && card.urlPublica !== 'null');
+
+  const handleOpenPublicLink = () => {
+    if (!hasPublicUrl) {
+      return;
+    }
+    window.open(card.urlPublica!, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div id="cardModal" className="modal-overlay fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center p-4 z-50" onClick={onClose}>
@@ -206,8 +214,19 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                  {formatDate(card.dataCriacao)}
                </p>
              </div>
-              
-              <button 
+            {!isFila && hasPublicUrl && (
+              <button
+                onClick={handleOpenPublicLink}
+                className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-200 backdrop-blur-sm"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                Link Pipefy
+              </button>
+            )}
+
+             <button
                 id="closeCardModal" 
                 onClick={onClose} 
                 className="text-white/80 hover:text-white transition-all duration-200 p-2 rounded-xl hover:bg-white/20 backdrop-blur-sm group"
