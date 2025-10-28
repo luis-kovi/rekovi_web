@@ -83,12 +83,20 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
     let filtered = cards
 
     if (searchTerm) {
-      filtered = filtered.filter(card => 
-        card.placa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.nomeDriver.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.chofer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.faseAtual.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      const normalizedSearch = searchTerm.toLowerCase()
+      filtered = filtered.filter(card => {
+        const placa = (card.placa ?? '').toLowerCase()
+        const driver = (card.nomeDriver ?? '').toLowerCase()
+        const chofer = (card.chofer ?? '').toLowerCase()
+        const phase = (card.faseAtual ?? '').toLowerCase()
+
+        return (
+          placa.includes(normalizedSearch) ||
+          driver.includes(normalizedSearch) ||
+          chofer.includes(normalizedSearch) ||
+          phase.includes(normalizedSearch)
+        )
+      })
     }
 
     if (selectedPhase !== 'all') {
