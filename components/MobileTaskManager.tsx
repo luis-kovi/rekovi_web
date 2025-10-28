@@ -239,14 +239,6 @@ export default function MobileTaskManager({ initialCards, permissionType, onUpda
           }}
           permissionType={permissionType}
           initialTab={initialModalTab}
-          onAllocateDriver={async () => {}}
-          onRejectCollection={async () => {}}
-          onUnlockVehicle={async () => {}}
-          onRequestTowing={async () => {}}
-          onReportProblem={async () => {}}
-          onConfirmPatioDelivery={async () => {}}
-          onConfirmCarTowed={async () => {}}
-          onRequestTowMechanical={async () => {}}
         />
       )}
 

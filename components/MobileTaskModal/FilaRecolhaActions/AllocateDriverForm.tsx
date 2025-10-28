@@ -17,7 +17,7 @@ interface PreApprovedUser {
 
 interface AllocateDriverFormProps {
   card: Card;
-  onAllocateDriver: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>;
+  onAllocateDriver: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string, billingType: string) => Promise<void>;
   onClose: () => void;
   onBack: () => void;
 }
@@ -119,7 +119,7 @@ export default function AllocateDriverForm({ card, onAllocateDriver, onClose, on
       const dateTimeString = `${collectionDate} ${collectionTime}`;
       const finalCollectionValue = billingType === 'avulso' ? collectionValue : '';
 
-      await onAllocateDriver(card.id, selectedChofer, choferEmail, dateTimeString, finalCollectionValue, additionalKm);
+      await onAllocateDriver(card.id, selectedChofer, choferEmail, dateTimeString, finalCollectionValue, additionalKm, billingType);
 
       setFeedback('Chofer alocado com sucesso! Os dados serão atualizados em até 3 minutos.');
       setTimeout(() => {

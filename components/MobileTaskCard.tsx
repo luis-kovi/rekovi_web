@@ -27,6 +27,9 @@ export default function MobileTaskCard({ card, phaseColor, adaptedPhaseName, onC
 
   // Função para formatar data
   const formatDate = (dateString: string) => {
+    if (!dateString) {
+      return 'Data indisponivel'
+    }
     const date = new Date(dateString)
     const now = new Date()
     const diffTime = Math.abs(now.getTime() - date.getTime())

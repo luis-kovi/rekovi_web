@@ -1,7 +1,7 @@
 // components/MobileTaskModal.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import type { Card } from '@/types'
 import { createClient } from '@/utils/supabase/client'
 import { logger } from '@/utils/logger'
@@ -14,23 +14,238 @@ import ConfirmPatioDeliveryForm from './MobileTaskModal/ConfirmacaoRecolhaAction
 import CarTowedForm from './MobileTaskModal/ConfirmacaoRecolhaActions/CarTowedForm'
 import RequestTowMechanicalForm from './MobileTaskModal/ConfirmacaoRecolhaActions/RequestTowMechanicalForm'
 
+const uploadImageToPipefy = async (file: File, fieldId: string, cardId: string, session: any) => {
+  try {
+    const supabaseUrl = (createClient() as any).supabaseUrl;
+    const fileName = `${cardId}_${fieldId}_${Date.now()}.${file.type.split('/')[1] || 'jpg'}`;
+    const presignedQuery = `
+      mutation CreatePresignedUrl($organizationId: ID!, $fileName: String!, $contentType: String!) {
+        createPresignedUrl(
+          input: {
+            organizationId: $organizationId
+            fileName: $fileName
+            contentType: $contentType
+          }
+        ) {
+          url
+          downloadUrl
+          clientMutationId
+        }
+      }
+    `;
+
+    const variables = {
+      organizationId: '281428',
+      fileName,
+      contentType: file.type
+    };
+
+    const presignedResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ query: presignedQuery, variables })
+    });
+
+    if (!presignedResponse.ok) {
+      const errorText = await presignedResponse.text();
+      throw new Error(`Erro ao gerar URL de upload: ${presignedResponse.status} - ${errorText}`);
+    }
+
+    const presignedData = await presignedResponse.json();
+
+    if (presignedData.errors?.length) {
+      const messages = presignedData.errors.map((error: any) => error.message).join(', ');
+      throw new Error(`Erro na API Pipefy: ${messages}`);
+    }
+
+    const { url: uploadUrl, downloadUrl } = presignedData.data?.createPresignedUrl ?? {};
+
+    if (!uploadUrl || !downloadUrl) {
+      throw new Error('URLs de upload/download não fornecidas');
+    }
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type
+      }
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(`Erro ao fazer upload da imagem: ${uploadResponse.status} - ${errorText}`);
+    }
+
+    const urlParts = downloadUrl.split('/uploads/');
+    const filePath = urlParts[1] ? urlParts[1].split('?')[0] : '';
+    const organizationId = '870bddf7-6ce7-4b9d-81d8-9087f1c10ae2';
+    const fullPath = `orgs/${organizationId}/uploads/${filePath}`;
+
+    const updateFieldQuery = `
+      mutation {
+        updateCardField(
+          input: {
+            card_id: "${cardId}"
+            field_id: "${fieldId}"
+            new_value: ["${fullPath}"]
+          }
+        ) {
+          success
+          clientMutationId
+        }
+      }
+    `;
+
+    const updateResponse = await fetch(`${supabaseUrl}/functions/v1/upload-image-pipefy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ query: updateFieldQuery })
+    });
+
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      throw new Error(`Erro ao atualizar campo com imagem: ${updateResponse.status} - ${errorText}`);
+    }
+
+    const updateData = await updateResponse.json();
+
+    if (updateData.errors?.length) {
+      const messages = updateData.errors.map((error: any) => error.message).join(', ');
+      throw new Error(`Erro ao atualizar campo ${fieldId}: ${messages}`);
+    }
+
+    return downloadUrl;
+  } catch (error) {
+    logger.error('Erro no upload da imagem via Pipefy:', error);
+    throw error;
+  }
+};
+
+const getPhaseFieldIds = (phase: string) => {
+  const phaseFieldMap: Record<string, any> = {
+    'Tentativa 1 de Recolha': {
+      action: 'para_seguir_com_a_recolha_nos_informe_a_a_o_necess_ria',
+      reason: 'qual_o_motivo_do_guincho',
+      difficulty: 'carro_localizado',
+      photos: {
+        frente: 'foto_do_ve_culo_e_ou_local_da_recolha_1',
+        traseira: 'foto_do_ve_culo_e_ou_local_da_recolha_2',
+        lateralEsquerda: 'foto_do_ve_culo_e_ou_local_da_recolha_3',
+        lateralDireita: 'foto_da_lateral_direita_passageiro',
+        estepe: 'foto_do_estepe',
+        painel: 'foto_do_painel'
+      },
+      evidences: {
+        photo1: 'evid_ncia_1',
+        photo2: 'evid_ncia_2',
+        photo3: 'evid_ncia_3'
+      }
+    },
+    'Tentativa 2 de Recolha': {
+      action: 'qual_a_a_o_necess_ria_para_seguirmos_com_a_recolha',
+      reason: 'qual_o_motivo_do_guincho',
+      difficulty: 'qual_a_maior_dificuldade',
+      photos: {
+        frente: 'foto_do_ve_culo_e_ou_local_da_recolha',
+        traseira: 'foto_da_lateral_traseira_esquerda_do_ve_culo',
+        lateralEsquerda: 'foto_da_lateral_traseira_direita_do_ve_culo',
+        lateralDireita: 'foto_da_lateral_direita_do_ve_culo',
+        estepe: 'foto_do_estepe',
+        painel: 'foto_da_parte_interna_do_ve_culo_'
+      },
+      evidences: {
+        photo1: 'anexe_foto_do_cen_rio_atual_para_que_possamos_entender_melhor_a_situa_o',
+        photo2: 'caso_tenha_algum_documento_que_possa_nos_ajudar_anexe_neste_campo',
+        photo3: 'alguma_evid_ncia_extra_fotos_documentos'
+      }
+    },
+    'Tentativa 3 de Recolha': {
+      action: 'qual_a_a_o_necess_ria_para_seguirmos_com_a_recolha',
+      reason: 'qual_o_motivo_do_guincho',
+      difficulty: 'qual_o_maior_motivo_para_n_o_conseguir_a_recolha',
+      photos: {
+        frente: 'foto_do_ve_culo_e_do_local_da_recolha',
+        traseira: 'foto_da_lateral_direita_do_ve_culo',
+        lateralEsquerda: 'foto_da_lateral_esquerda_do_ve_culo',
+        lateralDireita: 'foto_da_lateral_traseira_direita_do_ve_culo',
+        estepe: 'foto_da_lateral_traseira_esquerda_do_ve_culo',
+        painel: 'foto_da_chave_do_ve_culo'
+      },
+      evidences: {
+        photo1: 'anexe_foto_do_cen_rio_atual_para_que_possamos_entender_melhor_a_situa_o',
+        photo2: 'anexe_outra_evid_ncia_caso_tenha',
+        photo3: 'caso_tenha_algum_documento_que_possa_nos_ajudar_anexe_neste_campo'
+      }
+    },
+    'Tentativa 4 de Recolha': {
+      action: 'qual_a_a_o_necess_ria_para_seguirmos_com_a_recolha',
+      reason: 'qual_o_motivo_do_guincho',
+      difficulty: 'qual_o_maior_motivo_para_n_o_conseguir_a_recolha',
+      photos: {
+        frente: 'foto_do_ve_culo_e_do_local_da_recolha',
+        traseira: 'foto_da_lateral_direita_do_ve_culo',
+        lateralEsquerda: 'foto_da_lateral_esquerda_do_ve_culo',
+        lateralDireita: 'foto_da_lateral_traseira_direita_do_ve_culo',
+        estepe: 'foto_da_lateral_traseira_esquerda_do_ve_culo',
+        painel: 'foto_da_chave_do_ve_culo'
+      },
+      evidences: {
+        photo1: 'anexe_foto_do_cen_rio_atual_para_que_possamos_entender_melhor_a_situa_o',
+        photo2: 'anexe_outra_evid_ncia_caso_tenha',
+        photo3: 'caso_tenha_algum_documento_que_possa_nos_ajudar_anexe_neste_campo'
+      }
+    }
+  };
+
+  return phaseFieldMap[phase] || phaseFieldMap['Tentativa 1 de Recolha'];
+};
+
+const executePipefyMutation = async (session: any, query: string, variables?: Record<string, any>) => {
+  const supabaseUrl = (createClient() as any).supabaseUrl;
+  const response = await fetch(`${supabaseUrl}/functions/v1/update-chofer-pipefy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`
+    },
+    body: JSON.stringify(variables ? { query, variables } : { query })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    const message = errorData?.error || `Erro na API: ${response.status}`;
+    throw new Error(message);
+  }
+
+  const result = await response.json();
+
+  if (result.error || result.errors?.length) {
+    const errorMessage =
+      result.error ||
+      result.errors.map((error: any) => error.message).join(', ');
+    throw new Error(errorMessage);
+  }
+
+  return result;
+};
+
 interface MobileTaskModalProps {
   card: Card
   isOpen: boolean
   onClose: () => void
   permissionType: string
   initialTab?: 'details' | 'actions' | 'history'
-  onAllocateDriver?: (cardId: string, driverName: string, driverEmail: string, dateTime: string, collectionValue: string, additionalKm: string) => Promise<void>
-  onRejectCollection?: (cardId: string, reason: string, observations: string) => Promise<void>
-  onUnlockVehicle?: (cardId: string, phase: string, photos: Record<string, File>, observations?: string) => Promise<void>
-  onRequestTowing?: (cardId: string, phase: string, reason: string, photos: Record<string, File>) => Promise<void>
-  onReportProblem?: (cardId: string, phase: string, difficulty: string, evidences: Record<string, File>) => Promise<void>
-  onConfirmPatioDelivery?: (cardId: string, photos: Record<string, File>, expenses: string[], expenseValues: Record<string, string>, expenseReceipts: Record<string, File>) => Promise<void>
-  onConfirmCarTowed?: (cardId: string, photo: File, expenses: string[], expenseValues: Record<string, string>, expenseReceipts: Record<string, File>) => Promise<void>
-  onRequestTowMechanical?: (cardId: string, reason: string) => Promise<void>
 }
 
-export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details', onAllocateDriver, onRejectCollection, onUnlockVehicle, onRequestTowing, onReportProblem, onConfirmPatioDelivery, onConfirmCarTowed, onRequestTowMechanical }: MobileTaskModalProps) {
+export default function MobileTaskModal({ card, isOpen, onClose, permissionType, initialTab = 'details' }: MobileTaskModalProps) {
+  const supabase = useMemo(() => createClient(), []);
   const [activeTab, setActiveTab] = useState<'details' | 'actions' | 'history'>(initialTab)
   
   const [showAllocateDriver, setShowAllocateDriver] = useState(false);
@@ -41,6 +256,516 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
   const [showConfirmPatioDelivery, setShowConfirmPatioDelivery] = useState(false);
   const [showCarTowed, setShowCarTowed] = useState(false);
   const [showRequestTowMechanical, setShowRequestTowMechanical] = useState(false);
+
+  const getSessionOrThrow = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+      throw new Error('Usuário não autenticado');
+    }
+    return session;
+  };
+
+  const getCurrentUserEmail = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.email || 'Usuário desconhecido';
+  };
+
+  const handleAllocateDriver = async (
+    cardId: string,
+    driverName: string,
+    driverEmail: string,
+    dateTime: string,
+    collectionValue: string,
+    additionalKm: string,
+    billingType: string
+  ) => {
+    logger.log('Alocando chofer (mobile):', { cardId, driverName, driverEmail, dateTime, collectionValue, additionalKm, billingType });
+
+    const session = await getSessionOrThrow();
+    const userEmail = await getCurrentUserEmail();
+
+    const fieldsToUpdate = [
+      {
+        fieldId: 'nome_do_chofer_que_far_a_recolha',
+        value: driverName
+      },
+      {
+        fieldId: 'e_mail_do_chofer',
+        value: driverEmail
+      },
+      {
+        fieldId: 'data_e_hora_prevista_para_recolha',
+        value: dateTime
+      },
+      {
+        fieldId: 'custo_de_km_adicional',
+        value: additionalKm
+      },
+      {
+        fieldId: 've_culo_ser_recolhido',
+        value: 'Sim'
+      },
+      {
+        fieldId: 'tipo_de_faturamento',
+        value: billingType
+      }
+    ];
+
+    if (billingType === 'avulso') {
+      fieldsToUpdate.push({
+        fieldId: 'valor_da_recolha',
+        value: collectionValue
+      });
+    } else {
+      fieldsToUpdate.push({
+        fieldId: 'valor_da_recolha',
+        value: ''
+      });
+    }
+
+    const mutationQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+          }
+        ) {
+          clientMutationId
+          success
+        }
+      }
+    `;
+
+    const commentQuery = `
+      mutation {
+        createComment(
+          input: {
+            card_id: "${cardId}"
+            text: "O ${userEmail} alocou o chofer ${driverName} para a recolha."
+          }
+        ) {
+          comment {
+            id
+          }
+        }
+      }
+    `;
+
+    await Promise.all([
+      executePipefyMutation(session, mutationQuery),
+      executePipefyMutation(session, commentQuery)
+    ]);
+  };
+
+  const handleRejectCollection = async (cardId: string, reason: string, observations: string) => {
+    logger.log('Rejeitando recolha (mobile):', { cardId, reason, observations });
+
+    const session = await getSessionOrThrow();
+    const userEmail = await getCurrentUserEmail();
+
+    const updateQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: [
+              {
+                fieldId: "ve_culo_ser_recolhido"
+                value: "Não"
+              }
+            ]
+          }
+        ) {
+          clientMutationId
+          success
+        }
+      }
+    `;
+
+    const commentQuery = `
+      mutation {
+        createComment(
+          input: {
+            card_id: "${cardId}"
+            text: "O ${userEmail} rejeitou a recolha.\\nMotivo: ${reason}\\nComentário: ${observations}"
+          }
+        ) {
+          comment {
+            id
+          }
+        }
+      }
+    `;
+
+    await Promise.all([
+      executePipefyMutation(session, updateQuery),
+      executePipefyMutation(session, commentQuery)
+    ]);
+  };
+
+  const handleUnlockVehicle = async (
+    cardId: string,
+    phase: string,
+    photos: Record<string, File>,
+    observations?: string
+  ) => {
+    logger.log('Desbloqueando veículo (mobile):', { cardId, phase, photos, observations });
+
+    const session = await getSessionOrThrow();
+    const userEmail = await getCurrentUserEmail();
+    const fieldIds = getPhaseFieldIds(phase);
+
+    await Promise.all(
+      Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = fieldIds.photos[key];
+        if (fieldId) {
+          await uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      })
+    );
+
+    const actionQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: [
+              {
+                fieldId: "${fieldIds.action}"
+                value: "Desbloquear Veículo"
+              }
+            ]
+          }
+        ) {
+          success
+        }
+      }
+    `;
+
+    await executePipefyMutation(session, actionQuery);
+
+    if (observations) {
+      const commentQuery = `
+        mutation {
+          createComment(
+            input: {
+              card_id: "${cardId}"
+              text: "Usuário ${userEmail} inseriu a observação ${observations} na solicitação de desbloqueio."
+            }
+          ) {
+            comment {
+              id
+            }
+          }
+        }
+      `;
+
+      await executePipefyMutation(session, commentQuery);
+    }
+  };
+
+  const handleRequestTowing = async (
+    cardId: string,
+    phase: string,
+    reason: string,
+    photos: Record<string, File>
+  ) => {
+    logger.log('Solicitando guincho (mobile):', { cardId, phase, reason, photos });
+
+    const session = await getSessionOrThrow();
+    const fieldIds = getPhaseFieldIds(phase);
+
+    const photosToUpload =
+      reason === 'Veículo na rua sem recuperação da chave'
+        ? Object.fromEntries(Object.entries(photos).filter(([key]) => !['estepe', 'painel'].includes(key)))
+        : photos;
+
+    await Promise.all(
+      Object.entries(photosToUpload).map(async ([key, file]) => {
+        const fieldId = fieldIds.photos[key];
+        if (fieldId) {
+          await uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      })
+    );
+
+    const updateQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: [
+              {
+                fieldId: "${fieldIds.reason}"
+                value: "${reason}"
+              },
+              {
+                fieldId: "${fieldIds.action}"
+                value: "Solicitar Guincho"
+              }
+            ]
+          }
+        ) {
+          success
+        }
+      }
+    `;
+
+    await executePipefyMutation(session, updateQuery);
+  };
+
+  const handleReportProblem = async (
+    cardId: string,
+    phase: string,
+    difficulty: string,
+    evidences: Record<string, File>
+  ) => {
+    logger.log('Reportando problema (mobile):', { cardId, phase, difficulty, evidences });
+
+    const session = await getSessionOrThrow();
+    const fieldIds = getPhaseFieldIds(phase);
+
+    await Promise.all(
+      Object.entries(evidences).map(async ([key, file]) => {
+        const fieldId = fieldIds.evidences[key];
+        if (fieldId) {
+          await uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      })
+    );
+
+    const updateQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: [
+              {
+                fieldId: "${fieldIds.difficulty}"
+                value: "${difficulty}"
+              },
+              {
+                fieldId: "${fieldIds.action}"
+                value: "Reportar Problema"
+              }
+            ]
+          }
+        ) {
+          success
+        }
+      }
+    `;
+
+    await executePipefyMutation(session, updateQuery);
+  };
+
+  const handleConfirmPatioDelivery = async (
+    cardId: string,
+    photos: Record<string, File>,
+    expenses: string[],
+    expenseValues: Record<string, string>,
+    expenseReceipts: Record<string, File>
+  ) => {
+    logger.log('Confirmando entrega no pátio (mobile):', { cardId, photos, expenses, expenseValues });
+
+    const session = await getSessionOrThrow();
+
+    const photoFieldMapping: Record<string, string> = {
+      frente: 'foto_do_ve_culo_e_ou_local_da_recolha',
+      traseira: 'foto_da_lateral_traseira_esquerda_do_ve_culo',
+      lateralDireita: 'foto_da_lateral_traseira_direita_do_ve_culo',
+      lateralEsquerda: 'foto_da_lateral_direita_do_ve_culo',
+      painel: 'foto_da_lateral_esquerda_do_ve_culo',
+      odometro: 'foto_do_od_metro'
+    };
+
+    await Promise.all(
+      Object.entries(photos).map(async ([key, file]) => {
+        const fieldId = photoFieldMapping[key];
+        if (fieldId) {
+          await uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      })
+    );
+
+    const expenseValueFields: Record<string, string> = {
+      gasolina: 'valor_do_abastecimento',
+      pedagio: 'valor_do_s_ped_gio_s',
+      estacionamento: 'valor_do_estacionamento',
+      motoboy: 'valor_do_motoboy'
+    };
+
+    const expenseFieldMapping: Record<string, string> = {
+      gasolina: 'comprovante_ou_nota_do_abastecimento',
+      pedagio: 'comprovante_do_ped_gio',
+      estacionamento: 'comprovante_do_estacionamento',
+      motoboy: 'comprovante_de_pagamento_ou_nota_do_motoboy'
+    };
+
+    await Promise.all(
+      Object.entries(expenseReceipts).map(async ([key, file]) => {
+        const fieldId = expenseFieldMapping[key];
+        if (fieldId) {
+          await uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      })
+    );
+
+    const fieldsToUpdate = [
+      {
+        fieldId: 'situa_o_da_recolha',
+        value: 'Veículo entregue no pátio'
+      },
+      {
+        fieldId: 'selecionar_tipo_de_entrega',
+        value: 'Carro entregue no pátio'
+      }
+    ];
+
+    expenses.forEach(expense => {
+      const valueFieldId = expenseValueFields[expense];
+      if (valueFieldId) {
+        fieldsToUpdate.push({
+          fieldId: valueFieldId,
+          value: expenseValues[expense] || ''
+        });
+      }
+    });
+
+    const mutationQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+          }
+        ) {
+          success
+        }
+      }
+    `;
+
+    await executePipefyMutation(session, mutationQuery);
+  };
+
+  const handleConfirmCarTowed = async (
+    cardId: string,
+    photo: File,
+    expenses: string[],
+    expenseValues: Record<string, string>,
+    expenseReceipts: Record<string, File>
+  ) => {
+    logger.log('Confirmando carro guinchado (mobile):', { cardId, expenses, expenseValues });
+
+    const session = await getSessionOrThrow();
+
+    await uploadImageToPipefy(photo, 'foto_do_carro_no_guincho', cardId, session);
+
+    const expenseFieldMapping: Record<string, string> = {
+      gasolina: 'comprovante_ou_nota_do_abastecimento',
+      pedagio: 'comprovante_do_ped_gio',
+      estacionamento: 'comprovante_do_estacionamento',
+      motoboy: 'comprovante_de_pagamento_ou_nota_do_motoboy'
+    };
+
+    await Promise.all(
+      Object.entries(expenseReceipts).map(async ([key, file]) => {
+        const fieldId = expenseFieldMapping[key];
+        if (fieldId) {
+          await uploadImageToPipefy(file, fieldId, cardId, session);
+        }
+      })
+    );
+
+    const expenseValueFields: Record<string, string> = {
+      gasolina: 'valor_do_abastecimento',
+      pedagio: 'valor_do_s_ped_gio_s',
+      estacionamento: 'valor_do_estacionamento',
+      motoboy: 'valor_do_motoboy'
+    };
+
+    const fieldsToUpdate = [
+      {
+        fieldId: 'selecione_uma_op_o',
+        value: 'Carro guinchado'
+      },
+      {
+        fieldId: 'o_carro_chegou_no_guincho',
+        value: 'Sim'
+      }
+    ];
+
+    expenses.forEach(expense => {
+      const valueFieldId = expenseValueFields[expense];
+      if (valueFieldId) {
+        fieldsToUpdate.push({
+          fieldId: valueFieldId,
+          value: expenseValues[expense] || ''
+        });
+      }
+    });
+
+    const mutationQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: ${JSON.stringify(fieldsToUpdate).replace(/"fieldId"/g, 'fieldId').replace(/"value"/g, 'value')}
+          }
+        ) {
+          success
+        }
+      }
+    `;
+
+    await executePipefyMutation(session, mutationQuery);
+  };
+
+  const handleRequestTowMechanical = async (cardId: string, reason: string) => {
+    logger.log('Solicitando guincho por problema mecânico (mobile):', { cardId, reason });
+
+    const session = await getSessionOrThrow();
+    const userEmail = await getCurrentUserEmail();
+
+    const updateQuery = `
+      mutation {
+        updateFieldsValues(
+          input: {
+            nodeId: "${cardId}"
+            values: [
+              {
+                fieldId: "selecione_uma_op_o"
+                value: "Solicitar um novo guincho (carro não desbloqueou ou apresentou problemas mecânicos após a solicitação de desbloqueio)"
+              }
+            ]
+          }
+        ) {
+          success
+        }
+      }
+    `;
+
+    const commentQuery = `
+      mutation {
+        createComment(
+          input: {
+            card_id: "${cardId}"
+            text: "O ${userEmail} inseriu a seguinte observação no pedido do guincho: ${reason}"
+          }
+        ) {
+          comment {
+            id
+          }
+        }
+      }
+    `;
+
+    await Promise.all([
+      executePipefyMutation(session, updateQuery),
+      executePipefyMutation(session, commentQuery)
+    ]);
+  };
 
   const isFila = card.faseAtual === 'Fila de Recolha';
   const isTentativaRecolha = [
@@ -400,19 +1125,19 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {showAllocateDriver && onAllocateDriver && (
+                    {showAllocateDriver && (
                       <AllocateDriverForm
                         card={card}
-                        onAllocateDriver={onAllocateDriver}
+                        onAllocateDriver={handleAllocateDriver}
                         onClose={onClose}
                         onBack={() => setShowAllocateDriver(false)}
                       />
                     )}
 
-                    {showRejectCollection && onRejectCollection && (
+                    {showRejectCollection && (
                       <RejectCollectionForm
                         card={card}
-                        onRejectCollection={onRejectCollection}
+                        onRejectCollection={handleRejectCollection}
                         onClose={onClose}
                         onBack={() => setShowRejectCollection(false)}
                       />
@@ -460,28 +1185,28 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {showUnlockVehicle && onUnlockVehicle && (
+                    {showUnlockVehicle && (
                       <UnlockVehicleForm
                         card={card}
-                        onUnlockVehicle={onUnlockVehicle}
+                        onUnlockVehicle={handleUnlockVehicle}
                         onClose={onClose}
                         onBack={() => setShowUnlockVehicle(false)}
                       />
                     )}
 
-                    {showRequestTowing && onRequestTowing && (
+                    {showRequestTowing && (
                       <RequestTowingForm
                         card={card}
-                        onRequestTowing={onRequestTowing}
+                        onRequestTowing={handleRequestTowing}
                         onClose={onClose}
                         onBack={() => setShowRequestTowing(false)}
                       />
                     )}
 
-                    {showReportProblem && onReportProblem && (
+                    {showReportProblem && (
                       <ReportProblemForm
                         card={card}
-                        onReportProblem={onReportProblem}
+                        onReportProblem={handleReportProblem}
                         onClose={onClose}
                         onBack={() => setShowReportProblem(false)}
                       />
@@ -532,28 +1257,28 @@ export default function MobileTaskModal({ card, isOpen, onClose, permissionType,
                       </div>
                     )}
 
-                    {showConfirmPatioDelivery && onConfirmPatioDelivery && (
+                    {showConfirmPatioDelivery && (
                       <ConfirmPatioDeliveryForm
                         card={card}
-                        onConfirmPatioDelivery={onConfirmPatioDelivery}
+                        onConfirmPatioDelivery={handleConfirmPatioDelivery}
                         onClose={onClose}
                         onBack={() => setShowConfirmPatioDelivery(false)}
                       />
                     )}
 
-                    {showCarTowed && onConfirmCarTowed && (
+                    {showCarTowed && (
                       <CarTowedForm
                         card={card}
-                        onConfirmCarTowed={onConfirmCarTowed}
+                        onConfirmCarTowed={handleConfirmCarTowed}
                         onClose={onClose}
                         onBack={() => setShowCarTowed(false)}
                       />
                     )}
 
-                    {showRequestTowMechanical && onRequestTowMechanical && (
+                    {showRequestTowMechanical && (
                       <RequestTowMechanicalForm
                         card={card}
-                        onRequestTowMechanical={onRequestTowMechanical}
+                        onRequestTowMechanical={handleRequestTowMechanical}
                         onClose={onClose}
                         onBack={() => setShowRequestTowMechanical(false)}
                       />
