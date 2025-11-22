@@ -56,6 +56,11 @@ Deno.serve(async (req)=>{
     }
     // Retorna a resposta do Pipefy para o frontend, incluindo os cabeçalhos CORS
     const data = await response.json();
+    console.log('Resposta Pipefy:', JSON.stringify(data).substring(0, 500));
+    if (data.errors && data.errors.length > 0) {
+      console.error('Erros GraphQL:', data.errors);
+      throw new Error(`Erro GraphQL: ${data.errors[0].message}`);
+    }
     console.log('Resposta Pipefy recebida com sucesso');
     return new Response(JSON.stringify(data), {
       headers: {
