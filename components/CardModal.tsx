@@ -214,7 +214,7 @@ export default function CardModal({ card, onClose, permissionType, onUpdateChofe
                  {formatDate(card.dataCriacao)}
                </p>
              </div>
-            {!isFila && hasPublicUrl && (
+            {hasPublicUrl && (
               <button
                 onClick={handleOpenPublicLink}
                 className="inline-flex items-center gap-2 px-3 py-2 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-200 backdrop-blur-sm"
