@@ -234,7 +234,42 @@ export default function KanbanBoard({ initialCards, permissionType, onUpdateStat
       const userEmail = user?.email || 'Usuário desconhecido';
 
       // Preparar os valores para atualização
-      const fieldsToUpdate = [\n        {\n          fieldId: "nome_do_chofer_que_far_a_recolha",\n          value: driverName\n        },\n        {\n          fieldId: "e_mail_do_chofer",\n          value: driverEmail\n        },\n        {\n          fieldId: "data_e_hora_prevista_para_recolha",\n          value: dateTime\n        },\n        {\n          fieldId: "ve_culo_ser_recolhido",\n          value: "Sim"\n        },\n        {\n          fieldId: "tipo_de_faturamento",\n          value: billingType\n        }\n      ];\n\n      if (billingType === "Avulso" && collectionValue) {\n        fieldsToUpdate.push({\n          fieldId: "valor_da_recolha",\n          value: collectionValue\n        });\n      }\n\n      if (billingType === "Avulso" && additionalKm) {\n        fieldsToUpdate.push({\n          fieldId: "custo_de_km_adicional",\n          value: additionalKm\n        });\n      }
+      const fieldsToUpdate = [
+        {
+          fieldId: "nome_do_chofer_que_far_a_recolha",
+          value: driverName
+        },
+        {
+          fieldId: "e_mail_do_chofer",
+          value: driverEmail
+        },
+        {
+          fieldId: "data_e_hora_prevista_para_recolha",
+          value: dateTime
+        },
+        {
+          fieldId: "ve_culo_ser_recolhido",
+          value: "Sim"
+        },
+        {
+          fieldId: "tipo_de_faturamento",
+          value: billingType
+        }
+      ];
+
+      if (billingType === 'Avulso' && collectionValue) {
+        fieldsToUpdate.push({
+          fieldId: "valor_da_recolha",
+          value: collectionValue
+        });
+      }
+
+      if (billingType === 'Avulso' && additionalKm) {
+        fieldsToUpdate.push({
+          fieldId: "custo_de_km_adicional",
+          value: additionalKm
+        });
+      }
 
       // Query GraphQL para atualizar os campos no Pipefy
       const pipefyQuery = `
